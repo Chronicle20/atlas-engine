@@ -1,0 +1,96 @@
+package net.server.handlers.login;
+
+import client.MapleClient;
+import connection.packets.CLogin;
+import net.AbstractMaplePacketHandler;
+import net.server.Server;
+import net.server.coordinator.session.MapleSessionCoordinator;
+import net.server.coordinator.session.MapleSessionCoordinator.AntiMulticlientResult;
+import net.server.world.World;
+import org.apache.mina.core.session.IoSession;
+import tools.Randomizer;
+import tools.data.input.SeekableLittleEndianAccessor;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
+public class ViewAllCharSelectedWithPicHandler extends AbstractMaplePacketHandler {
+
+    private static int parseAntiMulticlientError(AntiMulticlientResult res) {
+        return switch (res) {
+            case REMOTE_PROCESSING -> 10;
+            case REMOTE_LOGGEDIN -> 7;
+            case REMOTE_NO_MATCH -> 17;
+            case COORDINATOR_ERROR -> 8;
+            default -> 9;
+        };
+    }
+
+    @Override
+    public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+
+        String pic = slea.readMapleAsciiString();
+        int charId = slea.readInt();
+        slea.readInt(); // please don't let the client choose which world they should login
+
+        String macs = slea.readMapleAsciiString();
+        String hwid = slea.readMapleAsciiString();
+
+        if (!hwid.matches("[0-9A-F]{12}_[0-9A-F]{8}")) {
+            c.announce(CLogin.getAfterLoginError(17));
+            return;
+        }
+
+        c.updateMacs(macs);
+        c.updateHWID(hwid);
+
+        if (c.hasBannedMac() || c.hasBannedHWID()) {
+            MapleSessionCoordinator.getInstance().closeSession(c.getSession(), true);
+            return;
+        }
+
+        IoSession session = c.getSession();
+
+        Server server = Server.getInstance();
+        if (!server.haveCharacterEntry(c.getAccID(), charId)) {
+            MapleSessionCoordinator.getInstance().closeSession(c.getSession(), true);
+            return;
+        }
+
+        c.setWorld(server.getCharacterWorld(charId).orElseThrow());
+        World wserv = c.getWorldServer();
+        if (wserv == null || wserv.isWorldCapacityFull()) {
+            c.announce(CLogin.getAfterLoginError(10));
+            return;
+        }
+
+        int channel = Randomizer.rand(1, wserv.getChannelsSize());
+        c.setChannel(channel);
+
+        if (c.checkPic(pic)) {
+            String[] socket = server.getInetSocket(c.getWorld(), c.getChannel());
+            if (socket == null) {
+                c.announce(CLogin.getAfterLoginError(10));
+                return;
+            }
+
+            AntiMulticlientResult res = MapleSessionCoordinator.getInstance().attemptGameSession(session, c.getAccID(), hwid);
+            if (res != AntiMulticlientResult.SUCCESS) {
+                c.announce(CLogin.getAfterLoginError(parseAntiMulticlientError(res)));
+                return;
+            }
+
+            server.unregisterLoginState(c);
+            c.setCharacterOnSessionTransitionState(charId);
+
+            try {
+                c.announce(CLogin.getServerIP(InetAddress.getByName(socket[0]), Integer.parseInt(socket[1]), charId));
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+
+        } else {
+            c.announce(CLogin.wrongPic());
+        }
+    }
+}

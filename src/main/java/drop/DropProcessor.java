@@ -3,6 +3,8 @@ package drop;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -18,10 +20,13 @@ public class DropProcessor {
 
    private final Map<Integer, List<DropEntry>> dropCache;
 
+   private final Map<Integer, List<GlobalDropEntry>> globalDropCache;
+
    private final String serviceUrl;
 
    private DropProcessor() {
       dropCache = new HashMap<>();
+      globalDropCache = new HashMap<>();
       serviceUrl = System.getenv("DROP_INFORMATION_SERVICE_URL");
    }
 
@@ -70,6 +75,48 @@ public class DropProcessor {
       return entries;
    }
 
+   public List<GlobalDropEntry> getRelevantGlobalDrops(int mapid) {
+      int continentid = mapid / 100000000;
+
+      List<GlobalDropEntry> contiItems = globalDropCache.get(continentid);
+      if (contiItems != null) {
+         return contiItems;
+      }
+
+      contiItems = new ArrayList<>();
+
+      // Make a request to the API endpoint
+      String apiUrl = String.format("%s/continents", serviceUrl);
+      try {
+         URL url = new URL(apiUrl);
+         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+         connection.setRequestMethod("GET");
+
+         int responseCode = connection.getResponseCode();
+         if (responseCode == HttpURLConnection.HTTP_OK) {
+            ResourceConverter converter = new ResourceConverter(ContinentResource.class, DropResource.class);
+            JSONAPIDocument<List<ContinentResource>> dropDocumentCollection =
+                  converter.readDocumentCollection(connection.getInputStream(), ContinentResource.class);
+            contiItems = Objects.requireNonNull(dropDocumentCollection.get())
+                  .stream()
+                  .filter(c -> Integer.parseInt(c.getId()) < 0 || Integer.parseInt(c.getId()) == continentid)
+                  .map(ContinentResource::getDrops)
+                  .flatMap(Collection::stream)
+                  .map(dr -> transformContinentDrop(continentid, dr))
+                  .toList();
+         } else {
+            System.out.println("Error: HTTP request failed with status code " + responseCode);
+         }
+
+         connection.disconnect();
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
+
+      globalDropCache.put(continentid, contiItems);
+      return contiItems;
+   }
+
    public List<Integer> getMonsterIdsWhoDrop(int itemId) {
       List<Integer> entries = Collections.emptyList();
       // Make a request to the API endpoint
@@ -104,5 +151,10 @@ public class DropProcessor {
    private DropEntry transform(DropResource dropResource) {
       return new DropEntry(dropResource.getItemId(), dropResource.getChance(), dropResource.getMinimumQuantity(),
             dropResource.getMaximumQuantity(), dropResource.getQuestId());
+   }
+
+   private GlobalDropEntry transformContinentDrop(int continentId, DropResource dropResource) {
+      return new GlobalDropEntry(dropResource.getItemId(), dropResource.getChance(), dropResource.getMinimumQuantity(),
+            dropResource.getMaximumQuantity(), dropResource.getQuestId(), continentId);
    }
 }

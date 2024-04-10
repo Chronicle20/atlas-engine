@@ -72,7 +72,7 @@ public class MapleLifeFactory {
 
     private static void setMonsterAttackInfo(int mid, List<MobAttackInfoHolder> attackInfos) {
         if (!attackInfos.isEmpty()) {
-            MapleMonsterInformationProvider mi = MapleMonsterInformationProvider.getInstance();
+            MonsterInformationProvider mi = MonsterInformationProvider.getInstance();
 
             for (MobAttackInfoHolder attackInfo : attackInfos) {
                 mi.setMobAttackInfo(mid, attackInfo.attackPos, attackInfo.mpCon, attackInfo.coolTime);
@@ -173,7 +173,7 @@ public class MapleLifeFactory {
         }
         decodeElementalString(stats, MapleDataTool.getString("elemAttr", monsterInfoData, ""));
 
-        MapleMonsterInformationProvider mi = MapleMonsterInformationProvider.getInstance();
+        MonsterInformationProvider mi = MonsterInformationProvider.getInstance();
         MapleData monsterSkillInfoData = monsterInfoData.getChildByPath("skill");
         if (monsterSkillInfoData != null) {
             int i = 0;

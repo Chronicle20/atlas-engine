@@ -6,7 +6,7 @@ import connection.packets.CMob;
 import constants.game.GameConstants;
 import net.AbstractMaplePacketHandler;
 import server.life.MapleMonster;
-import server.life.MapleMonsterInformationProvider;
+import server.life.MonsterInformationProvider;
 import server.maps.MapleMap;
 import tools.FilePrinter;
 import tools.data.input.SeekableLittleEndianAccessor;
@@ -32,7 +32,7 @@ public class FieldDamageMobHandler extends AbstractMaplePacketHandler {
     private static void performDamage(MapleClient c, int dmg, MapleMonster mob) {
         MapleMap map = c.getPlayer().getMap();
         if (dmg < 0 || dmg > GameConstants.MAX_FIELD_MOB_DAMAGE) {
-            FilePrinter.printError(FilePrinter.EXPLOITS + c.getPlayer().getName() + ".txt", c.getPlayer().getName() + " tried to use an obstacle on mapid " + map.getId() + " to attack " + MapleMonsterInformationProvider.getInstance().getMobNameFromId(mob.getId()) + " with damage " + dmg);
+            FilePrinter.printError(FilePrinter.EXPLOITS + c.getPlayer().getName() + ".txt", c.getPlayer().getName() + " tried to use an obstacle on mapid " + map.getId() + " to attack " + MonsterInformationProvider.getInstance().getMobNameFromId(mob.getId()) + " with damage " + dmg);
             return;
         }
 

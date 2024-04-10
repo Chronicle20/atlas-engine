@@ -20,8 +20,8 @@
 package server.loot;
 
 import client.MapleCharacter;
-import server.life.MapleMonsterInformationProvider;
-import server.life.MonsterDropEntry;
+import drop.DropEntry;
+import drop.DropProcessor;
 import server.quest.MapleQuest;
 
 import java.util.LinkedList;
@@ -32,20 +32,20 @@ import java.util.List;
  */
 public class MapleLootManager {
 
-    private static boolean isRelevantDrop(MonsterDropEntry dropEntry, List<MapleCharacter> players, List<MapleLootInventory> playersInv) {
+    private static boolean isRelevantDrop(DropEntry dropEntry, List<MapleCharacter> players, List<MapleLootInventory> playersInv) {
         int qStartAmount = 0, qCompleteAmount = 0;
-        MapleQuest quest = MapleQuest.getInstance(dropEntry.questid);
+        MapleQuest quest = MapleQuest.getInstance(dropEntry.questId());
         if (quest != null) {
-            qStartAmount = quest.getStartItemAmountNeeded(dropEntry.itemId);
-            qCompleteAmount = quest.getCompleteItemAmountNeeded(dropEntry.itemId);
+            qStartAmount = quest.getStartItemAmountNeeded(dropEntry.itemId());
+            qCompleteAmount = quest.getCompleteItemAmountNeeded(dropEntry.itemId());
         }
 
         //boolean restricted = MapleItemInformationProvider.getInstance().isPickupRestricted(dropEntry.itemId);
         for (int i = 0; i < players.size(); i++) {
             MapleLootInventory chrInv = playersInv.get(i);
 
-            if (dropEntry.questid > 0) {
-                int qItemAmount, chrQuestStatus = players.get(i).getQuestStatus(dropEntry.questid);
+            if (dropEntry.questId() > 0) {
+                int qItemAmount, chrQuestStatus = players.get(i).getQuestStatus(dropEntry.questId());
                 if (chrQuestStatus == 0) {
                     qItemAmount = qStartAmount;
                 } else if (chrQuestStatus != 1) {
@@ -56,7 +56,7 @@ public class MapleLootManager {
 
                 // thanks kvmba for noticing quest items with no required amount failing to be detected as such
 
-                int qItemStatus = chrInv.hasItem(dropEntry.itemId, qItemAmount);
+                int qItemStatus = chrInv.hasItem(dropEntry.itemId(), qItemAmount);
                 if (qItemStatus == 2) {
                     continue;
                 } /*else if (restricted && qItemStatus == 1) {  // one-of-a-kind loots should be available everytime, thanks onechord for noticing
@@ -72,8 +72,8 @@ public class MapleLootManager {
         return false;
     }
 
-    public static List<MonsterDropEntry> retrieveRelevantDrops(int monsterId, List<MapleCharacter> players) {
-        List<MonsterDropEntry> loots = MapleMonsterInformationProvider.getInstance().retrieveEffectiveDrop(monsterId);
+    public static List<DropEntry> retrieveRelevantDrops(int monsterId, List<MapleCharacter> players) {
+        List<DropEntry> loots = DropProcessor.getInstance().getDropsForMonster(monsterId);
         if (loots.isEmpty()) {
             return loots;
         }
@@ -84,8 +84,8 @@ public class MapleLootManager {
             playersInv.add(lootInv);
         }
 
-        List<MonsterDropEntry> effectiveLoot = new LinkedList<>();
-        for (MonsterDropEntry mde : loots) {
+        List<DropEntry> effectiveLoot = new LinkedList<>();
+        for (DropEntry mde : loots) {
             if (isRelevantDrop(mde, players, playersInv)) {
                 effectiveLoot.add(mde);
             }

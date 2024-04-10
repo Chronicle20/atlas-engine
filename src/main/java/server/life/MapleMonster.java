@@ -31,6 +31,8 @@ import connection.packets.CMobPool;
 import connection.packets.CSummonedPool;
 import connection.packets.CWvsContext;
 import constants.skills.*;
+import drop.DropEntry;
+import drop.DropProcessor;
 import net.server.audit.LockCollector;
 import net.server.audit.locks.MonitoredLockType;
 import net.server.audit.locks.MonitoredReentrantLock;
@@ -358,9 +360,9 @@ public class MapleMonster extends AbstractLoadedMapleLife {
             long animationTime;
 
             if (skill == null) {
-                animationTime = MapleMonsterInformationProvider.getInstance().getMobAttackAnimationTime(this.getId(), attackPos);
+                animationTime = MonsterInformationProvider.getInstance().getMobAttackAnimationTime(this.getId(), attackPos);
             } else {
-                animationTime = MapleMonsterInformationProvider.getInstance().getMobSkillAnimationTime(skill);
+                animationTime = MonsterInformationProvider.getInstance().getMobSkillAnimationTime(skill);
             }
 
             if (animationTime > 0) {
@@ -747,9 +749,9 @@ public class MapleMonster extends AbstractLoadedMapleLife {
         }
     }
 
-    public List<MonsterDropEntry> retrieveRelevantDrops() {
-        if (this.getStats().isFriendly()) {     // thanks Conrad for noticing friendly mobs not spawning loots after a recent update
-            return MapleMonsterInformationProvider.getInstance().retrieveEffectiveDrop(this.getId());
+    public List<DropEntry> retrieveRelevantDrops() {
+        if (this.getStats().isFriendly()) {
+            return DropProcessor.getInstance().getDropsForMonster(this.getId());
         }
 
         Map<Integer, MapleCharacter> pchars = map.getMapAllPlayers();
@@ -1548,7 +1550,7 @@ public class MapleMonster extends AbstractLoadedMapleLife {
             }
             */
 
-            Pair<Integer, Integer> attackInfo = MapleMonsterInformationProvider.getInstance().getMobAttackInfo(this.getId(), attackPos);
+            Pair<Integer, Integer> attackInfo = MonsterInformationProvider.getInstance().getMobAttackInfo(this.getId(), attackPos);
             if (attackInfo == null) {
                 return -1;
             }

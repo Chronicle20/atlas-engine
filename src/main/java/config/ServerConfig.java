@@ -1,6 +1,8 @@
 package config;
 
 public class ServerConfig {
+    public boolean UTF8 = false;
+
     //Thread Tracker Configuration
     public boolean USE_THREAD_TRACKER;
 
@@ -101,7 +103,6 @@ public class ServerConfig {
     public boolean USE_ERASE_PET_ON_EXPIRATION;
     public boolean USE_BUFF_MOST_SIGNIFICANT;
     public boolean USE_BUFF_EVERLASTING;
-    public boolean USE_MULTIPLE_SAME_EQUIP_DROP;
     public boolean USE_BANISHABLE_TOWN_SCROLL;
     public boolean USE_ENABLE_FULL_RESPAWN;
     public boolean USE_ENABLE_CHAT_LOG;

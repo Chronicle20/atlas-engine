@@ -80,6 +80,8 @@ import constants.skills.SuperGM;
 import constants.skills.ThunderBreaker;
 import constants.skills.WhiteKnight;
 import constants.skills.WindArcher;
+import drop.DropEntry;
+import drop.DropProcessor;
 import net.AbstractMaplePacketHandler;
 import net.server.PlayerBuffValueHolder;
 import scripting.AbstractPlayerInteraction;
@@ -88,10 +90,9 @@ import server.TimerManager;
 import server.life.Element;
 import server.life.ElementalEffectiveness;
 import server.life.MapleMonster;
-import server.life.MapleMonsterInformationProvider;
+import server.life.MonsterInformationProvider;
 import server.life.MobSkill;
 import server.life.MobSkillFactory;
-import server.life.MonsterDropEntry;
 import server.maps.MapleMap;
 import server.maps.MapleMapItem;
 import server.maps.MapleMapObject;
@@ -108,6 +109,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 
 public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandler {
 
@@ -362,14 +364,13 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
                     } else if (attack.skill == Bandit.STEAL) {
                         Skill steal = SkillFactory.getSkill(Bandit.STEAL)
                                 .orElseThrow();
-                        if (monster.getStolen()
-                                .size() < 1) { // One steal per mob <3
+                        if (monster.getStolen().isEmpty()) {
                             if (steal.getEffect(player.getSkillLevel(steal))
                                     .makeChanceResult()) {
                                 monster.addStolen(0);
 
-                                MapleMonsterInformationProvider mi = MapleMonsterInformationProvider.getInstance();
-                                List<Integer> dropPool = mi.retrieveDropPool(monster.getId());
+                                List<Integer> dropPool = MonsterInformationProvider.getInstance()
+                                        .retrieveDropPool(monster.getId());
                                 if (!dropPool.isEmpty()) {
                                     int rndPool = (int) Math.floor(Math.random() * dropPool.get(dropPool.size() - 1));
 
@@ -378,12 +379,17 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
                                         i++;
                                     }
 
-                                    List<MonsterDropEntry> toSteal = new ArrayList<>();
-                                    toSteal.add(mi.retrieveDrop(monster.getId())
-                                            .get(i));
 
-                                    map.dropItemsFromMonster(toSteal, player, monster);
-                                    monster.addStolen(toSteal.get(0).itemId);
+                                    List<DropEntry> drops = DropProcessor.getInstance()
+                                            .getDropsForMonster(monster.getId());
+                                    if (!drops.isEmpty()) {
+                                        Random random = new Random();
+                                        int randomIndex = random.nextInt(drops.size());
+                                        DropEntry stolenItem = drops.get(randomIndex);
+
+                                        map.dropItemsFromMonster(Collections.singletonList(stolenItem), player, monster);
+                                        monster.addStolen(stolenItem.itemId());
+                                    }
                                 }
                             }
                         }
@@ -1081,9 +1087,9 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
         }
         short attackerPositionX = lea.readShort();
         short attackerPositionY = lea.readShort();
-        if(mesoExplosion){
+        if (mesoExplosion) {
             byte mesoCount = lea.readByte();
-            for(int i = 0; i < mesoCount; i++){
+            for (int i = 0; i < mesoCount; i++) {
                 int mesos = lea.readInt();
                 lea.readByte();
             }

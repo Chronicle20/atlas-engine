@@ -29,7 +29,7 @@ import client.status.MonsterStatusEffect;
 import connection.packets.CMob;
 import net.AbstractMaplePacketHandler;
 import server.life.MapleMonster;
-import server.life.MapleMonsterInformationProvider;
+import server.life.MonsterInformationProvider;
 import server.maps.MapleMap;
 import tools.FilePrinter;
 import tools.data.input.SeekableLittleEndianAccessor;
@@ -103,7 +103,7 @@ public final class MobDamageMobHandler extends AbstractMaplePacketHandler {
             if (dmg > maxDmg) {
                 AutobanFactory.DAMAGE_HACK.alert(c.getPlayer(), "Possible packet editing hypnotize damage exploit.");   // thanks Rien dev team
 
-                FilePrinter.printError(FilePrinter.EXPLOITS + c.getPlayer().getName() + ".txt", c.getPlayer().getName() + " had hypnotized " + MapleMonsterInformationProvider.getInstance().getMobNameFromId(attacker.getId()) + " to attack " + MapleMonsterInformationProvider.getInstance().getMobNameFromId(damaged.getId()) + " with damage " + dmg + " (max: " + maxDmg + ")");
+                FilePrinter.printError(FilePrinter.EXPLOITS + c.getPlayer().getName() + ".txt", c.getPlayer().getName() + " had hypnotized " + MonsterInformationProvider.getInstance().getMobNameFromId(attacker.getId()) + " to attack " + MonsterInformationProvider.getInstance().getMobNameFromId(damaged.getId()) + " with damage " + dmg + " (max: " + maxDmg + ")");
                 dmg = maxDmg;
             }
 

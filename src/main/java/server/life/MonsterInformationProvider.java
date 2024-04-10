@@ -20,8 +20,8 @@
  */
 package server.life;
 
-import config.YamlConfig;
-import constants.inventory.ItemConstants;
+import drop.DropEntry;
+import drop.DropProcessor;
 import provider.MapleData;
 import provider.MapleDataProvider;
 import provider.MapleDataProviderFactory;
@@ -29,7 +29,6 @@ import provider.MapleDataTool;
 import server.ItemInformationProvider;
 import tools.DatabaseConnection;
 import tools.Pair;
-import tools.Randomizer;
 
 import java.io.File;
 import java.sql.Connection;
@@ -38,52 +37,43 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 
-public class MapleMonsterInformationProvider {
-    // Author : LightPepsi
-
-    private static final MapleMonsterInformationProvider instance = new MapleMonsterInformationProvider();
-    private final Map<Integer, List<MonsterDropEntry>> drops = new HashMap<>();
+public class MonsterInformationProvider {
+    private static final MonsterInformationProvider instance = new MonsterInformationProvider();
     private final List<MonsterGlobalDropEntry> globaldrops = new ArrayList<>();
     private final Map<Integer, List<MonsterGlobalDropEntry>> continentdrops = new HashMap<>();
     private final Map<Integer, List<Integer>> dropsChancePool = new HashMap<>();    // thanks to ronan
-    private final Set<Integer> hasNoMultiEquipDrops = new HashSet<>();
-    private final Map<Integer, List<MonsterDropEntry>> extraMultiEquipDrops = new HashMap<>();
     private final Map<Pair<Integer, Integer>, Integer> mobAttackAnimationTime = new HashMap<>();
     private final Map<MobSkill, Integer> mobSkillAnimationTime = new HashMap<>();
     private final Map<Integer, Pair<Integer, Integer>> mobAttackInfo = new HashMap<>();
     private final Map<Integer, Boolean> mobBossCache = new HashMap<>();
     private final Map<Integer, String> mobNameCache = new HashMap<>();
 
-    protected MapleMonsterInformationProvider() {
+    protected MonsterInformationProvider() {
         retrieveGlobal();
     }
 
-    public static MapleMonsterInformationProvider getInstance() {
+    public static MonsterInformationProvider getInstance() {
         return instance;
     }
 
-    public static ArrayList<Pair<Integer, String>> getMobsIDsFromName(String search) {
+    public static List<Integer> getMobsIDsFromName(String search) {
         MapleDataProvider dataProvider = MapleDataProviderFactory.getDataProvider(new File("wz/String.wz"));
-        ArrayList<Pair<Integer, String>> retMobs = new ArrayList<>();
         MapleData data = dataProvider.getData("Mob.img");
-        List<Pair<Integer, String>> mobPairList = new LinkedList<>();
-        for (MapleData mobIdData : data.getChildren()) {
-            int mobIdFromData = Integer.parseInt(mobIdData.getName());
-            String mobNameFromData = MapleDataTool.getString(mobIdData.getChildByPath("name"), "NO-NAME");
-            mobPairList.add(new Pair<>(mobIdFromData, mobNameFromData));
-        }
-        for (Pair<Integer, String> mobPair : mobPairList) {
-            if (mobPair.getRight().toLowerCase().contains(search.toLowerCase())) {
-                retMobs.add(mobPair);
-            }
-        }
-        return retMobs;
+        return data.getChildren().stream()
+              .filter(d -> nameMatches(d, search))
+              .map(MapleData::getName)
+              .map(Integer::parseInt)
+              .collect(Collectors.toList());
+    }
+
+    private static boolean nameMatches(MapleData data, String search) {
+        String name = MapleDataTool.getString(data.getChildByPath("name"), "NO-NAME");
+        return name.toLowerCase().contains(search.toLowerCase());
     }
 
     public final List<MonsterGlobalDropEntry> getRelevantGlobalDrops(int mapid) {
@@ -148,92 +138,6 @@ public class MapleMonsterInformationProvider {
         }
     }
 
-    public List<MonsterDropEntry> retrieveEffectiveDrop(final int monsterId) {
-        // this reads the drop entries searching for multi-equip, properly processing them
-
-        List<MonsterDropEntry> list = retrieveDrop(monsterId);
-        if (hasNoMultiEquipDrops.contains(monsterId) || !YamlConfig.config.server.USE_MULTIPLE_SAME_EQUIP_DROP) {
-            return list;
-        }
-
-        List<MonsterDropEntry> multiDrops = extraMultiEquipDrops.get(monsterId), extra = new LinkedList<>();
-        if (multiDrops == null) {
-            multiDrops = new LinkedList<>();
-
-            for (MonsterDropEntry mde : list) {
-                if (ItemConstants.isEquipment(mde.itemId) && mde.Maximum > 1) {
-                    multiDrops.add(mde);
-
-                    int rnd = Randomizer.rand(mde.Minimum, mde.Maximum);
-                    for (int i = 0; i < rnd - 1; i++) {
-                        extra.add(mde);   // this passes copies of the equips' MDE with min/max quantity > 1, but idc on equips they are unused anyways
-                    }
-                }
-            }
-
-            if (!multiDrops.isEmpty()) {
-                extraMultiEquipDrops.put(monsterId, multiDrops);
-            } else {
-                hasNoMultiEquipDrops.add(monsterId);
-            }
-        } else {
-            for (MonsterDropEntry mde : multiDrops) {
-                int rnd = Randomizer.rand(mde.Minimum, mde.Maximum);
-                for (int i = 0; i < rnd - 1; i++) {
-                    extra.add(mde);
-                }
-            }
-        }
-
-        List<MonsterDropEntry> ret = new LinkedList<>(list);
-        ret.addAll(extra);
-
-        return ret;
-    }
-
-    public final List<MonsterDropEntry> retrieveDrop(final int monsterId) {
-        if (drops.containsKey(monsterId)) {
-            return drops.get(monsterId);
-        }
-        final List<MonsterDropEntry> ret = new LinkedList<>();
-
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        Connection con = null;
-        try {
-            con = DatabaseConnection.getConnection();
-            ps = con.prepareStatement("SELECT itemid, chance, minimum_quantity, maximum_quantity, questid FROM drop_data WHERE dropperid = ?");
-            ps.setInt(1, monsterId);
-            rs = ps.executeQuery();
-
-            while (rs.next()) {
-                ret.add(new MonsterDropEntry(rs.getInt("itemid"), rs.getInt("chance"), rs.getInt("minimum_quantity"), rs.getInt("maximum_quantity"), rs.getShort("questid")));
-            }
-
-            con.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ret;
-        } finally {
-            try {
-                if (ps != null && !ps.isClosed()) {
-                    ps.close();
-                }
-                if (rs != null && !rs.isClosed()) {
-                    rs.close();
-                }
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (SQLException ignore) {
-                ignore.printStackTrace();
-                return ret;
-            }
-        }
-        drops.put(monsterId, ret);
-        return ret;
-    }
-
     public final List<Integer> retrieveDropPool(final int monsterId) {  // ignores Quest and Party Quest items
         if (dropsChancePool.containsKey(monsterId)) {
             return dropsChancePool.get(monsterId);
@@ -241,13 +145,14 @@ public class MapleMonsterInformationProvider {
 
         ItemInformationProvider ii = ItemInformationProvider.getInstance();
 
-        List<MonsterDropEntry> dropList = retrieveDrop(monsterId);
+        List<DropEntry> dropList = DropProcessor.getInstance()
+                .getDropsForMonster(monsterId);
         List<Integer> ret = new ArrayList<>();
 
         int accProp = 0;
-        for (MonsterDropEntry mde : dropList) {
-            if (!ii.isQuestItem(mde.itemId) && !ii.isPartyQuestItem(mde.itemId)) {
-                accProp += mde.chance;
+        for (DropEntry mde : dropList) {
+            if (!ii.isQuestItem(mde.itemId()) && !ii.isPartyQuestItem(mde.itemId())) {
+                accProp += mde.chance();
             }
 
             ret.add(accProp);
@@ -293,7 +198,8 @@ public class MapleMonsterInformationProvider {
         Boolean boss = mobBossCache.get(id);
         if (boss == null) {
             try {
-                boss = MapleLifeFactory.getMonster(id).isBoss();
+                boss = MapleLifeFactory.getMonster(id)
+                        .isBoss();
             } catch (NullPointerException npe) {
                 boss = false;
             } catch (Exception e) {   //nonexistant mob
@@ -323,9 +229,6 @@ public class MapleMonsterInformationProvider {
     }
 
     public final void clearDrops() {
-        drops.clear();
-        hasNoMultiEquipDrops.clear();
-        extraMultiEquipDrops.clear();
         dropsChancePool.clear();
         globaldrops.clear();
         continentdrops.clear();

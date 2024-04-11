@@ -45,7 +45,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.IntStream;
 
-import client.MapleBuffStat;
+import client.BuffDataHolder;
+import client.BuffStat;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.autoban.AutobanFactory;
@@ -724,8 +725,8 @@ public class MapleMap {
                int mesos = Randomizer.nextInt(de.maximum() - de.minimum()) + de.minimum();
 
                if (mesos > 0) {
-                  if (chr.getBuffedValue(MapleBuffStat.MESOUP) != null) {
-                     mesos = (int) (mesos * chr.getBuffedValue(MapleBuffStat.MESOUP)
+                  if (chr.getBuffedValue(BuffStat.MESOUP) != null) {
+                     mesos = (int) (mesos * chr.getBuffedValue(BuffStat.MESOUP)
                            .doubleValue() / 100.0);
                   }
                   mesos = mesos * chr.getMesoRate();
@@ -2577,9 +2578,9 @@ public class MapleMap {
 
          msm.runMapScript(chr.getClient(), "onUserEnter/" + onUserEnter, false);
       }
-      if (FieldLimit.CANNOTUSEMOUNTS.check(fieldLimit) && chr.getBuffedValue(MapleBuffStat.MONSTER_RIDING) != null) {
-         chr.cancelEffectFromBuffStat(MapleBuffStat.MONSTER_RIDING);
-         chr.cancelBuffStats(MapleBuffStat.MONSTER_RIDING);
+      if (FieldLimit.CANNOTUSEMOUNTS.check(fieldLimit) && chr.getBuffedValue(BuffStat.MONSTER_RIDING) != null) {
+         chr.cancelEffectFromBuffStat(BuffStat.MONSTER_RIDING);
+         chr.cancelBuffStats(BuffStat.MONSTER_RIDING);
       }
 
       if (mapid == 200090060) { // To Rien
@@ -2716,8 +2717,9 @@ public class MapleMap {
          broadcastGMSpawnPlayerMapObjectMessage(chr, chr, true);
          chr.announce(CField.getGMEffect(0x10, (byte) 1));
 
-         List<Pair<MapleBuffStat, Integer>> dsstat = Collections.singletonList(new Pair<>(MapleBuffStat.DARKSIGHT, 0));
-         broadcastGMMessage(chr, CUserRemote.giveForeignBuff(chr.getId(), dsstat), false);
+         List<Pair<BuffStat, BuffDataHolder>> dsstat = Collections.singletonList(new Pair<>(BuffStat.DARKSIGHT, new BuffDataHolder(0, 0, 0
+               )));
+         broadcastGMMessage(chr, CUserRemote.giveForeignBuff(chr, dsstat), false);
       } else {
          broadcastSpawnPlayerMapObjectMessage(chr, chr, true);
       }
@@ -2758,7 +2760,7 @@ public class MapleMap {
          }
       }
 
-      MapleStatEffect summonStat = chr.getStatForBuff(MapleBuffStat.SUMMON);
+      MapleStatEffect summonStat = chr.getStatForBuff(BuffStat.SUMMON);
       if (summonStat != null) {
          MapleSummon summon = chr.getSummonByKey(summonStat.getSourceId());
          summon.setPosition(chr.getPosition());
@@ -2933,7 +2935,7 @@ public class MapleMap {
 
       for (MapleSummon summon : new ArrayList<>(chr.getSummonsValues())) {
          if (summon.isStationary()) {
-            chr.cancelEffectFromBuffStat(MapleBuffStat.PUPPET);
+            chr.cancelEffectFromBuffStat(BuffStat.PUPPET);
          } else {
             removeMapObject(summon);
          }

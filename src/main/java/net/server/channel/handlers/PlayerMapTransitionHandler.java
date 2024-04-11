@@ -17,10 +17,13 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 package net.server.channel.handlers;
 
-import client.MapleBuffStat;
+import java.util.Collections;
+import java.util.List;
+
+import client.BuffDataHolder;
+import client.BuffStat;
 import client.MapleCharacter;
 import client.MapleClient;
 import connection.packets.CMobPool;
@@ -31,43 +34,42 @@ import server.maps.MapleMapObject;
 import tools.Pair;
 import tools.data.input.SeekableLittleEndianAccessor;
 
-import java.util.Collections;
-import java.util.List;
-
 /**
  * @author Ronan
  */
 public final class PlayerMapTransitionHandler extends AbstractMaplePacketHandler {
 
-    @Override
-    public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-        MapleCharacter chr = c.getPlayer();
-        chr.setMapTransitionComplete();
+   @Override
+   public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+      MapleCharacter chr = c.getPlayer();
+      chr.setMapTransitionComplete();
 
-        int beaconid = chr.getBuffSource(MapleBuffStat.HOMING_BEACON);
-        if (beaconid != -1) {
-            chr.cancelBuffStats(MapleBuffStat.HOMING_BEACON);
+      int beaconid = chr.getBuffSource(BuffStat.HOMING_BEACON);
+      if (beaconid != -1) {
+         chr.cancelBuffStats(BuffStat.HOMING_BEACON);
 
-            final List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<>(MapleBuffStat.HOMING_BEACON, 0));
-            chr.announce(CWvsContext.giveBuff(1, beaconid, stat));
-        }
+         final List<Pair<BuffStat, BuffDataHolder>> stat = Collections.singletonList(new Pair<>(BuffStat.HOMING_BEACON,
+               new BuffDataHolder(0, 0, 0)));
+         chr.announce(CWvsContext.giveBuff(chr, 1, beaconid, stat));
+      }
 
-        if (!chr.isHidden()) {  // thanks Lame (Conrad) for noticing hidden characters controlling mobs
-            for (MapleMapObject mo : chr.getMap().getMonsters()) {    // thanks BHB, IxianMace, Jefe for noticing several issues regarding mob statuses (such as freeze)
-                MapleMonster m = (MapleMonster) mo;
-                if (m.getSpawnEffect() == 0 || m.getHp() < m.getMaxHp()) {     // avoid effect-spawning mobs
-                    if (m.getController().filter(controller -> controller == chr).isPresent()) {
-                        c.announce(CMobPool.stopControllingMonster(m.getObjectId()));
-                        m.sendDestroyData(c);
-                        m.aggroRemoveController();
-                    } else {
-                        m.sendDestroyData(c);
-                    }
+      if (!chr.isHidden()) {  // thanks Lame (Conrad) for noticing hidden characters controlling mobs
+         for (MapleMapObject mo : chr.getMap()
+               .getMonsters()) {    // thanks BHB, IxianMace, Jefe for noticing several issues regarding mob statuses (such as freeze)
+            MapleMonster m = (MapleMonster) mo;
+            if (m.getSpawnEffect() == 0 || m.getHp() < m.getMaxHp()) {     // avoid effect-spawning mobs
+               if (m.getController().filter(controller -> controller == chr).isPresent()) {
+                  c.announce(CMobPool.stopControllingMonster(m.getObjectId()));
+                  m.sendDestroyData(c);
+                  m.aggroRemoveController();
+               } else {
+                  m.sendDestroyData(c);
+               }
 
-                    m.sendSpawnData(c);
-                    m.aggroSwitchController(chr, false);
-                }
+               m.sendSpawnData(c);
+               m.aggroSwitchController(chr, false);
             }
-        }
-    }
+         }
+      }
+   }
 }

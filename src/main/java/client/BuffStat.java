@@ -116,7 +116,9 @@ public enum BuffStat{
     MONSTER_RIDING(113),
     SPEED_INFUSION(114),
     HOMING_BEACON(115),
-    UNDEAD(116, true);
+    UNDEAD(116, true),
+    SUMMON(126),
+    PUPPET(127);
 
     private final int shift;
     private final int mask;

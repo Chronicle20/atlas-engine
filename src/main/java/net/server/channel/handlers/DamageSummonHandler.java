@@ -21,7 +21,7 @@
 */
 package net.server.channel.handlers;
 
-import client.MapleBuffStat;
+import client.BuffStat;
 import client.MapleCharacter;
 import client.MapleClient;
 import connection.packets.CSummonedPool;
@@ -31,24 +31,25 @@ import server.maps.MapleSummon;
 import tools.data.input.SeekableLittleEndianAccessor;
 
 public final class DamageSummonHandler extends AbstractMaplePacketHandler {
-    @Override
-    public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-        int oid = slea.readInt();
-        slea.skip(1);   // -1
-        int damage = slea.readInt();
-        int monsterIdFrom = slea.readInt();
+   @Override
+   public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+      int oid = slea.readInt();
+      slea.skip(1);   // -1
+      int damage = slea.readInt();
+      int monsterIdFrom = slea.readInt();
 
-        MapleCharacter player = c.getPlayer();
-        MapleMapObject mmo = player.getMap().getMapObject(oid).orElse(null);
+      MapleCharacter player = c.getPlayer();
+      MapleMapObject mmo = player.getMap().getMapObject(oid).orElse(null);
 
-        if (mmo != null && mmo instanceof MapleSummon) {
-            MapleSummon summon = (MapleSummon) mmo;
+      if (mmo != null && mmo instanceof MapleSummon) {
+         MapleSummon summon = (MapleSummon) mmo;
 
-            summon.addHP(-damage);
-            if (summon.getHP() <= 0) {
-                player.cancelEffectFromBuffStat(MapleBuffStat.PUPPET);
-            }
-            player.getMap().broadcastMessage(player, CSummonedPool.damageSummon(player.getId(), oid, damage, monsterIdFrom), summon.getPosition());
-        }
-    }
+         summon.addHP(-damage);
+         if (summon.getHP() <= 0) {
+            player.cancelEffectFromBuffStat(BuffStat.PUPPET);
+         }
+         player.getMap().broadcastMessage(player, CSummonedPool.damageSummon(player.getId(), oid, damage, monsterIdFrom),
+               summon.getPosition());
+      }
+   }
 }

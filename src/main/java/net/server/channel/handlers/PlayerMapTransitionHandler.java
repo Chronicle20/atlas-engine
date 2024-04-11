@@ -22,8 +22,8 @@ package net.server.channel.handlers;
 import java.util.Collections;
 import java.util.List;
 
-import client.BuffDataHolder;
-import client.BuffStat;
+import client.TemporaryStatValue;
+import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleClient;
 import connection.packets.CMobPool;
@@ -44,12 +44,12 @@ public final class PlayerMapTransitionHandler extends AbstractMaplePacketHandler
       MapleCharacter chr = c.getPlayer();
       chr.setMapTransitionComplete();
 
-      int beaconid = chr.getBuffSource(BuffStat.HOMING_BEACON);
+      int beaconid = chr.getBuffSource(TemporaryStatType.HOMING_BEACON);
       if (beaconid != -1) {
-         chr.cancelBuffStats(BuffStat.HOMING_BEACON);
+         chr.cancelBuffStats(TemporaryStatType.HOMING_BEACON);
 
-         final List<Pair<BuffStat, BuffDataHolder>> stat = Collections.singletonList(new Pair<>(BuffStat.HOMING_BEACON,
-               new BuffDataHolder(0, 0, 0)));
+         final List<Pair<TemporaryStatType, TemporaryStatValue>> stat = Collections.singletonList(new Pair<>(TemporaryStatType.HOMING_BEACON,
+               TemporaryStatValue.empty()));
          chr.announce(CWvsContext.giveBuff(chr, 1, beaconid, stat));
       }
 

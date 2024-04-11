@@ -5,6 +5,7 @@ import client.MapleClient;
 import client.MapleQuestStatus;
 import client.MapleRing;
 import client.Skill;
+import client.SkillEntry;
 import client.inventory.Item;
 import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
@@ -325,32 +326,32 @@ public class CStage {
     }
 
     private static void addSkillInfo(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
-        Map<Skill, MapleCharacter.SkillEntry> skills = chr.getSkills();
+        Map<Skill, SkillEntry> skills = chr.getSkills();
         int skillsSize = skills.size();
         // We don't want to include any hidden skill in this, so subtract them from the size list and ignore them.
-        for (Iterator<Map.Entry<Skill, MapleCharacter.SkillEntry>> it = skills.entrySet()
+        for (Iterator<Map.Entry<Skill, SkillEntry>> it = skills.entrySet()
                 .iterator(); it.hasNext(); ) {
-            Map.Entry<Skill, MapleCharacter.SkillEntry> skill = it.next();
+            Map.Entry<Skill, SkillEntry> skill = it.next();
             if (GameConstants.isHiddenSkills(skill.getKey()
                     .id())) {
                 skillsSize--;
             }
         }
         mplew.writeShort(skillsSize);
-        for (Iterator<Map.Entry<Skill, MapleCharacter.SkillEntry>> it = skills.entrySet()
+        for (Iterator<Map.Entry<Skill, SkillEntry>> it = skills.entrySet()
                 .iterator(); it.hasNext(); ) {
-            Map.Entry<Skill, MapleCharacter.SkillEntry> skill = it.next();
+            Map.Entry<Skill, SkillEntry> skill = it.next();
             if (GameConstants.isHiddenSkills(skill.getKey()
                     .id())) {
                 continue;
             }
             mplew.writeInt(skill.getKey()
                     .id());
-            mplew.writeInt(skill.getValue().skillevel);
-            CCommon.addExpirationTime(mplew, skill.getValue().expiration);
+            mplew.writeInt(skill.getValue().skillLevel());
+            CCommon.addExpirationTime(mplew, skill.getValue().expiration());
             if (skill.getKey()
                     .isFourthJob()) {
-                mplew.writeInt(skill.getValue().masterlevel);
+                mplew.writeInt(skill.getValue().masterLevel());
             }
         }
         mplew.writeShort(chr.getAllCooldowns()

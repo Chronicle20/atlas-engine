@@ -23,7 +23,7 @@
 */
 package client.command.commands.gm3;
 
-import client.BuffStat;
+import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.command.Command;
@@ -39,8 +39,8 @@ public class CheckDmgCommand extends Command {
       MapleCharacter victim = c.getWorldServer().getPlayerStorage().getCharacterByName(params[0]).orElse(null);
       if (victim != null) {
          int maxBase = victim.calculateMaxBaseDamage(victim.getTotalWatk());
-         Integer watkBuff = victim.getBuffedValue(BuffStat.WATK);
-         Integer matkBuff = victim.getBuffedValue(BuffStat.MATK);
+         Integer watkBuff = victim.getBuffedValue(TemporaryStatType.WATK);
+         Integer matkBuff = victim.getBuffedValue(TemporaryStatType.MATK);
          int blessing = victim.getSkillLevel(10000000 * player.getJobType() + 12);
          if (watkBuff == null) {
             watkBuff = 0;

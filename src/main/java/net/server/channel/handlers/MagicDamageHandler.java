@@ -23,7 +23,7 @@ package net.server.channel.handlers;
 
 import java.util.Optional;
 
-import client.BuffStat;
+import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.Skill;
@@ -53,8 +53,8 @@ public final class MagicDamageHandler extends AbstractDealDamageHandler {
 
       AttackInfo attack = parseDamage(slea, chr, false, true);
 
-      if (chr.getBuffEffect(BuffStat.MORPH) != null) {
-         if (chr.getBuffEffect(BuffStat.MORPH).isMorphWithoutAttack()) {
+      if (chr.getBuffEffect(TemporaryStatType.MORPH) != null) {
+         if (chr.getBuffEffect(TemporaryStatType.MORPH).isMorphWithoutAttack()) {
             // How are they attacking when the client won't let them?
             chr.getClient().disconnect(false, false);
             return;

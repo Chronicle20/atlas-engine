@@ -1,6 +1,6 @@
 package client;
 
-public enum BuffStat{
+public enum TemporaryStatType {
     WATK(0),
     WDEF(1),
     MATK(2),
@@ -125,11 +125,11 @@ public enum BuffStat{
     private final byte set;
     private final boolean disease;
 
-    private BuffStat(int shift){
+    TemporaryStatType(int shift){
         this(shift, false);
     }
 
-    private BuffStat(int shift, boolean isDisease){
+    TemporaryStatType(int shift, boolean isDisease){
         this.shift = shift;
         if(shift == 126 || shift == 127){
             long stat = ((shift >> 32) & 0xffffffffL);
@@ -156,35 +156,5 @@ public enum BuffStat{
 
     public byte getSet(){
         return set;
-    }
-
-    public static BuffStat getByShift(int shift){
-        for(BuffStat buff : values()){
-            if(buff.getShift() == shift) return buff;
-        }
-        return null;
-    }
-
-    public boolean isMovementAffectingStat(){
-        switch (this){
-            case SPEED:
-            case JUMP:
-            case STUN:
-            case WEAKEN:// weakness?
-            case SLOW:
-            case MORPH:
-            case GHOST_MORPH:
-                // case BasicStatUp:
-                // case Attract:
-            case MONSTER_RIDING:
-            case DASH_SPEED:
-            case DASH_JUMP:
-            case BAN_MAP:
-            case Flying:
-            case Frozen:
-                return true;
-            default:
-                return false;
-        }
     }
 }

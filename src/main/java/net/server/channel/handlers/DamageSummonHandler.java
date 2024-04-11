@@ -21,7 +21,7 @@
 */
 package net.server.channel.handlers;
 
-import client.BuffStat;
+import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleClient;
 import connection.packets.CSummonedPool;
@@ -46,7 +46,7 @@ public final class DamageSummonHandler extends AbstractMaplePacketHandler {
 
          summon.addHP(-damage);
          if (summon.getHP() <= 0) {
-            player.cancelEffectFromBuffStat(BuffStat.PUPPET);
+            player.cancelEffectFromBuffStat(TemporaryStatType.PUPPET);
          }
          player.getMap().broadcastMessage(player, CSummonedPool.damageSummon(player.getId(), oid, damage, monsterIdFrom),
                summon.getPosition());

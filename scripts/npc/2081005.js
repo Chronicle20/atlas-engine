@@ -24,8 +24,8 @@ var status = 0;
 var price = 100000;
 
 function isTransformed(ch) {
-    const BuffStat = Java.type('client.BuffStat');
-    return ch.getBuffSource(BuffStat.MORPH) == 2210003;
+    const TemporaryStatType = Java.type('client.TemporaryStatType');
+    return ch.getBuffSource(TemporaryStatType.MORPH) == 2210003;
 }
 
 function start() {

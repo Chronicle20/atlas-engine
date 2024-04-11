@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import client.BuffStat;
+import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleRing;
@@ -635,8 +635,8 @@ public class MapleInventoryManipulator {
          target.setPosition(src);
          eqpInv.addItemFromDB(target);
       }
-      if (chr.getBuffedValue(BuffStat.BOOSTER) != null && ItemConstants.isWeapon(source.getItemId())) {
-         chr.cancelBuffStats(BuffStat.BOOSTER);
+      if (chr.getBuffedValue(TemporaryStatType.BOOSTER) != null && ItemConstants.isWeapon(source.getItemId())) {
+         chr.cancelBuffStats(TemporaryStatType.BOOSTER);
       }
 
       mods.add(new ModifyInventory(2, source, src));

@@ -695,7 +695,7 @@ public class MapleMonster extends AbstractLoadedMapleLife {
         float multiplier = 1.0f;
 
         // thanks Prophecy & Aika for finding out Holy Symbol not being applied on party bonuses
-        Integer holySymbol = attacker.getBuffedValue(BuffStat.HOLY_SYMBOL);
+        Integer holySymbol = attacker.getBuffedValue(TemporaryStatType.HOLY_SYMBOL);
         if (holySymbol != null) {
             if (YamlConfig.config.server.USE_FULL_HOLY_SYMBOL) { // thanks Mordred, xinyifly, AyumiLove, andy33 for noticing HS hands out 20% of its potential on less than 3 players
                 multiplier *= (1.0 + (holySymbol.doubleValue() / 100.0));
@@ -727,7 +727,7 @@ public class MapleMonster extends AbstractLoadedMapleLife {
             }
 
             //TODO MapleBuffStat
-//            Integer expBonus = attacker.getBuffedValue(BuffStat.EXP_INCREASE);
+//            Integer expBonus = attacker.getBuffedValue(TemporaryStatType.EXP_INCREASE);
 //            if (expBonus != null) {     // exp increase player buff found thanks to HighKey21
 //                personalExp += expBonus;
 //            }
@@ -1749,7 +1749,7 @@ public class MapleMonster extends AbstractLoadedMapleLife {
     }
 
     public boolean isCharacterPuppetInVicinity(MapleCharacter chr) {
-        MapleStatEffect mse = chr.getBuffEffect(BuffStat.PUPPET);
+        MapleStatEffect mse = chr.getBuffEffect(TemporaryStatType.PUPPET);
         if (mse == null) {
             return false;
         }
@@ -2064,7 +2064,7 @@ public class MapleMonster extends AbstractLoadedMapleLife {
                     return;
                 }
 
-                MapleStatEffect puppetEffect = chrController.get().getBuffEffect(BuffStat.PUPPET);
+                MapleStatEffect puppetEffect = chrController.get().getBuffEffect(TemporaryStatType.PUPPET);
                 if (puppetEffect != null) {
                     MapleSummon puppet = chrController.get().getSummonByKey(puppetEffect.getSourceId());
 

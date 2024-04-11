@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import client.BuffDataHolder;
-import client.BuffStat;
+import client.TemporaryStatValue;
+import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleDisease;
 import client.MapleJob;
@@ -145,7 +145,7 @@ public class MapleStatEffect {
    private int cp, nuffSkill;
    private List<MapleDisease> cureDebuffs;
    private boolean skill;
-   private List<Pair<BuffStat, BuffDataHolder>> statups;
+   private List<Pair<TemporaryStatType, TemporaryStatValue>> statups;
    private Map<MonsterStatus, Integer> monsterStatus;
    private int x, y, mobCount, moneyCon, cooldown, morphId = 0, ghost, fatigue, berserk, booster;
    private double prop;
@@ -241,7 +241,7 @@ public class MapleStatEffect {
          ret.overTime = overTime;
       }
 
-      ArrayList<Pair<BuffStat, BuffDataHolder>> statups = new ArrayList<>();
+      ArrayList<Pair<TemporaryStatType, TemporaryStatValue>> statups = new ArrayList<>();
       ret.watk = (short) MapleDataTool.getInt("pad", source, 0);
       ret.wdef = (short) MapleDataTool.getInt("pdd", source, 0);
       ret.matk = (short) MapleDataTool.getInt("mad", source, 0);
@@ -253,10 +253,10 @@ public class MapleStatEffect {
       ret.jump = (short) MapleDataTool.getInt("jump", source, 0);
 
       //      ret.barrier = MapleDataTool.getInt("barrier", source, 0);
-      //      ret.addBuffStatPairToListIfNotZero(statups, BuffStat.AURA, ret.barrier);
+      //      ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.AURA, ret.barrier);
 
       //      ret.mapProtection = mapProtection(sourceid);
-      //      ret.addBuffStatPairToListIfNotZero(statups, BuffStat.MAP_PROTECTION, (int) ret.mapProtection);
+      //      ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.MAP_PROTECTION, (int) ret.mapProtection);
 
       if (ret.overTime && ret.getSummonMovementType() == null) {
          if (!skill) {
@@ -264,46 +264,46 @@ public class MapleStatEffect {
                ret.berserk = MapleDataTool.getInt("berserk", source, 0);
                ret.booster = MapleDataTool.getInt("booster", source, 0);
 
-               //               ret.addBuffStatPairToListIfNotZero(statups, BuffStat.BERSERK, ret.berserk);
-               ret.addBuffStatPairToListIfNotZero(statups, BuffStat.BOOSTER, ret.booster);
+               //               ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.BERSERK, ret.berserk);
+               ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.BOOSTER, ret.booster);
             } else if (isDojoBuff(sourceid) || isHpMpRecovery(sourceid)) {
                ret.mhpR = (byte) MapleDataTool.getInt("mhpR", source, 0);
                ret.mhpRRate = (short) (MapleDataTool.getInt("mhpRRate", source, 0) * 100);
                ret.mmpR = (byte) MapleDataTool.getInt("mmpR", source, 0);
                ret.mmpRRate = (short) (MapleDataTool.getInt("mmpRRate", source, 0) * 100);
 
-               //               ret.addBuffStatPairToListIfNotZero(statups, BuffStat.HPREC, (int) ret.mhpR);
-               //               ret.addBuffStatPairToListIfNotZero(statups, BuffStat.MPREC, (int) ret.mmpR);
+               //               ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.HPREC, (int) ret.mhpR);
+               //               ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.MPREC, (int) ret.mmpR);
             } else if (isRateCoupon(sourceid)) {
                //               switch (MapleDataTool.getInt("expR", source, 0)) {
                //                  case 1:
-               //                     ret.addBuffStatPairToListIfNotZero(statups, BuffStat.COUPON_EXP1, 1);
+               //                     ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.COUPON_EXP1, 1);
                //                     break;
                //
                //                  case 2:
-               //                     ret.addBuffStatPairToListIfNotZero(statups, BuffStat.COUPON_EXP2, 1);
+               //                     ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.COUPON_EXP2, 1);
                //                     break;
                //
                //                  case 3:
-               //                     ret.addBuffStatPairToListIfNotZero(statups, BuffStat.COUPON_EXP3, 1);
+               //                     ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.COUPON_EXP3, 1);
                //                     break;
                //
                //                  case 4:
-               //                     ret.addBuffStatPairToListIfNotZero(statups, BuffStat.COUPON_EXP4, 1);
+               //                     ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.COUPON_EXP4, 1);
                //                     break;
                //               }
                //
                //               switch (MapleDataTool.getInt("drpR", source, 0)) {
                //                  case 1:
-               //                     ret.addBuffStatPairToListIfNotZero(statups, BuffStat.COUPON_DRP1, 1);
+               //                     ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.COUPON_DRP1, 1);
                //                     break;
                //
                //                  case 2:
-               //                     ret.addBuffStatPairToListIfNotZero(statups, BuffStat.COUPON_DRP2, 1);
+               //                     ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.COUPON_DRP2, 1);
                //                     break;
                //
                //                  case 3:
-               //                     ret.addBuffStatPairToListIfNotZero(statups, BuffStat.COUPON_DRP3, 1);
+               //                     ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.COUPON_DRP3, 1);
                //                     break;
                //               }
             } else if (isMonsterCard(sourceid)) {
@@ -334,13 +334,13 @@ public class MapleStatEffect {
                }
 
                if (MapleDataTool.getInt("mesoupbyitem", source, 0) != 0) {
-                  ret.addBuffStatPairToListIfNotZero(statups, BuffStat.MESO_UP_BY_ITEM, 4);
+                  ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.MESO_UP_BY_ITEM, 4);
                   prob = MapleDataTool.getInt("prob", source, 1);
                }
 
                int itemupType = MapleDataTool.getInt("itemupbyitem", source, 0);
                if (itemupType != 0) {
-                  ret.addBuffStatPairToListIfNotZero(statups, BuffStat.ITEM_UP_BY_ITEM, 4);
+                  ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.ITEM_UP_BY_ITEM, 4);
                   prob = MapleDataTool.getInt("prob", source, 1);
 
                   switch (itemupType) {
@@ -355,33 +355,33 @@ public class MapleStatEffect {
                }
 
                if (MapleDataTool.getInt("respectPimmune", source, 0) != 0) {
-                  ret.addBuffStatPairToListIfNotZero(statups, BuffStat.RESPECT_PIMMUNE, 4);
+                  ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.RESPECT_PIMMUNE, 4);
                }
 
                if (MapleDataTool.getInt("respectMimmune", source, 0) != 0) {
-                  ret.addBuffStatPairToListIfNotZero(statups, BuffStat.RESPECT_MIMMUNE, 4);
+                  ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.RESPECT_MIMMUNE, 4);
                }
 
                if (MapleDataTool.getString("defenseAtt", source, null) != null) {
-                  ret.addBuffStatPairToListIfNotZero(statups, BuffStat.DEFENSE_ATT, 4);
+                  ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.DEFENSE_ATT, 4);
                }
 
                if (MapleDataTool.getString("defenseState", source, null) != null) {
-                  ret.addBuffStatPairToListIfNotZero(statups, BuffStat.DEFENSE_STATE, 4);
+                  ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.DEFENSE_STATE, 4);
                }
 
                //               int thaw = MapleDataTool.getInt("thaw", source, 0);
                //               if (thaw != 0) {
-               //                  ret.addBuffStatPairToListIfNotZero(statups, BuffStat.MAP_PROTECTION, thaw > 0 ? 1 : 2);
+               //                  ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.MAP_PROTECTION, thaw > 0 ? 1 : 2);
                //               }
 
                ret.cardStats = new CardItemupStats(itemupCode, prob, areas, inParty);
             } else if (isExpIncrease(sourceid)) {
-               //               ret.addBuffStatPairToListIfNotZero(statups, BuffStat.EXP_INCREASE, MapleDataTool.getInt("expinc", source, 0));
+               //               ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.EXP_INCREASE, MapleDataTool.getInt("expinc", source, 0));
             }
          } else {
             if (isMapChair(sourceid)) {
-               //               ret.addBuffStatPairToListIfNotZero(statups, BuffStat.MAP_CHAIR, 1);
+               //               ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.MAP_CHAIR, 1);
             } else if ((sourceid == Beginner.NIMBLE_FEET || sourceid == Noblesse.NIMBLE_FEET || sourceid == Evan.NIMBLE_FEET
                   || sourceid == Legend.AGILE_BODY) && YamlConfig.config.server.USE_ULTRA_NIMBLE_FEET == true) {
                ret.jump = (short) (ret.speed * 4);
@@ -389,14 +389,14 @@ public class MapleStatEffect {
             }
          }
 
-         ret.addBuffStatPairToListIfNotZero(statups, BuffStat.WATK, (int) ret.watk);
-         ret.addBuffStatPairToListIfNotZero(statups, BuffStat.WDEF, (int) ret.wdef);
-         ret.addBuffStatPairToListIfNotZero(statups, BuffStat.MATK, (int) ret.matk);
-         ret.addBuffStatPairToListIfNotZero(statups, BuffStat.MDEF, (int) ret.mdef);
-         ret.addBuffStatPairToListIfNotZero(statups, BuffStat.ACC, (int) ret.acc);
-         ret.addBuffStatPairToListIfNotZero(statups, BuffStat.AVOID, (int) ret.avoid);
-         ret.addBuffStatPairToListIfNotZero(statups, BuffStat.SPEED, (int) ret.speed);
-         ret.addBuffStatPairToListIfNotZero(statups, BuffStat.JUMP, (int) ret.jump);
+         ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.WATK, (int) ret.watk);
+         ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.WDEF, (int) ret.wdef);
+         ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.MATK, (int) ret.matk);
+         ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.MDEF, (int) ret.mdef);
+         ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.ACC, (int) ret.acc);
+         ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.AVOID, (int) ret.avoid);
+         ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.SPEED, (int) ret.speed);
+         ret.addBuffStatPairToListIfNotZero(statups, TemporaryStatType.JUMP, (int) ret.jump);
       }
 
       MapleData ltd = source.getChildByPath("lt");
@@ -437,13 +437,13 @@ public class MapleStatEffect {
             case Noblesse.RECOVERY:
             case Legend.RECOVERY:
             case Evan.RECOVERY:
-               statups.add(new Pair<>(BuffStat.RECOVERY, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.RECOVERY, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Beginner.ECHO_OF_HERO:
             case Noblesse.ECHO_OF_HERO:
             case Legend.ECHO_OF_HERO:
             case Evan.ECHO_OF_HERO:
-               statups.add(new Pair<>(BuffStat.ECHO_OF_HERO, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.ECHO_OF_HERO, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Beginner.MONSTER_RIDER:
             case Noblesse.MONSTER_RIDER:
@@ -463,27 +463,27 @@ public class MapleStatEffect {
             case Beginner.BALROG_MOUNT:
             case Noblesse.BALROG_MOUNT:
             case Legend.BALROG_MOUNT:
-               statups.add(new Pair<>(BuffStat.MONSTER_RIDING, new BuffDataHolder(sourceid, ret.skillLevel, sourceid)));
+               statups.add(new Pair<>(TemporaryStatType.MONSTER_RIDING, new TemporaryStatValue(sourceid, ret.skillLevel, sourceid)));
                break;
             case Beginner.INVINCIBLE_BARRIER:
             case Noblesse.INVINCIBLE_BARRIER:
             case Legend.INVICIBLE_BARRIER:
             case Evan.INVINCIBLE_BARRIER:
-               statups.add(new Pair<>(BuffStat.DIVINE_BODY, new BuffDataHolder(sourceid, ret.skillLevel, 1)));
+               statups.add(new Pair<>(TemporaryStatType.DIVINE_BODY, new TemporaryStatValue(sourceid, ret.skillLevel, 1)));
                break;
             case Fighter.POWER_GUARD:
             case Page.POWER_GUARD:
-               statups.add(new Pair<>(BuffStat.POWERGUARD, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.POWERGUARD, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Spearman.HYPER_BODY:
             case GM.HYPER_BODY:
             case SuperGM.HYPER_BODY:
-               statups.add(new Pair<>(BuffStat.HYPERBODYHP, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
-               statups.add(new Pair<>(BuffStat.HYPERBODYMP, new BuffDataHolder(sourceid, ret.skillLevel, ret.y)));
+               statups.add(new Pair<>(TemporaryStatType.HYPERBODYHP, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.HYPERBODYMP, new TemporaryStatValue(sourceid, ret.skillLevel, ret.y)));
                break;
             case Crusader.COMBO:
             case DawnWarrior.COMBO:
-               statups.add(new Pair<>(BuffStat.COMBO, new BuffDataHolder(sourceid, ret.skillLevel, 1)));
+               statups.add(new Pair<>(TemporaryStatType.COMBO, new TemporaryStatValue(sourceid, ret.skillLevel, 1)));
                break;
             case WhiteKnight.BW_FIRE_CHARGE:
             case WhiteKnight.BW_ICE_CHARGE:
@@ -495,131 +495,131 @@ public class MapleStatEffect {
             case Paladin.SWORD_HOLY_CHARGE:
             case DawnWarrior.SOUL_CHARGE:
             case ThunderBreaker.LIGHTNING_CHARGE:
-               statups.add(new Pair<>(BuffStat.WK_CHARGE, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.WK_CHARGE, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case DragonKnight.DRAGON_BLOOD:
-               statups.add(new Pair<>(BuffStat.DRAGONBLOOD, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.DRAGONBLOOD, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Hero.STANCE:
             case Paladin.STANCE:
             case DarkKnight.STANCE:
             case Aran.FREEZE_STANDING:
-               statups.add(new Pair<>(BuffStat.STANCE, new BuffDataHolder(sourceid, ret.skillLevel, iprop)));
+               statups.add(new Pair<>(TemporaryStatType.STANCE, new TemporaryStatValue(sourceid, ret.skillLevel, iprop)));
                break;
             case DawnWarrior.FINAL_ATTACK:
-               statups.add(new Pair<>(BuffStat.SOUL_MASTER_FINAL, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.SOUL_MASTER_FINAL, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case WindArcher.FINAL_ATTACK:
-               statups.add(new Pair<>(BuffStat.WIND_BREAKER_FINAL, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.WIND_BREAKER_FINAL, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             // MAGICIAN
             case Magician.MAGIC_GUARD:
             case BlazeWizard.MAGIC_GUARD:
             case Evan.MAGIC_GUARD:
-               statups.add(new Pair<>(BuffStat.MAGIC_GUARD, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.MAGIC_GUARD, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Cleric.INVINCIBLE:
-               statups.add(new Pair<>(BuffStat.INVINCIBLE, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.INVINCIBLE, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Priest.HOLY_SYMBOL:
             case SuperGM.HOLY_SYMBOL:
-               statups.add(new Pair<>(BuffStat.HOLY_SYMBOL, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.HOLY_SYMBOL, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case FPArchMage.INFINITY:
             case ILArchMage.INFINITY:
             case Bishop.INFINITY:
-               statups.add(new Pair<>(BuffStat.INFINITY, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.INFINITY, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case FPArchMage.MANA_REFLECTION:
             case ILArchMage.MANA_REFLECTION:
             case Bishop.MANA_REFLECTION:
-               statups.add(new Pair<>(BuffStat.MANA_REFLECTION, new BuffDataHolder(sourceid, ret.skillLevel, 1)));
+               statups.add(new Pair<>(TemporaryStatType.MANA_REFLECTION, new TemporaryStatValue(sourceid, ret.skillLevel, 1)));
                break;
             case Bishop.HOLY_SHIELD:
-               statups.add(new Pair<>(BuffStat.HOLY_SHIELD, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.HOLY_SHIELD, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case BlazeWizard.ELEMENTAL_RESET:
             case Evan.ELEMENTAL_RESET:
-               statups.add(new Pair<>(BuffStat.ELEMENTAL_RESET, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.ELEMENTAL_RESET, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Evan.MAGIC_SHIELD:
-               statups.add(new Pair<>(BuffStat.MAGIC_SHIELD, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.MAGIC_SHIELD, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Evan.MAGIC_RESISTANCE:
-               statups.add(new Pair<>(BuffStat.MAGIC_RESIST, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.MAGIC_RESIST, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Evan.SLOW:
-               statups.add(new Pair<>(BuffStat.EVAN_SLOW, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.EVAN_SLOW, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                // BOWMAN
             case Priest.MYSTIC_DOOR:
             case Hunter.SOUL_ARROW:
             case Crossbowman.SOUL_ARROW:
             case WindArcher.SOUL_ARROW:
-               statups.add(new Pair<>(BuffStat.SOULARROW, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.SOULARROW, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Ranger.PUPPET:
             case Sniper.PUPPET:
             case WindArcher.PUPPET:
             case Outlaw.OCTOPUS:
             case Corsair.WRATH_OF_THE_OCTOPI:
-               statups.add(new Pair<>(BuffStat.PUPPET, new BuffDataHolder(sourceid, ret.skillLevel, 1)));
+               statups.add(new Pair<>(TemporaryStatType.PUPPET, new TemporaryStatValue(sourceid, ret.skillLevel, 1)));
                break;
             case Bowmaster.CONCENTRATE:
-               statups.add(new Pair<>(BuffStat.CONCENTRATE, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.CONCENTRATE, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Bowmaster.HAMSTRING:
-               statups.add(new Pair<>(BuffStat.HAMSTRING, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.HAMSTRING, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                monsterStatus.put(MonsterStatus.SPEED, x);
                break;
             case Marksman.BLIND:
-               statups.add(new Pair<>(BuffStat.BLIND, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.BLIND, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                monsterStatus.put(MonsterStatus.ACC, x);
                break;
             case Bowmaster.SHARP_EYES:
             case Marksman.SHARP_EYES:
-               statups.add(new Pair<>(BuffStat.SHARP_EYES, new BuffDataHolder(sourceid, ret.skillLevel, (ret.x << 8 | ret.y))));
+               statups.add(new Pair<>(TemporaryStatType.SHARP_EYES, new TemporaryStatValue(sourceid, ret.skillLevel, (ret.x << 8 | ret.y))));
                break;
             case WindArcher.WIND_WALK:
-               statups.add(new Pair<>(BuffStat.WIND_WALK, new BuffDataHolder(sourceid, ret.skillLevel, 1)));
+               statups.add(new Pair<>(TemporaryStatType.WIND_WALK, new TemporaryStatValue(sourceid, ret.skillLevel, 1)));
             case Rogue.DARK_SIGHT:
             case NightWalker.DARK_SIGHT:
-               statups.add(new Pair<>(BuffStat.DARKSIGHT, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.DARKSIGHT, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Hermit.MESO_UP:
-               statups.add(new Pair<>(BuffStat.MESOUP, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.MESOUP, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Hermit.SHADOW_PARTNER:
             case NightWalker.SHADOW_PARTNER:
-               statups.add(new Pair<>(BuffStat.SHADOWPARTNER, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.SHADOWPARTNER, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case ChiefBandit.MESO_GUARD:
-               statups.add(new Pair<>(BuffStat.MESOGUARD, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.MESOGUARD, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case ChiefBandit.PICKPOCKET:
-               statups.add(new Pair<>(BuffStat.PICKPOCKET, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.PICKPOCKET, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case NightLord.SHADOW_STARS:
-               statups.add(new Pair<>(BuffStat.SHADOW_CLAW, new BuffDataHolder(sourceid, ret.skillLevel, 0)));
+               statups.add(new Pair<>(TemporaryStatType.SHADOW_CLAW, new TemporaryStatValue(sourceid, ret.skillLevel, 0)));
                break;
             // PIRATE
             case Pirate.DASH:
             case ThunderBreaker.DASH:
             case Beginner.SPACE_DASH:
             case Noblesse.SPACE_DASH:
-               statups.add(new Pair<>(BuffStat.DASH_SPEED, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
-               statups.add(new Pair<>(BuffStat.DASH_JUMP, new BuffDataHolder(sourceid, ret.skillLevel, ret.y)));
+               statups.add(new Pair<>(TemporaryStatType.DASH_SPEED, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.DASH_JUMP, new TemporaryStatValue(sourceid, ret.skillLevel, ret.y)));
                break;
             case Corsair.SPEED_INFUSION:
             case Buccaneer.SPEED_INFUSION:
             case ThunderBreaker.SPEED_INFUSION:
-               statups.add(new Pair<>(BuffStat.SPEED_INFUSION, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.SPEED_INFUSION, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Outlaw.HOMING_BEACON:
             case Corsair.BULLSEYE:
-               statups.add(new Pair<>(BuffStat.HOMING_BEACON, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.HOMING_BEACON, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case ThunderBreaker.SPARK:
-               statups.add(new Pair<>(BuffStat.SPARK, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.SPARK, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             // MULTIPLE
             case Aran.POLEARM_BOOSTER:
@@ -646,7 +646,7 @@ public class MapleStatEffect {
             case Beginner.POWER_EXPLOSION:
             case Noblesse.POWER_EXPLOSION:
             case Legend.POWER_EXPLOSION:
-               statups.add(new Pair<>(BuffStat.BOOSTER, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.BOOSTER, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Hero.MAPLE_WARRIOR:
             case Paladin.MAPLE_WARRIOR:
@@ -662,17 +662,17 @@ public class MapleStatEffect {
             case Buccaneer.MAPLE_WARRIOR:
             case Aran.MAPLE_WARRIOR:
             case Evan.MAPLE_WARRIOR:
-               statups.add(new Pair<>(BuffStat.MAPLE_WARRIOR, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.MAPLE_WARRIOR, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             // SUMMON
             case Ranger.SILVER_HAWK:
             case Sniper.GOLDEN_EAGLE:
-               statups.add(new Pair<>(BuffStat.SUMMON, new BuffDataHolder(sourceid, ret.skillLevel, 1)));
+               statups.add(new Pair<>(TemporaryStatType.SUMMON, new TemporaryStatValue(sourceid, ret.skillLevel, 1)));
                monsterStatus.put(MonsterStatus.STUN, 1);
                break;
             case FPArchMage.ELQUINES:
             case Marksman.FROST_PREY:
-               statups.add(new Pair<>(BuffStat.SUMMON, new BuffDataHolder(sourceid, ret.skillLevel, 1)));
+               statups.add(new Pair<>(TemporaryStatType.SUMMON, new TemporaryStatValue(sourceid, ret.skillLevel, 1)));
                monsterStatus.put(MonsterStatus.FREEZE, 1);
                break;
             case Priest.SUMMON_DRAGON:
@@ -687,7 +687,7 @@ public class MapleStatEffect {
             case NightWalker.DARKNESS:
             case ThunderBreaker.LIGHTNING:
             case BlazeWizard.IFRIT:
-               statups.add(new Pair<>(BuffStat.SUMMON, new BuffDataHolder(sourceid, ret.skillLevel, 1)));
+               statups.add(new Pair<>(TemporaryStatType.SUMMON, new TemporaryStatValue(sourceid, ret.skillLevel, 1)));
                break;
             // ----------------------------- MONSTER STATUS ---------------------------------- //
             case Crusader.ARMOR_CRASH:
@@ -782,32 +782,32 @@ public class MapleStatEffect {
                monsterStatus.put(MonsterStatus.PHANTOM_IMPRINT, x);
                //ARAN
             case Aran.COMBO_ABILITY:
-               statups.add(new Pair<>(BuffStat.ARAN_COMBO, new BuffDataHolder(sourceid, ret.skillLevel, 100)));
+               statups.add(new Pair<>(TemporaryStatType.ARAN_COMBO, new TemporaryStatValue(sourceid, ret.skillLevel, 100)));
                break;
             case Aran.COMBO_BARRIER:
-               statups.add(new Pair<>(BuffStat.COMBO_BARRIER, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.COMBO_BARRIER, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Aran.COMBO_DRAIN:
-               statups.add(new Pair<>(BuffStat.COMBO_DRAIN, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.COMBO_DRAIN, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Aran.SMART_KNOCKBACK:
-               statups.add(new Pair<>(BuffStat.SMART_KNOCKBACK, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.SMART_KNOCKBACK, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Aran.BODY_PRESSURE:
-               statups.add(new Pair<>(BuffStat.BODY_PRESSURE, new BuffDataHolder(sourceid, ret.skillLevel, ret.x)));
+               statups.add(new Pair<>(TemporaryStatType.BODY_PRESSURE, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case Aran.SNOW_CHARGE:
-               statups.add(new Pair<>(BuffStat.WK_CHARGE, new BuffDataHolder(sourceid, ret.skillLevel, ret.duration)));
+               statups.add(new Pair<>(TemporaryStatType.WK_CHARGE, new TemporaryStatValue(sourceid, ret.skillLevel, ret.duration)));
                break;
             default:
                break;
          }
       }
       if (ret.isMorph()) {
-         statups.add(new Pair<>(BuffStat.MORPH, new BuffDataHolder(sourceid, ret.skillLevel, ret.getMorph())));
+         statups.add(new Pair<>(TemporaryStatType.MORPH, new TemporaryStatValue(sourceid, ret.skillLevel, ret.getMorph())));
       }
       if (ret.ghost > 0 && !skill) {
-         statups.add(new Pair<>(BuffStat.GHOST_MORPH, new BuffDataHolder(sourceid, ret.skillLevel, ret.ghost)));
+         statups.add(new Pair<>(TemporaryStatType.GHOST_MORPH, new TemporaryStatValue(sourceid, ret.skillLevel, ret.ghost)));
       }
       ret.monsterStatus = monsterStatus;
       statups.trimToSize();
@@ -870,10 +870,10 @@ public class MapleStatEffect {
       }
    }
 
-   private void addBuffStatPairToListIfNotZero(List<Pair<BuffStat, BuffDataHolder>> list, BuffStat buffstat,
+   private void addBuffStatPairToListIfNotZero(List<Pair<TemporaryStatType, TemporaryStatValue>> list, TemporaryStatType buffstat,
                                                Integer val) {
       if (val != 0) {
-         list.add(new Pair<>(buffstat, new BuffDataHolder(getSourceId(), getSourceLevel(), val)));
+         list.add(new Pair<>(buffstat, new TemporaryStatValue(getSourceId(), getSourceLevel(), val)));
       }
    }
 
@@ -1082,9 +1082,9 @@ public class MapleStatEffect {
       if (overTime || isCygnusFA() || summonMovementType != null) {
          if (summonMovementType != null && pos != null) {
             if (summonMovementType.getValue() == SummonMovementType.STATIONARY.getValue()) {
-               applyto.cancelBuffStats(BuffStat.PUPPET);
+               applyto.cancelBuffStats(TemporaryStatType.PUPPET);
             } else {
-               applyto.cancelBuffStats(BuffStat.SUMMON);
+               applyto.cancelBuffStats(TemporaryStatType.SUMMON);
             }
 
             applyto.announce(CWvsContext.enableActions());
@@ -1143,7 +1143,7 @@ public class MapleStatEffect {
                applyto.dropMessage(5, "There are no door portals available for the town at this moment. Try again later.");
             }
 
-            applyto.cancelBuffStats(BuffStat.SOULARROW);  // cancel door buff
+            applyto.cancelBuffStats(TemporaryStatType.SOULARROW);  // cancel door buff
          }
       } else if (isMist()) {
          Rectangle bounds =
@@ -1312,8 +1312,8 @@ public class MapleStatEffect {
    }
 
    public final void applyComboBuff(final MapleCharacter applyto, int combo) {
-      final List<Pair<BuffStat, BuffDataHolder>> stat =
-            Collections.singletonList(new Pair<>(BuffStat.ARAN_COMBO, new BuffDataHolder(sourceid, 0, combo)));
+      final List<Pair<TemporaryStatType, TemporaryStatValue>> stat =
+            Collections.singletonList(new Pair<>(TemporaryStatType.ARAN_COMBO, new TemporaryStatValue(sourceid, 0, combo)));
       applyto.announce(CWvsContext.giveBuff(applyto, sourceid, 99999, stat));
 
       final long starttime = Server.getInstance().getCurrentTime();
@@ -1323,14 +1323,14 @@ public class MapleStatEffect {
    }
 
    public final void applyBeaconBuff(final MapleCharacter applyto, int objectid) {
-      applyto.announce(CWvsContext.giveBuff(applyto, 1, sourceid, Collections.singletonList(new Pair<>(BuffStat.HOMING_BEACON,
-            new BuffDataHolder(0, 0, objectid)))));
+      applyto.announce(CWvsContext.giveBuff(applyto, 1, sourceid, Collections.singletonList(new Pair<>(TemporaryStatType.HOMING_BEACON,
+            new TemporaryStatValue(0, 0, objectid)))));
 
       final long starttime = Server.getInstance().getCurrentTime();
       applyto.registerEffect(this, starttime, Long.MAX_VALUE, false);
    }
 
-   public void updateBuffEffect(MapleCharacter target, List<Pair<BuffStat, BuffDataHolder>> activeStats, long starttime) {
+   public void updateBuffEffect(MapleCharacter target, List<Pair<TemporaryStatType, TemporaryStatValue>> activeStats, long starttime) {
       int localDuration = getBuffLocalDuration();
       localDuration = alchemistModifyVal(target, localDuration, false);
 
@@ -1346,7 +1346,7 @@ public class MapleStatEffect {
          applyto.cancelEffect(this, true, -1);
       }
 
-      List<Pair<BuffStat, BuffDataHolder>> localstatups = statups;
+      List<Pair<TemporaryStatType, TemporaryStatValue>> localstatups = statups;
       int localDuration = getBuffLocalDuration();
       int localsourceid = sourceid;
       int seconds = localDuration / 1000;
@@ -1379,11 +1379,11 @@ public class MapleStatEffect {
 
          localDuration = sourceid;
          localsourceid = ridingMountId;
-         localstatups = Collections.singletonList(new Pair<>(BuffStat.MONSTER_RIDING, new BuffDataHolder(0, 0, 0)));
+         localstatups = Collections.singletonList(new Pair<>(TemporaryStatType.MONSTER_RIDING, TemporaryStatValue.empty()));
       } else if (isSkillMorph()) {
          for (int i = 0; i < localstatups.size(); i++) {
-            if (localstatups.get(i).getLeft().equals(BuffStat.MORPH)) {
-               localstatups.set(i, new Pair<>(BuffStat.MORPH, new BuffDataHolder(sourceid, 0, getMorph(applyto))));
+            if (localstatups.get(i).getLeft().equals(TemporaryStatType.MORPH)) {
+               localstatups.set(i, new Pair<>(TemporaryStatType.MORPH, new TemporaryStatValue(sourceid, 0, getMorph(applyto))));
                break;
             }
          }
@@ -1407,21 +1407,21 @@ public class MapleStatEffect {
             buff = CWvsContext.giveBuff(applyto, sourceid, seconds, localstatups);
             mbuff = CUserRemote.giveForeignPirateBuff(applyto.getId(), sourceid, seconds, localstatups);
          } else if (isDs()) {
-            List<Pair<BuffStat, BuffDataHolder>> dsstat = Collections.singletonList(new Pair<>(BuffStat.DARKSIGHT,
-                  new BuffDataHolder(0, 0, 0)));
+            List<Pair<TemporaryStatType, TemporaryStatValue>> dsstat = Collections.singletonList(new Pair<>(TemporaryStatType.DARKSIGHT,
+                  TemporaryStatValue.empty()));
             mbuff = CUserRemote.giveForeignBuff(applyto, dsstat);
          } else if (isWw()) {
-            List<Pair<BuffStat, BuffDataHolder>> dsstat = Collections.singletonList(new Pair<>(BuffStat.WIND_WALK,
-                  new BuffDataHolder(0, 0, 0)));
+            List<Pair<TemporaryStatType, TemporaryStatValue>> dsstat = Collections.singletonList(new Pair<>(TemporaryStatType.WIND_WALK,
+                  TemporaryStatValue.empty()));
             mbuff = CUserRemote.giveForeignBuff(applyto, dsstat);
          } else if (isCombo()) {
-            Integer comboCount = applyto.getBuffedValue(BuffStat.COMBO);
+            Integer comboCount = applyto.getBuffedValue(TemporaryStatType.COMBO);
             if (comboCount == null) {
                comboCount = 0;
             }
 
-            List<Pair<BuffStat, BuffDataHolder>> cbstat = Collections.singletonList(new Pair<>(BuffStat.COMBO,
-                  new BuffDataHolder(0, 0, comboCount)));
+            List<Pair<TemporaryStatType, TemporaryStatValue>> cbstat = Collections.singletonList(new Pair<>(TemporaryStatType.COMBO,
+                  new TemporaryStatValue(0, 0, comboCount)));
             buff = CWvsContext.giveBuff(applyto, (skill ? sourceid : -sourceid), localDuration, cbstat);
             mbuff = CUserRemote.giveForeignBuff(applyto, cbstat);
          } else if (isMonsterRiding()) {
@@ -1436,20 +1436,20 @@ public class MapleStatEffect {
             mbuff = CUserRemote.showMonsterRiding(applyto.getId(), givemount);
             localDuration = duration;
          } else if (isShadowPartner()) {
-            mbuff = CUserRemote.giveForeignBuff(applyto, Collections.singletonList(new Pair<>(BuffStat.SHADOWPARTNER,
-                  new BuffDataHolder(0, 0, 0))));
+            mbuff = CUserRemote.giveForeignBuff(applyto, Collections.singletonList(new Pair<>(TemporaryStatType.SHADOWPARTNER,
+                  TemporaryStatValue.empty())));
          } else if (isSoulArrow()) {
             mbuff = CUserRemote.giveForeignBuff(applyto,
-                  Collections.singletonList(new Pair<>(BuffStat.SOULARROW, new BuffDataHolder(0, 0, 0))));
+                  Collections.singletonList(new Pair<>(TemporaryStatType.SOULARROW, TemporaryStatValue.empty())));
          } else if (isEnrage()) {
             applyto.handleOrbconsume();
          } else if (isMorph()) {
-            mbuff = CUserRemote.giveForeignBuff(applyto, Collections.singletonList(new Pair<>(BuffStat.MORPH,
-                  new BuffDataHolder(sourceid, 0, getMorph(applyto)))));
+            mbuff = CUserRemote.giveForeignBuff(applyto, Collections.singletonList(new Pair<>(TemporaryStatType.MORPH,
+                  new TemporaryStatValue(sourceid, 0, getMorph(applyto)))));
          }
          //         else if (isAriantShield()) {
-         //            mbuff = CUserRemote.giveForeignBuff(applyto, Collections.singletonList(new Pair<>(BuffStat.AURA,
-         //                  new BuffDataHolder(sourceid, 0, 1))));
+         //            mbuff = CUserRemote.giveForeignBuff(applyto, Collections.singletonList(new Pair<>(TemporaryStatType.AURA,
+         //                  new TemporaryStatValue(sourceid, 0, 1))));
          //         }
 
          if (buff != null) {
@@ -1544,10 +1544,10 @@ public class MapleStatEffect {
                }
             }
             mpchange -= mpCon * mod;
-            if (applyfrom.getBuffedValue(BuffStat.INFINITY) != null) {
+            if (applyfrom.getBuffedValue(TemporaryStatType.INFINITY) != null) {
                mpchange = 0;
-            } else if (applyfrom.getBuffedValue(BuffStat.CONCENTRATE) != null) {
-               mpchange -= (int) (mpchange * (applyfrom.getBuffedValue(BuffStat.CONCENTRATE).doubleValue() / 100));
+            } else if (applyfrom.getBuffedValue(TemporaryStatType.CONCENTRATE) != null) {
+               mpchange -= (int) (mpchange * (applyfrom.getBuffedValue(TemporaryStatType.CONCENTRATE).doubleValue() / 100));
             }
          }
       }
@@ -1786,8 +1786,8 @@ public class MapleStatEffect {
          return false;
       }
 
-      for (Pair<BuffStat, BuffDataHolder> p : statups) {
-         if (p.getLeft().equals(BuffStat.WK_CHARGE)) {
+      for (Pair<TemporaryStatType, TemporaryStatValue> p : statups) {
+         if (p.getLeft().equals(TemporaryStatType.WK_CHARGE)) {
             return true;
          }
       }
@@ -1964,7 +1964,7 @@ public class MapleStatEffect {
       return duration;
    }
 
-   public List<Pair<BuffStat, BuffDataHolder>> getStatups() {
+   public List<Pair<TemporaryStatType, TemporaryStatValue>> getStatups() {
       return statups;
    }
 

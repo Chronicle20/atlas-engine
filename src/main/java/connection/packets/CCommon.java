@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 
-import client.BuffDataHolder;
-import client.BuffStat;
+import client.TemporaryStatValue;
+import client.TemporaryStatType;
 import client.GuidedBullet;
 import client.MapleCharacter;
 import client.MapleClient;
@@ -401,9 +401,9 @@ public class CCommon {
       mplew.writeLong(secondmask);
    }
 
-   public static void writeLongMask(final LittleEndianWriter mplew, List<Pair<BuffStat, BuffDataHolder>> statups) {
+   public static void writeLongMask(final LittleEndianWriter mplew, List<Pair<TemporaryStatType, TemporaryStatValue>> statups) {
       int[] mask = new int[4];
-      for (Pair<BuffStat, BuffDataHolder> statup : statups) {
+      for (Pair<TemporaryStatType, TemporaryStatValue> statup : statups) {
          mask[statup.left.getSet()] |= statup.left.getMask();
       }
       for (int i = 3; i >= 0; i--) {
@@ -411,9 +411,9 @@ public class CCommon {
       }
    }
 
-   public static void writeLongMaskFromList(final MaplePacketLittleEndianWriter mplew, List<BuffStat> statups) {
+   public static void writeLongMaskFromList(final MaplePacketLittleEndianWriter mplew, List<TemporaryStatType> statups) {
       int[] mask = new int[4];
-      for (BuffStat statup : statups) {
+      for (TemporaryStatType statup : statups) {
          mask[statup.getSet()] |= statup.getMask();
       }
       for (int i = 3; i >= 0; i--) {
@@ -449,7 +449,7 @@ public class CCommon {
       list.add(new TemporaryStatBase(true)); // Dash Jump
 
       TemporaryStatBase mount;
-      Integer bv = character.getBuffedValue(BuffStat.MONSTER_RIDING);
+      Integer bv = character.getBuffedValue(TemporaryStatType.MONSTER_RIDING);
       if (bv == null) {
          mount = new TemporaryStatBase(false);
       } else {

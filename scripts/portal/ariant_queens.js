@@ -19,8 +19,8 @@
 */
 
 function isTigunMorphed(ch) {
-    const BuffStat = Java.type('client.BuffStat');
-    return ch.getBuffSource(BuffStat.MORPH) == 2210005;
+    const TemporaryStatType = Java.type('client.TemporaryStatType');
+    return ch.getBuffSource(TemporaryStatType.MORPH) == 2210005;
 }
 
 function enter(pi) {

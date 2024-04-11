@@ -925,10 +925,11 @@ public class AbstractPlayerInteraction {
     }
 
     private void teachSkill(Skill skill, byte level, byte masterLevel, long expiration, boolean force) {
-        MapleCharacter.SkillEntry skillEntry = getPlayer().getSkills().get(skill);
+        SkillEntry skillEntry = getPlayer().getSkills().get(skill);
         if (skillEntry != null) {
             if (!force && level > -1) {
-                getPlayer().changeSkillLevel(skill, (byte) Math.max(skillEntry.skillevel, level), Math.max(skillEntry.masterlevel, masterLevel), expiration == -1 ? -1 : Math.max(skillEntry.expiration, expiration));
+                getPlayer().changeSkillLevel(skill, (byte) Math.max(skillEntry.skillLevel(), level), Math.max(skillEntry.masterLevel(),
+                      masterLevel), expiration == -1 ? -1 : Math.max(skillEntry.expiration(), expiration));
                 return;
             }
         } else if (GameConstants.isAranSkills(skill.id())) {

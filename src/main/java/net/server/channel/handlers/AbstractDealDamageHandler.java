@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 
-import client.BuffStat;
+import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleJob;
 import client.Skill;
@@ -338,7 +338,7 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
                }
                totDamage += totDamageToOneMonster;
                monster.aggroMonsterDamage(player, totDamageToOneMonster);
-               if (player.getBuffedValue(BuffStat.PICKPOCKET) != null && (attack.skill == 0 || attack.skill == Rogue.DOUBLE_STAB
+               if (player.getBuffedValue(TemporaryStatType.PICKPOCKET) != null && (attack.skill == 0 || attack.skill == Rogue.DOUBLE_STAB
                      || attack.skill == Bandit.SAVAGE_BLOW || attack.skill == ChiefBandit.ASSAULTER
                      || attack.skill == ChiefBandit.BAND_OF_THIEVES || attack.skill == Shadower.ASSASSINATE
                      || attack.skill == Shadower.TAUNT || attack.skill == Shadower.BOOMERANG_STEP)) {
@@ -347,7 +347,7 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
                   int picklv = (player.isGM()) ? pickpocket.getMaxLevel() : player.getSkillLevel(pickpocket);
                   if (picklv > 0) {
                      int delay = 0;
-                     final int maxmeso = player.getBuffedValue(BuffStat.PICKPOCKET);
+                     final int maxmeso = player.getBuffedValue(TemporaryStatType.PICKPOCKET);
                      for (Integer eachd : onedList) {
                         eachd += Integer.MAX_VALUE;
 
@@ -442,7 +442,7 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
                }
 
                if (player.isAran()) {
-                  if (player.getBuffedValue(BuffStat.WK_CHARGE) != null) {
+                  if (player.getBuffedValue(TemporaryStatType.WK_CHARGE) != null) {
                      Skill snowCharge = SkillFactory.getSkill(Aran.SNOW_CHARGE)
                            .orElseThrow();
                      if (totDamageToOneMonster > 0) {
@@ -455,7 +455,7 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
                      }
                   }
                }
-               if (player.getBuffedValue(BuffStat.HAMSTRING) != null) {
+               if (player.getBuffedValue(TemporaryStatType.HAMSTRING) != null) {
                   Skill hamstring = SkillFactory.getSkill(Bowmaster.HAMSTRING)
                         .orElseThrow();
                   if (hamstring.getEffect(player.getSkillLevel(hamstring))
@@ -467,7 +467,7 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
                            .getY() * 1000L);
                   }
                }
-               if (player.getBuffedValue(BuffStat.SLOW) != null) {
+               if (player.getBuffedValue(TemporaryStatType.SLOW) != null) {
                   Skill slow = SkillFactory.getSkill(Evan.SLOW)
                         .orElseThrow();
                   if (slow.getEffect(player.getSkillLevel(slow))
@@ -479,7 +479,7 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
                            .getY() * 60 * 1000L);
                   }
                }
-               if (player.getBuffedValue(BuffStat.BLIND) != null) {
+               if (player.getBuffedValue(TemporaryStatType.BLIND) != null) {
                   Skill blind = SkillFactory.getSkill(Marksman.BLIND)
                         .orElseThrow();
                   if (blind.getEffect(player.getSkillLevel(blind))
@@ -495,7 +495,7 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
                   for (int charge = 1211005; charge < 1211007; charge++) {
                      Skill chargeSkill = SkillFactory.getSkill(charge)
                            .orElseThrow();
-                     if (player.isBuffFrom(BuffStat.WK_CHARGE, chargeSkill)) {
+                     if (player.isBuffFrom(TemporaryStatType.WK_CHARGE, chargeSkill)) {
                         if (totDamageToOneMonster > 0) {
                            if (charge == WhiteKnight.BW_ICE_CHARGE || charge == WhiteKnight.SWORD_ICE_CHARGE) {
                               monster.setTempEffectiveness(Element.ICE, ElementalEffectiveness.WEAK,
@@ -516,7 +516,7 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
                      for (int charge = 1221003; charge < 1221004; charge++) {
                         Skill chargeSkill = SkillFactory.getSkill(charge)
                               .orElseThrow();
-                        if (player.isBuffFrom(BuffStat.WK_CHARGE, chargeSkill)) {
+                        if (player.isBuffFrom(TemporaryStatType.WK_CHARGE, chargeSkill)) {
                            if (totDamageToOneMonster > 0) {
                               monster.setTempEffectiveness(Element.HOLY, ElementalEffectiveness.WEAK,
                                     chargeSkill.getEffect(player.getSkillLevel(chargeSkill))
@@ -526,9 +526,9 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
                         }
                      }
                   }
-               } else if (player.getBuffedValue(BuffStat.COMBO_DRAIN) != null) {
+               } else if (player.getBuffedValue(TemporaryStatType.COMBO_DRAIN) != null) {
                   Skill skill;
-                  if (player.getBuffedValue(BuffStat.COMBO_DRAIN) != null) {
+                  if (player.getBuffedValue(TemporaryStatType.COMBO_DRAIN) != null) {
                      skill = SkillFactory.getSkill(21100005)
                            .orElseThrow();
                      player.addHP(((totDamage * skill.getEffect(player.getSkillLevel(skill))
@@ -880,7 +880,7 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
          }
       }
 
-      Integer comboBuff = chr.getBuffedValue(BuffStat.COMBO);
+      Integer comboBuff = chr.getBuffedValue(TemporaryStatType.COMBO);
       if (comboBuff != null && comboBuff > 0) {
          int oid = chr.isCygnus() ? DawnWarrior.COMBO : Crusader.COMBO;
          int advcomboid = chr.isCygnus() ? DawnWarrior.ADVANCED_COMBO : Hero.ADVANCED_COMBO;
@@ -957,7 +957,7 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
          canCrit = true;
       }
 
-      if (chr.getBuffEffect(BuffStat.SHARP_EYES) != null) {
+      if (chr.getBuffEffect(TemporaryStatType.SHARP_EYES) != null) {
          // Any class that has sharp eyes can crit. Also, since it stacks with normal crit go ahead
          // and calc it in.
 
@@ -966,7 +966,7 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
       }
 
       boolean shadowPartner = false;
-      if (chr.getBuffEffect(BuffStat.SHADOWPARTNER) != null) {
+      if (chr.getBuffEffect(TemporaryStatType.SHADOWPARTNER) != null) {
          shadowPartner = true;
       }
 
@@ -997,10 +997,10 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
                .getMonsterByOid(oid)
                .orElse(null);
 
-         if (chr.getBuffEffect(BuffStat.WK_CHARGE) != null) {
+         if (chr.getBuffEffect(TemporaryStatType.WK_CHARGE) != null) {
             // Charge, so now we need to check elemental effectiveness
-            int sourceID = chr.getBuffSource(BuffStat.WK_CHARGE);
-            int level = chr.getBuffedValue(BuffStat.WK_CHARGE);
+            int sourceID = chr.getBuffSource(TemporaryStatType.WK_CHARGE);
+            int level = chr.getBuffedValue(TemporaryStatType.WK_CHARGE);
             if (monster != null) {
                if (sourceID == WhiteKnight.BW_FIRE_CHARGE || sourceID == WhiteKnight.SWORD_FIRE_CHARGE) {
                   if (monster.getStats()
@@ -1033,7 +1033,7 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
          if (ret.skill != 0) {
             Skill skill = SkillFactory.getSkill(ret.skill)
                   .orElseThrow();
-            if (skill.element() != Element.NEUTRAL && chr.getBuffedValue(BuffStat.ELEMENTAL_RESET) == null) {
+            if (skill.element() != Element.NEUTRAL && chr.getBuffedValue(TemporaryStatType.ELEMENTAL_RESET) == null) {
                // The skill has an element effect, so we need to factor that in.
                if (monster != null) {
                   ElementalEffectiveness eff = monster.getElementalEffectiveness(skill.element());

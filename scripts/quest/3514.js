@@ -43,8 +43,8 @@ function start(mode, type, selection) {
 }
 
 function usedPotion(ch) {
-    const BuffStat = Java.type('client.BuffStat');
-    return ch.getBuffSource(BuffStat.HPREC) == 2022337;
+    const TemporaryStatType = Java.type('client.TemporaryStatType');
+    return ch.getBuffSource(TemporaryStatType.HPREC) == 2022337;
 }
 
 function end(mode, type, selection) {

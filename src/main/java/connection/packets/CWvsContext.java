@@ -14,8 +14,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import client.BuddylistEntry;
-import client.BuffDataHolder;
-import client.BuffStat;
+import client.TemporaryStatValue;
+import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleDisease;
@@ -163,7 +163,7 @@ public class CWvsContext {
 
    /**
     * It is important that statups is in the correct order (see declaration
-    * order in BuffStat) since this method doesn't do automagical
+    * order in TemporaryStatType) since this method doesn't do automagical
     * reordering.
     *
     * @param buffid
@@ -173,12 +173,12 @@ public class CWvsContext {
     */
    //1F 00 00 00 00 00 03 00 00 40 00 00 00 E0 00 00 00 00 00 00 00 00 E0 01 8E AA 4F 00 00 C2 EB 0B E0 01 8E AA 4F 00 00 C2 EB 0B 0C 00 8E AA 4F 00 00 C2 EB 0B 44 02 8E AA 4F 00 00 C2 EB 0B 44 02 8E AA 4F 00 00 C2 EB 0B 00 00 E0 7A 1D 00 8E AA 4F 00 00 00 00 00 00 00 00 03
    public static byte[] giveBuff(MapleCharacter character, int buffid, int bufflength,
-                                 List<Pair<BuffStat, BuffDataHolder>> statups) {
+                                 List<Pair<TemporaryStatType, TemporaryStatValue>> statups) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       mplew.writeShort(SendOpcode.GIVE_BUFF.getValue());
       CCommon.writeLongMask(mplew, statups);
-      for (Pair<BuffStat, BuffDataHolder> statup : statups) {
-         mplew.writeShort(statup.getRight().getValue());
+      for (Pair<TemporaryStatType, TemporaryStatValue> statup : statups) {
+         mplew.writeShort(statup.getRight().value());
          mplew.writeInt(buffid);
          mplew.writeInt(bufflength);
       }
@@ -206,7 +206,7 @@ public class CWvsContext {
       return mplew.getPacket();
    }
 
-   public static byte[] cancelBuff(List<BuffStat> statups) {
+   public static byte[] cancelBuff(List<TemporaryStatType> statups) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       mplew.writeShort(SendOpcode.CANCEL_BUFF.getValue());
       CCommon.writeLongMaskFromList(mplew, statups);

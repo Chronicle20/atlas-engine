@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import client.BuffDataHolder;
-import client.BuffStat;
+import client.TemporaryStatValue;
+import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleDisease;
@@ -159,7 +159,7 @@ public class CUserRemote {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       mplew.writeShort(SendOpcode.GIVE_FOREIGN_BUFF.getValue());
       mplew.writeInt(cid);
-      CCommon.writeLongMaskFromList(mplew, Collections.singletonList(BuffStat.MONSTER_RIDING));
+      CCommon.writeLongMaskFromList(mplew, Collections.singletonList(TemporaryStatType.MONSTER_RIDING));
       mplew.writeShort(0);
       mplew.writeInt(mount.getItemId());
       mplew.writeInt(mount.getSkillId());
@@ -189,20 +189,20 @@ public class CUserRemote {
       return mplew.getPacket();
    }
 
-   public static byte[] giveForeignBuff(MapleCharacter character, List<Pair<BuffStat, BuffDataHolder>> statups) {
+   public static byte[] giveForeignBuff(MapleCharacter character, List<Pair<TemporaryStatType, TemporaryStatValue>> statups) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       mplew.writeShort(SendOpcode.GIVE_FOREIGN_BUFF.getValue());
       mplew.writeInt(character.getId());
       CCommon.writeLongMask(mplew, statups);
-      for (Pair<BuffStat, BuffDataHolder> statup : statups) {
+      for (Pair<TemporaryStatType, TemporaryStatValue> statup : statups) {
          if (statup.getLeft().isDisease()) {
-            if (statup.getLeft() == BuffStat.POISON) {
-               mplew.writeShort(statup.getRight().getValue());
+            if (statup.getLeft() == TemporaryStatType.POISON) {
+               mplew.writeShort(statup.getRight().value());
             }
-            mplew.writeShort(statup.getRight().getSourceID());
-            mplew.writeShort(statup.getRight().getSourceLevel());
+            mplew.writeShort(statup.getRight().sourceId());
+            mplew.writeShort(statup.getRight().sourceLevel());
          } else {
-            mplew.writeInt(statup.getRight().getValue());
+            mplew.writeInt(statup.getRight().value());
          }
       }
       mplew.write(0);
@@ -250,7 +250,7 @@ public class CUserRemote {
    }
 
    // packet found thanks to Ronan
-   public static byte[] giveForeignWKChargeEffect(int cid, int buffid, List<Pair<BuffStat, BuffDataHolder>> statups) {
+   public static byte[] giveForeignWKChargeEffect(int cid, int buffid, List<Pair<TemporaryStatType, TemporaryStatValue>> statups) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(19);
       mplew.writeShort(SendOpcode.GIVE_FOREIGN_BUFF.getValue());
       mplew.writeInt(cid);
@@ -263,7 +263,7 @@ public class CUserRemote {
       return mplew.getPacket();
    }
 
-   public static byte[] giveForeignPirateBuff(int cid, int buffid, int time, List<Pair<BuffStat, BuffDataHolder>> statups) {
+   public static byte[] giveForeignPirateBuff(int cid, int buffid, int time, List<Pair<TemporaryStatType, TemporaryStatValue>> statups) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       boolean infusion =
             buffid == Buccaneer.SPEED_INFUSION || buffid == ThunderBreaker.SPEED_INFUSION || buffid == Corsair.SPEED_INFUSION;
@@ -271,9 +271,9 @@ public class CUserRemote {
       mplew.writeInt(cid);
       CCommon.writeLongMask(mplew, statups);
       mplew.writeShort(0);
-      for (Pair<BuffStat, BuffDataHolder> statup : statups) {
+      for (Pair<TemporaryStatType, TemporaryStatValue> statup : statups) {
          mplew.writeInt(statup.getRight()
-               .getValue());
+               .value());
          mplew.writeInt(buffid);
          mplew.skip(infusion ? 10 : 5);
          mplew.writeShort(time);
@@ -301,7 +301,7 @@ public class CUserRemote {
       return mplew.getPacket();
    }
 
-   public static byte[] cancelForeignBuff(int cid, List<BuffStat> statups) {
+   public static byte[] cancelForeignBuff(int cid, List<TemporaryStatType> statups) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       mplew.writeShort(SendOpcode.CANCEL_FOREIGN_BUFF.getValue());
       mplew.writeInt(cid);

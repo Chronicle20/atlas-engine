@@ -1,50 +1,60 @@
-/*
-	This file is part of the OdinMS Maple Story Server
-    Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
-		       Matthias Butz <matze@odinms.de>
-		       Jan Christian Meyer <vimes@odinms.de>
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Affero General Public License as
-    published by the Free Software Foundation version 3 as published by
-    the Free Software Foundation. You may not use, modify or distribute
-    this program under any other version of the GNU Affero General Public
-    License.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Affero General Public License for more details.
-
-    You should have received a copy of the GNU Affero General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 package net.server.channel.handlers;
+
+import java.util.Optional;
 
 import client.MapleCharacter;
 import client.MapleClient;
 import connection.packets.CWvsContext;
 import net.AbstractMaplePacketHandler;
+import net.server.Server;
 import net.server.coordinator.world.MapleInviteCoordinator;
 import net.server.coordinator.world.MapleInviteCoordinator.InviteResult;
 import net.server.coordinator.world.MapleInviteCoordinator.InviteType;
+import net.server.world.MapleParty;
 import tools.data.input.SeekableLittleEndianAccessor;
 
 public final class DenyPartyRequestHandler extends AbstractMaplePacketHandler {
 
-    @Override
-    public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-        slea.readByte();
-        String[] characterName = slea.readMapleAsciiString().split("PS: ");
+   private static void denyPartyRequest(MapleCharacter character, MapleCharacter characterFrom) {
+      if (MapleInviteCoordinator.answerInvite(InviteType.PARTY, character.getId(), characterFrom.getPartyId().orElse(-1),
+            false).result == InviteResult.DENIED) {
+         character.updatePartySearchAvailability(!character.hasParty());
+         characterFrom.announce(CWvsContext.partyStatusMessage(23, character.getName()));
+      }
+   }
 
-        c.getChannelServer().getPlayerStorage().getCharacterByName(characterName[characterName.length - 1])
-                .ifPresent(characterFrom -> denyPartyRequest(c.getPlayer(), characterFrom));
-    }
+   @Override
+   public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+      byte action = slea.readByte();
+      int partyId = slea.readInt();
 
-    private static void denyPartyRequest(MapleCharacter character, MapleCharacter characterFrom) {
-        if (MapleInviteCoordinator.answerInvite(InviteType.PARTY, character.getId(), characterFrom.getPartyId().orElse(-1), false).result == InviteResult.DENIED) {
-            character.updatePartySearchAvailability(!character.hasParty());
-            characterFrom.announce(CWvsContext.partyStatusMessage(23, character.getName()));
-        }
-    }
+      Optional<MapleParty> party = Server.getInstance().getWorld(c.getWorld())
+            .flatMap(w -> w.getParty(partyId));
+      if (party.isEmpty()) {
+         return;
+      }
+
+      if (action == 0x1B) {
+         acceptInvite(c, party.get());
+      } else if (action != 0x16) {
+         denyInvite(c, party.get());
+      }
+   }
+
+   private void denyInvite(MapleClient c, MapleParty party) {
+      c.getChannelServer().getPlayerStorage().getCharacterById(party.getLeaderId())
+            .ifPresent(characterFrom -> denyPartyRequest(c.getPlayer(), characterFrom));
+   }
+
+   private void acceptInvite(MapleClient c, MapleParty party) {
+      MapleCharacter character = c.getPlayer();
+      MapleInviteCoordinator.MapleInviteResult
+            inviteRes = MapleInviteCoordinator.answerInvite(InviteType.PARTY, character.getId(), party.getId(), true);
+      InviteResult res = inviteRes.result;
+      if (res == InviteResult.ACCEPTED) {
+         MapleParty.joinParty(character, party.getId(), false);
+      } else {
+         c.announce(CWvsContext.serverNotice(5, "You couldn't join the party due to an expired invitation request."));
+      }
+   }
 }

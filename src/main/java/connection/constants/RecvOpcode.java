@@ -472,6 +472,7 @@ public enum RecvOpcode {
     // ExpeditionIntermediary::SendExpCreatePacket
     // ExpeditionIntermediary::SendWithdrawPacket
     // ExpeditionIntermediary::OnPacketExpNoti_Invite
+    EXPEDITION_OPERATION(0x7F),
 
 
     // 0x80 - CUIFadeYesNo::OnButtonClicked
@@ -482,6 +483,7 @@ public enum RecvOpcode {
     // TabPartyAdver::SendPartyApplyPacketTo
     // TabPartyAdver::SendAdverDeletePacket
     // CWvsContext::OnPartyResult
+    PARTY_RESULT(0x80),
 
     // CUIFadeYesNo::OnButtonClicked
     // CField::InputGuildName

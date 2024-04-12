@@ -730,10 +730,6 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
          ret.charge = 0;
       }
 
-      // mage attacks have 6 * 4 debug bytes
-      if (ret.magic) {
-         lea.skip(6 * 4);
-      }
       lea.readInt(); // dwKey
       lea.readInt(); // crc32
 

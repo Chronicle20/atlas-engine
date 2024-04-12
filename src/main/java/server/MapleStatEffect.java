@@ -232,7 +232,11 @@ public class MapleStatEffect {
          }
       }
       ret.sourceid = sourceid;
+      try {
       ret.skillLevel = Integer.parseInt(source.getName());
+      } catch (NumberFormatException e) {
+         ret.skillLevel = 0;
+      }
       ret.skill = skill;
       if (!ret.skill && ret.duration > -1) {
          ret.overTime = true;

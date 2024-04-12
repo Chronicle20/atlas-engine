@@ -93,11 +93,6 @@ public class CStage {
             mplew.writeInt(to.getId());
             mplew.write(spawnPoint);
             mplew.writeShort(chr.getHp());
-            mplew.writeBool(false);
-            if (false) {
-                mplew.writeInt(0);
-                mplew.writeInt(0);
-            }
         }
         mplew.writeLong(CCommon.getTime(Server.getInstance()
                     .getCurrentTime()));
@@ -119,9 +114,6 @@ public class CStage {
         mplew.writeInt(to.getId());
         mplew.write(spawnPoint);
         mplew.writeShort(chr.getHp());
-        mplew.writeBool(true);
-        mplew.writeInt(spawnPosition.x);    // spawn position placement thanks to Arnah (Vertisy)
-        mplew.writeInt(spawnPosition.y);
         mplew.writeLong(CCommon.getTime(Server.getInstance()
                 .getCurrentTime()));
         return mplew.getPacket();

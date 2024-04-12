@@ -21,6 +21,7 @@
  */
 package net.server.channel.handlers;
 
+import ban.BanProcessor;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.inventory.MapleInventory;
@@ -140,7 +141,7 @@ public final class AdminCommandHandler extends AbstractMaplePacketHandler {
                         target.get().sendPolice(duration, reason, 6000);
                     }
                     c.announce(CField.getGMEffect(4, (byte) 0));
-                } else if (MapleCharacter.ban(victim, reason, false)) {
+                } else if (BanProcessor.getInstance().ban(victim, reason, false)) {
                     c.announce(CField.getGMEffect(4, (byte) 0));
                 } else {
                     c.announce(CField.getGMEffect(6, (byte) 1));

@@ -100,6 +100,7 @@ import constants.skills.SuperGM;
 import constants.skills.ThunderBreaker;
 import constants.skills.WhiteKnight;
 import constants.skills.WindArcher;
+import door.DoorProcessor;
 import net.server.Server;
 import net.server.channel.Channel;
 import net.server.world.MapleParty;
@@ -1127,28 +1128,7 @@ public class MapleStatEffect {
                   applyto.getPosition()).y;    // thanks Lame for pointing out unusual cases of doors sending players on ground below
          }
          Point doorPosition = new Point(applyto.getPosition().x, y);
-         MapleDoor door = new MapleDoor(applyto, doorPosition);
-
-         if (door.getOwnerId() >= 0) {
-            applyto.applyPartyDoor(door, false);
-
-            door.getTarget().spawnDoor(door.getAreaDoor());
-            door.getTown().spawnDoor(door.getTownDoor());
-         } else {
-            MapleInventoryManipulator.addFromDrop(applyto.getClient(), new Item(4006000, (short) 0, (short) 1), false);
-
-            if (door.getOwnerId() == -3) {
-               applyto.dropMessage(5,
-                     "Mystic Door cannot be cast far from a spawn point. Nearest one is at " + door.getDoorStatus().getRight()
-                           + "pts " + door.getDoorStatus().getLeft());
-            } else if (door.getOwnerId() == -2) {
-               applyto.dropMessage(5, "Mystic Door cannot be cast on a slope, try elsewhere.");
-            } else {
-               applyto.dropMessage(5, "There are no door portals available for the town at this moment. Try again later.");
-            }
-
-            applyto.cancelBuffStats(TemporaryStatType.SOULARROW);  // cancel door buff
-         }
+         DoorProcessor.getInstance().attemptDoorCreation(applyto, doorPosition, sourceid);
       } else if (isMist()) {
          Rectangle bounds =
                calculateBoundingBox(sourceid == NightWalker.POISON_BOMB ? pos : applyfrom.getPosition(), applyfrom.isFacingLeft());

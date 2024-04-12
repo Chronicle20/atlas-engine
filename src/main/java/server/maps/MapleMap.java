@@ -754,12 +754,13 @@ public class MapleMap {
 
    private byte dropGlobalItemsFromMonsterOnMap(List<GlobalDropEntry> globalEntry, Point pos, byte d, byte droptype,
                                                 int mobpos, MapleCharacter chr, MapleMonster mob) {
-      Collections.shuffle(globalEntry);
+      List<GlobalDropEntry> modifiableList = new ArrayList<>(globalEntry);
+      Collections.shuffle(modifiableList);
 
       Item idrop;
       ItemInformationProvider ii = ItemInformationProvider.getInstance();
 
-      for (final GlobalDropEntry de : globalEntry) {
+      for (final GlobalDropEntry de : modifiableList) {
          if (Randomizer.nextInt(999999) < de.chance()) {
             if (droptype == 3) {
                pos.x = mobpos + (d % 2 == 0 ? (40 * (d + 1) / 2) : -(40 * (d / 2)));
@@ -1905,6 +1906,12 @@ public class MapleMap {
       return getMapObject(oid)
             .filter(o -> o.getType() == MapleMapObjectType.PLAYER)
             .map(o -> (MapleCharacter) o);
+   }
+
+   public Optional<MapleDoorObject> getDoorByOid(int oid) {
+      return getMapObject(oid)
+            .filter(o -> o.getType() == MapleMapObjectType.DOOR)
+            .map(o -> (MapleDoorObject) o);
    }
 
    public MapleReactor getReactorById(int Id) {

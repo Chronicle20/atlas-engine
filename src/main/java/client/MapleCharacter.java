@@ -126,6 +126,7 @@ import constants.skills.Shadower;
 import constants.skills.Sniper;
 import constants.skills.ThunderBreaker;
 import constants.skills.Warrior;
+import door.DoorProcessor;
 import net.server.PlayerBuffValueHolder;
 import net.server.PlayerCoolDownValueHolder;
 import net.server.Server;
@@ -167,8 +168,6 @@ import server.life.MaplePlayerNPC;
 import server.life.MobSkill;
 import server.life.MobSkillFactory;
 import server.maps.FieldLimit;
-import server.maps.MapleDoor;
-import server.maps.MapleDoorObject;
 import server.maps.MapleDragon;
 import server.maps.MapleHiredMerchant;
 import server.maps.MapleMap;
@@ -211,7 +210,7 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
    private static final int[] ariantroomslot = new int[3];
    private final Map<Short, MapleQuestStatus> quests;
    private final AtomicBoolean mapTransitioning = new AtomicBoolean(true);
-         // player client is currently trying to change maps or log in the game map
+   // player client is currently trying to change maps or log in the game map
    private final AtomicBoolean awayFromWorld = new AtomicBoolean(true);  // player is online, but on cash shop or mts
    private final AtomicInteger exp = new AtomicInteger();
    private final AtomicInteger gachaexp = new AtomicInteger();
@@ -232,7 +231,7 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
    private final Map<TemporaryStatType, Byte> buffEffectsCount = new LinkedHashMap<>();
    private final Map<MapleDisease, Long> diseaseExpires = new LinkedHashMap<>();
    private final Map<Integer, Map<TemporaryStatType, MapleBuffStatValueHolder>> buffEffects = new LinkedHashMap<>();
-         // non-overriding buffs thanks to Ronan
+   // non-overriding buffs thanks to Ronan
    private final Map<Integer, Long> buffExpires = new LinkedHashMap<>();
    private final Map<Integer, MapleKeyBinding> keymap = new LinkedHashMap<>();
    private final Map<Integer, MapleSummon> summons = new LinkedHashMap<>();
@@ -329,7 +328,6 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
    private WeakReference<MapleMap> ownedMap = new WeakReference<>(null);
    private byte[] m_aQuickslotLoaded;
    private MapleQuickslotBinding m_pQuickslotKeyMapped;
-   private MapleDoor pdoor = null;
    private Map<MapleQuest, Long> questExpirations = new LinkedHashMap<>();
    private ScheduledFuture<?> dragonBloodSchedule;
    private ScheduledFuture<?> hpDecreaseTask;
@@ -527,66 +525,6 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
       return ret;
    }
 
-   public static boolean ban(String id, String reason, boolean accountId) {
-      PreparedStatement ps = null;
-      ResultSet rs = null;
-      Connection con = null;
-      try {
-         con = DatabaseConnection.getConnection();
-
-         if (id.matches("/[0-9]{1,3}\\..*")) {
-            ps = con.prepareStatement("INSERT INTO ipbans VALUES (DEFAULT, ?)");
-            ps.setString(1, id);
-            ps.executeUpdate();
-            ps.close();
-            return true;
-         }
-         if (accountId) {
-            ps = con.prepareStatement("SELECT id FROM accounts WHERE name = ?");
-         } else {
-            ps = con.prepareStatement("SELECT accountid FROM characters WHERE name = ?");
-         }
-
-         boolean ret = false;
-         ps.setString(1, id);
-         rs = ps.executeQuery();
-         if (rs.next()) {
-            Connection con2 = DatabaseConnection.getConnection();
-
-            try (PreparedStatement psb = con2.prepareStatement("UPDATE accounts SET banned = 1, banreason = ? WHERE id = ?")) {
-               psb.setString(1, reason);
-               psb.setInt(2, rs.getInt(1));
-               psb.executeUpdate();
-            } finally {
-               con2.close();
-            }
-            ret = true;
-         }
-
-         rs.close();
-         ps.close();
-         con.close();
-         return ret;
-      } catch (SQLException ex) {
-         ex.printStackTrace();
-      } finally {
-         try {
-            if (ps != null && !ps.isClosed()) {
-               ps.close();
-            }
-            if (rs != null && !rs.isClosed()) {
-               rs.close();
-            }
-            if (con != null && !con.isClosed()) {
-               con.close();
-            }
-         } catch (SQLException e) {
-            e.printStackTrace();
-         }
-      }
-      return false;
-   }
-
    public static boolean canCreateChar(String name) {
       String lname = name.toLowerCase();
       for (String nameTest : BLOCKED_NAMES) {
@@ -595,96 +533,6 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
          }
       }
       return getIdByName(name) < 0 && Pattern.compile("[a-zA-Z0-9]{3,12}").matcher(name).matches();
-   }
-
-   private static void addPartyPlayerDoor(MapleCharacter target) {
-      MapleDoor targetDoor = target.getPlayerDoor();
-      if (targetDoor != null) {
-         target.applyPartyDoor(targetDoor, true);
-      }
-   }
-
-   private static void removePartyPlayerDoor(MapleParty party, MapleCharacter target) {
-      target.removePartyDoor(party);
-   }
-
-   private static void updatePartyTownDoors(MapleParty party, MapleCharacter target, MapleCharacter partyLeaver,
-                                            List<MapleCharacter> partyMembers) {
-      if (partyLeaver != null) {
-         removePartyPlayerDoor(party, target);
-      } else {
-         addPartyPlayerDoor(target);
-      }
-
-      Map<Integer, MapleDoor> partyDoors = null;
-      if (!partyMembers.isEmpty()) {
-         partyDoors = party.getDoors();
-
-         for (MapleCharacter pchr : partyMembers) {
-            MapleDoor door = partyDoors.get(pchr.getId());
-            if (door != null) {
-               door.updateDoorPortal(pchr);
-            }
-         }
-
-         for (MapleDoor door : partyDoors.values()) {
-            for (MapleCharacter pchar : partyMembers) {
-               MapleDoorObject mdo = door.getTownDoor();
-               mdo.sendDestroyData(pchar.getClient(), true);
-               pchar.removeVisibleMapObject(mdo);
-            }
-         }
-
-         if (partyLeaver != null) {
-            Collection<MapleDoor> leaverDoors = partyLeaver.getDoors();
-            for (MapleDoor door : leaverDoors) {
-               for (MapleCharacter pchar : partyMembers) {
-                  MapleDoorObject mdo = door.getTownDoor();
-                  mdo.sendDestroyData(pchar.getClient(), true);
-                  pchar.removeVisibleMapObject(mdo);
-               }
-            }
-         }
-
-         List<Integer> histMembers = party.getMembersSortedByHistory();
-         for (Integer chrid : histMembers) {
-            MapleDoor door = partyDoors.get(chrid);
-
-            if (door != null) {
-               for (MapleCharacter pchar : partyMembers) {
-                  MapleDoorObject mdo = door.getTownDoor();
-                  mdo.sendSpawnData(pchar.getClient());
-                  pchar.addVisibleMapObject(mdo);
-               }
-            }
-         }
-      }
-
-      if (partyLeaver != null) {
-         Collection<MapleDoor> leaverDoors = partyLeaver.getDoors();
-
-         if (partyDoors != null) {
-            for (MapleDoor door : partyDoors.values()) {
-               MapleDoorObject mdo = door.getTownDoor();
-               mdo.sendDestroyData(partyLeaver.getClient(), true);
-               partyLeaver.removeVisibleMapObject(mdo);
-            }
-         }
-
-         for (MapleDoor door : leaverDoors) {
-            MapleDoorObject mdo = door.getTownDoor();
-            mdo.sendDestroyData(partyLeaver.getClient(), true);
-            partyLeaver.removeVisibleMapObject(mdo);
-         }
-
-         for (MapleDoor door : leaverDoors) {
-            door.updateDoorPortal(partyLeaver);
-
-            MapleDoorObject mdo = door.getTownDoor();
-            mdo.sendSpawnData(partyLeaver.getClient());
-            partyLeaver.addVisibleMapObject(mdo);
-         }
-      }
    }
 
    public static boolean deleteCharFromDB(MapleCharacter player, int senderAccId) {
@@ -1001,7 +849,8 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
       }
    }
 
-   private static Map<MapleStatEffect, Integer> topologicalSortLeafStatCount(Map<TemporaryStatType, Stack<MapleStatEffect>> buffStack) {
+   private static Map<MapleStatEffect, Integer> topologicalSortLeafStatCount(
+         Map<TemporaryStatType, Stack<MapleStatEffect>> buffStack) {
       Map<MapleStatEffect, Integer> leafBuffCount = new LinkedHashMap<>();
 
       for (Entry<TemporaryStatType, Stack<MapleStatEffect>> e : buffStack.entrySet()) {
@@ -1017,9 +866,10 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
       return leafBuffCount;
    }
 
-   private static List<MapleStatEffect> topologicalSortRemoveLeafStats(Map<MapleStatEffect, Set<TemporaryStatType>> stackedBuffStats,
-                                                                       Map<TemporaryStatType, Stack<MapleStatEffect>> buffStack,
-                                                                       Map<MapleStatEffect, Integer> leafStatCount) {
+   private static List<MapleStatEffect> topologicalSortRemoveLeafStats(
+         Map<MapleStatEffect, Set<TemporaryStatType>> stackedBuffStats,
+         Map<TemporaryStatType, Stack<MapleStatEffect>> buffStack,
+         Map<MapleStatEffect, Integer> leafStatCount) {
       List<MapleStatEffect> clearedStatEffects = new LinkedList<>();
       Set<TemporaryStatType> clearedStats = new LinkedHashSet<>();
 
@@ -1053,7 +903,8 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
       }
    }
 
-   private static List<MapleStatEffect> topologicalSortEffects(Map<TemporaryStatType, List<Pair<MapleStatEffect, TemporaryStatValue>>> buffEffects) {
+   private static List<MapleStatEffect> topologicalSortEffects(
+         Map<TemporaryStatType, List<Pair<MapleStatEffect, TemporaryStatValue>>> buffEffects) {
       Map<MapleStatEffect, Set<TemporaryStatType>> stackedBuffStats = new LinkedHashMap<>();
       Map<TemporaryStatType, Stack<MapleStatEffect>> buffStack = new LinkedHashMap<>();
 
@@ -2493,8 +2344,9 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
             if (!login) {
                getMap().broadcastNONGMMessage(this, CUserPool.removePlayerFromMap(getId()), false);
             }
-            List<Pair<TemporaryStatType, TemporaryStatValue>> ldsstat = Collections.singletonList(new Pair<>(TemporaryStatType.DARKSIGHT,
-                  TemporaryStatValue.empty()));
+            List<Pair<TemporaryStatType, TemporaryStatValue>> ldsstat =
+                  Collections.singletonList(new Pair<>(TemporaryStatType.DARKSIGHT,
+                        TemporaryStatValue.empty()));
             getMap().broadcastGMMessage(this, CUserRemote.giveForeignBuff(this, ldsstat), false);
             this.releaseControlledMonsters();
          }
@@ -2525,11 +2377,6 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
             getMap().broadcastMessage(this, CUserRemote.cancelForeignBuff(getId(), buffstats), false);
          }
       }
-   }
-
-   public boolean canDoor() {
-      MapleDoor door = getPlayerDoor();
-      return door == null || (door.isActive() && door.getElapsedDeployTime() > 5000);
    }
 
    public void setHasSandboxItem() {
@@ -3147,7 +2994,7 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
          map.updatePartyItemDropsToNewcomer(this, partyItems);
       }
 
-      updatePartyTownDoors(party, this, partyLeaver, partyMembers);
+      DoorProcessor.getInstance().updatePartyTownDoors(party, partyLeaver, partyMembers);
    }
 
    private Integer getVisitedMapIndex(MapleMap map) {
@@ -4663,7 +4510,8 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
             .anyMatch(id -> id == sourceid);
    }
 
-   private List<Pair<TemporaryStatType, TemporaryStatValue>> getActiveStatupsFromSourceid(int sourceid) { // already under effLock & chrLock
+   private List<Pair<TemporaryStatType, TemporaryStatValue>> getActiveStatupsFromSourceid(
+         int sourceid) { // already under effLock & chrLock
       List<Pair<TemporaryStatType, TemporaryStatValue>> ret = new ArrayList<>();
       List<Pair<TemporaryStatType, TemporaryStatValue>> singletonStatups = new ArrayList<>();
       for (Entry<TemporaryStatType, MapleBuffStatValueHolder> bel : buffEffects.get(sourceid).entrySet()) {
@@ -4696,7 +4544,8 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
       return ret;
    }
 
-   private void addItemEffectHolder(Integer sourceid, long expirationtime, Map<TemporaryStatType, MapleBuffStatValueHolder> statups) {
+   private void addItemEffectHolder(Integer sourceid, long expirationtime,
+                                    Map<TemporaryStatType, MapleBuffStatValueHolder> statups) {
       buffEffects.put(sourceid, statups);
       buffExpires.put(sourceid, expirationtime);
    }
@@ -4879,7 +4728,8 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
       }
    }
 
-   private List<Pair<TemporaryStatType, MapleBuffStatValueHolder>> deregisterBuffStats(Map<TemporaryStatType, MapleBuffStatValueHolder> stats) {
+   private List<Pair<TemporaryStatType, MapleBuffStatValueHolder>> deregisterBuffStats(
+         Map<TemporaryStatType, MapleBuffStatValueHolder> stats) {
       chrLock.lock();
       try {
          List<Pair<TemporaryStatType, MapleBuffStatValueHolder>> effectsToCancel = new ArrayList<>(stats.size());
@@ -4960,7 +4810,7 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
          effLock.lock();
          try {
             if (!hasBuffFromSourceid(Priest.MYSTIC_DOOR)) {
-               MapleDoor.attemptRemoveDoor(this);
+               DoorProcessor.getInstance().attemptRemoveDoor(this);
             }
          } finally {
             effLock.unlock();
@@ -5042,7 +4892,8 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
    }
 
    private List<Pair<TemporaryStatType, MapleBuffStatValueHolder>> cancelEffectInternal(MapleStatEffect effect, boolean overwrite,
-                                                                                        long startTime, Set<TemporaryStatType> removedStats) {
+                                                                                        long startTime,
+                                                                                        Set<TemporaryStatType> removedStats) {
       Map<TemporaryStatType, MapleBuffStatValueHolder> buffstats = null;
       Optional<TemporaryStatType> ombs;
       if (!overwrite) {   // is removing the source effect, meaning every effect from this srcid is being purged
@@ -5205,7 +5056,8 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
       }
    }
 
-   private List<Pair<Integer, Pair<MapleStatEffect, Long>>> propagatePriorityBuffEffectUpdates(Set<TemporaryStatType> retrievedStats) {
+   private List<Pair<Integer, Pair<MapleStatEffect, Long>>> propagatePriorityBuffEffectUpdates(
+         Set<TemporaryStatType> retrievedStats) {
       List<Pair<Integer, Pair<MapleStatEffect, Long>>> priorityUpdateEffects = new LinkedList<>();
       Map<MapleBuffStatValueHolder, MapleStatEffect> yokeStats = new LinkedHashMap<>();
 
@@ -5241,7 +5093,8 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
       return priorityUpdateEffects;
    }
 
-   private void propagateBuffEffectUpdates(Map<Integer, Pair<MapleStatEffect, Long>> retrievedEffects, Set<TemporaryStatType> retrievedStats,
+   private void propagateBuffEffectUpdates(Map<Integer, Pair<MapleStatEffect, Long>> retrievedEffects,
+                                           Set<TemporaryStatType> retrievedStats,
                                            Set<TemporaryStatType> removedStats) {
       cancelInactiveBuffStats(retrievedStats, removedStats);
       if (retrievedStats.isEmpty()) {
@@ -5473,7 +5326,8 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
          Map<TemporaryStatType, MapleBuffStatValueHolder> toDeploy;
 
          Map<TemporaryStatType, MapleBuffStatValueHolder> appliedStatups = effect.getStatups().stream()
-               .collect(Collectors.toMap(Pair::getLeft, p -> new MapleBuffStatValueHolder(effect, starttime, p.getRight().value())));
+               .collect(
+                     Collectors.toMap(Pair::getLeft, p -> new MapleBuffStatValueHolder(effect, starttime, p.getRight().value())));
 
          boolean active = effect.isActive(this);
          if (YamlConfig.config.server.USE_BUFF_MOST_SIGNIFICANT) {
@@ -5661,70 +5515,6 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
 
    public void setDojoStage(int x) {
       this.dojoStage = x;
-   }
-
-   public Collection<MapleDoor> getDoors() {
-      prtLock.lock();
-      try {
-         return (party != null ? Collections.unmodifiableCollection(party.getDoors().values()) :
-               (pdoor != null ? Collections.singleton(pdoor) : new LinkedHashSet<>()));
-      } finally {
-         prtLock.unlock();
-      }
-   }
-
-   public MapleDoor getPlayerDoor() {
-      prtLock.lock();
-      try {
-         return pdoor;
-      } finally {
-         prtLock.unlock();
-      }
-   }
-
-   public Optional<MapleDoor> getMainTownDoor() {
-      return getDoors().stream()
-            .filter(d -> d.getTownPortal().getId() == 0x80)
-            .findFirst();
-   }
-
-   public void applyPartyDoor(MapleDoor door, boolean partyUpdate) {
-      prtLock.lock();
-      try {
-         if (!partyUpdate) {
-            pdoor = door;
-         }
-
-         getParty().ifPresent(p -> p.addDoor(id, door));
-      } finally {
-         prtLock.unlock();
-      }
-
-      getParty().ifPresent(this::silentPartyUpdateInternal);
-   }
-
-   public MapleDoor removePartyDoor(boolean partyUpdate) {
-      MapleDoor ret = null;
-      MapleParty chrParty;
-
-      prtLock.lock();
-      try {
-         getParty().ifPresent(p -> p.removeDoor(id));
-
-         if (!partyUpdate) {
-            ret = pdoor;
-            pdoor = null;
-         }
-      } finally {
-         prtLock.unlock();
-      }
-
-      getParty().ifPresent(this::silentPartyUpdateInternal);
-      return ret;
-   }
-
-   private void removePartyDoor(MapleParty formerParty) {    // player is no longer registered at this party
-      formerParty.removeDoor(id);
    }
 
    public int getEnergyBar() {
@@ -7047,8 +6837,9 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
             @Override
             public void run() {
                energybar = 0;
-               List<Pair<TemporaryStatType, TemporaryStatValue>> stat = Collections.singletonList(new Pair<>(TemporaryStatType.ENERGY_CHARGE,
-                     new TemporaryStatValue(0, 0, energybar)));
+               List<Pair<TemporaryStatType, TemporaryStatValue>> stat =
+                     Collections.singletonList(new Pair<>(TemporaryStatType.ENERGY_CHARGE,
+                           new TemporaryStatValue(0, 0, energybar)));
                setBuffedValue(TemporaryStatType.ENERGY_CHARGE, energybar);
                client.announce(CWvsContext.giveBuff(MapleCharacter.this, energybar, 0, stat));
                getMap().broadcastMessage(chr, CUserRemote.cancelForeignFirstDebuff(id, ((long) 1) << 50));

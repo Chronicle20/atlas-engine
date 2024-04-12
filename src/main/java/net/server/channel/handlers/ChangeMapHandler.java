@@ -83,7 +83,7 @@ public final class ChangeMapHandler extends AbstractMaplePacketHandler {
                 String startwp = slea.readMapleAsciiString();
                 MaplePortal portal = chr.getMap().getPortal(startwp);
                 slea.readByte();
-                boolean wheel = slea.readShort() > 0;
+                boolean wheel = slea.readByte() > 0;
 
                 if (targetid != -1) {
                     if (!chr.isAlive()) {

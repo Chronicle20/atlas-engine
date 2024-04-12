@@ -9,13 +9,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 import client.BuddylistEntry;
-import client.TemporaryStatValue;
-import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleDisease;
@@ -26,15 +23,19 @@ import client.MapleQuestStatus;
 import client.MapleStat;
 import client.MonsterBook;
 import client.SkillMacro;
+import client.TemporaryStatType;
+import client.TemporaryStatValue;
 import client.inventory.Item;
 import client.inventory.MapleInventoryType;
 import client.inventory.MaplePet;
 import client.inventory.ModifyInventory;
 import client.newyear.NewYearCardRecord;
+import connection.constants.PartyOperationMode;
 import connection.constants.SendOpcode;
 import connection.constants.ShowStatusInfoMessageType;
 import constants.game.GameConstants;
 import constants.inventory.ItemConstants;
+import door.DoorProcessor;
 import net.server.Server;
 import net.server.guild.MapleAlliance;
 import net.server.guild.MapleGuild;
@@ -401,7 +402,6 @@ public class CWvsContext {
    }
 
    /**
-    * @param c
     * @param quest
     * @return
     */
@@ -415,7 +415,6 @@ public class CWvsContext {
    }
 
    /**
-    * @param c
     * @param quest
     * @return
     */
@@ -430,10 +429,8 @@ public class CWvsContext {
    }
 
    /**
-    * @param c
     * @param quest
     * @param npc
-    * @param progress
     * @return
     */
 
@@ -781,7 +778,6 @@ public class CWvsContext {
 
    /**
     * @param chr
-    * @param isSelf
     * @return
     */
    public static byte[] charInfo(MapleCharacter chr) {
@@ -921,46 +917,45 @@ public class CWvsContext {
       return mplew.getPacket();
    }
 
-   public static byte[] partyCreated(MapleParty party, int partycharid) {
+   public static byte[] partyCreated(MapleParty party, MaplePartyCharacter partyCharacter) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       mplew.writeShort(SendOpcode.PARTY_OPERATION.getValue());
       mplew.write(8);
       mplew.writeInt(party.getId());
 
-      Map<Integer, MapleDoor> partyDoors = party.getDoors();
-      if (partyDoors.size() > 0) {
-         MapleDoor door = partyDoors.get(partycharid);
-
-         if (door != null) {
-            MapleDoorObject mdo = door.getAreaDoor();
-            mplew.writeInt(mdo.getTo()
-                  .getId());
-            mplew.writeInt(mdo.getFrom()
-                  .getId());
-            mplew.writeInt(mdo.getPosition().x);
-            mplew.writeInt(mdo.getPosition().y);
-         } else {
-            mplew.writeInt(999999999);
-            mplew.writeInt(999999999);
-            mplew.writeInt(0);
-            mplew.writeInt(0);
-         }
-      } else {
-         mplew.writeInt(999999999);
-         mplew.writeInt(999999999);
-         mplew.writeInt(0);
-         mplew.writeInt(0);
+      Optional<MapleDoor> door = DoorProcessor.getInstance()
+            .getPartyDoors(partyCharacter.getWorld(), party.getMemberIds())
+            .stream()
+            .filter(d -> d.ownerId() == partyCharacter.getId())
+            .findFirst();
+      if (door.isEmpty()) {
+         writeEmptyDoor(mplew);
+         return mplew.getPacket();
       }
+
+      Optional<MapleDoorObject> mdo = DoorProcessor.getInstance().getDoorMapObject(door.get(), door.get()::targetId,
+            door.get()::targetDoorId);
+      if (mdo.isEmpty()) {
+         writeEmptyDoor(mplew);
+         return mplew.getPacket();
+      }
+
+      mplew.writeInt(mdo.get().getTo().getId());
+      mplew.writeInt(mdo.get().getFrom().getId());
+      mplew.writeInt(mdo.get().getPosition().x);
+      mplew.writeInt(mdo.get().getPosition().y);
       return mplew.getPacket();
    }
 
    public static byte[] partyInvite(MapleCharacter from) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       mplew.writeShort(SendOpcode.PARTY_OPERATION.getValue());
-      mplew.write(4);
+      mplew.write(PartyOperationMode.INVITE.getMode());
       mplew.writeInt(from.getPartyId()
             .orElse(-1));
       mplew.writeMapleAsciiString(from.getName());
+      mplew.writeInt(from.getLevel());
+      mplew.writeInt(from.getJob().getId());
       mplew.write(0);
       return mplew.getPacket();
    }
@@ -968,10 +963,12 @@ public class CWvsContext {
    public static byte[] partySearchInvite(MapleCharacter from) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       mplew.writeShort(SendOpcode.PARTY_OPERATION.getValue());
-      mplew.write(4);
+      mplew.write(PartyOperationMode.INVITE.getMode());
       mplew.writeInt(from.getPartyId()
             .orElse(-1));
       mplew.writeMapleAsciiString("PS: " + from.getName());
+      mplew.writeInt(from.getLevel());
+      mplew.writeInt(from.getJob().getId());
       mplew.write(0);
       return mplew.getPacket();
    }
@@ -1057,10 +1054,11 @@ public class CWvsContext {
       return mplew.getPacket();
    }
 
-   public static byte[] partyPortal(int townId, int targetId, Point position) {
+   public static byte[] partyPortal(int townId, int targetId, int skillId, Point position) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       mplew.writeShort(SendOpcode.PARTY_OPERATION.getValue());
-      mplew.writeShort(0x23);
+      mplew.writeShort(0x28);
+      mplew.write(0);
       mplew.writeInt(townId);
       mplew.writeInt(targetId);
       mplew.writePos(position);
@@ -1649,7 +1647,7 @@ public class CWvsContext {
     * @param pos      Where to put the portal.
     * @return The portal spawn packet.
     */
-   public static byte[] spawnPortal(int townId, int targetId, Point pos) {
+   public static byte[] spawnPortal(int townId, int targetId, int skillId, Point pos) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(14);
       mplew.writeShort(SendOpcode.SPAWN_PORTAL.getValue());
       mplew.writeInt(townId);
@@ -2410,38 +2408,46 @@ public class CWvsContext {
          }
       }
 
-      Map<Integer, MapleDoor> partyDoors = party.getDoors();
+      List<MapleDoor> doors = DoorProcessor.getInstance().getPartyDoors(party.getLeader().getWorld(), party.getMemberIds());
+
       for (MaplePartyCharacter partychar : partymembers) {
-         if (partychar.getChannel() == forchannel && !leaving) {
-            if (partyDoors.size() > 0) {
-               MapleDoor door = partyDoors.get(partychar.getId());
-               if (door != null) {
-                  MapleDoorObject mdo = door.getTownDoor();
-                  lew.writeInt(mdo.getTown()
-                        .getId());
-                  lew.writeInt(mdo.getArea()
-                        .getId());
-                  lew.writeInt(mdo.getPosition().x);
-                  lew.writeInt(mdo.getPosition().y);
-               } else {
-                  lew.writeInt(999999999);
-                  lew.writeInt(999999999);
-                  lew.writeInt(0);
-                  lew.writeInt(0);
-               }
-            } else {
-               lew.writeInt(999999999);
-               lew.writeInt(999999999);
-               lew.writeInt(0);
-               lew.writeInt(0);
-            }
-         } else {
-            lew.writeInt(999999999);
-            lew.writeInt(999999999);
-            lew.writeInt(0);
-            lew.writeInt(0);
+         if (partychar.getChannel() != forchannel || leaving) {
+            writeEmptyDoor(lew);
+            continue;
          }
+
+         if (doors.isEmpty()) {
+            writeEmptyDoor(lew);
+            continue;
+         }
+
+         Optional<MapleDoor> door = doors.stream()
+               .filter(d -> d.ownerId() == partychar.getId())
+               .findFirst();
+         if (door.isEmpty()) {
+            writeEmptyDoor(lew);
+            continue;
+         }
+
+         Optional<MapleDoorObject> mdo = DoorProcessor.getInstance().getDoorMapObject(door.get(), door.get()::townId,
+               door.get()::townDoorId);
+         if (mdo.isEmpty()) {
+            writeEmptyDoor(lew);
+            continue;
+         }
+
+         lew.writeInt(mdo.get().getTown().getId());
+         lew.writeInt(mdo.get().getArea().getId());
+         lew.writeInt(mdo.get().toPosition().x);
+         lew.writeInt(mdo.get().toPosition().y);
       }
+   }
+
+   private static void writeEmptyDoor(LittleEndianWriter lew) {
+      lew.writeInt(999999999);
+      lew.writeInt(999999999);
+      lew.writeInt(0);
+      lew.writeInt(0);
    }
 
    private static void getGuildInfo(final MaplePacketLittleEndianWriter mplew, MapleGuild guild) {
@@ -2563,7 +2569,6 @@ public class CWvsContext {
     * 5: Pink Text<br> 6: Lightblue Text
     *
     * @param type    The type of the notice.
-    * @param channel The channel this notice was sent on.
     * @param message The message to convey.
     * @return The server notice packet.
     */

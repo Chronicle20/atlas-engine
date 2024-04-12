@@ -47,10 +47,12 @@ public class MapleDoorObject extends AbstractMapleMapObject {
     private int pairOid;
     private int linkedPortalId;
     private Point linkedPos;
+    private int skillId;
     private MonitoredReadLock rlock = MonitoredReadLockFactory.createLock(locks);
     private MonitoredWriteLock wlock = MonitoredWriteLockFactory.createLock(locks);
 
-    public MapleDoorObject(int owner, MapleMap destination, MapleMap origin, int townPortalId, Point targetPosition, Point toPosition) {
+    public MapleDoorObject(int owner, MapleMap destination, MapleMap origin, int townPortalId, Point targetPosition,
+                           Point toPosition, int skillId) {
         super();
         setPosition(targetPosition);
 
@@ -59,6 +61,7 @@ public class MapleDoorObject extends AbstractMapleMapObject {
         from = origin;
         to = destination;
         linkedPos = toPosition;
+        this.skillId = skillId;
     }
 
     public void update(int townPortalId, Point toPosition) {
@@ -114,10 +117,10 @@ public class MapleDoorObject extends AbstractMapleMapObject {
         MapleCharacter chr = client.getPlayer();
         if (this.getFrom().getId() == chr.getMapId()) {
             if (chr.getParty().isPresent() && (this.getOwnerId() == chr.getId() || chr.getParty().flatMap(p -> p.getMemberById(getOwnerId())).isPresent())) {
-                chr.announce(CWvsContext.partyPortal(this.getFrom().getId(), this.getTo().getId(), this.toPosition()));
+                chr.announce(CWvsContext.partyPortal(this.getFrom().getId(), this.getTo().getId(), this.skillId, this.getPosition()));
             }
 
-            chr.announce(CWvsContext.spawnPortal(this.getFrom().getId(), this.getTo().getId(), this.toPosition()));
+            chr.announce(CWvsContext.spawnPortal(this.getFrom().getId(), this.getTo().getId(), this.skillId, this.toPosition()));
             if (!this.inTown()) {
                 chr.announce(CTownPortalPool.spawnDoor(this.getOwnerId(), this.getPosition(), launched));
             }
@@ -130,7 +133,7 @@ public class MapleDoorObject extends AbstractMapleMapObject {
         if (from.getId() == chr.getMapId()) {
             Optional<MapleParty> party = chr.getParty();
             if (party.isPresent() && (ownerId == chr.getId() || party.flatMap(p -> p.getMemberById(ownerId)).isPresent())) {
-                client.announce(CWvsContext.partyPortal(999999999, 999999999, new Point(-1, -1)));
+                client.announce(CWvsContext.partyPortal(999999999, 999999999, this.skillId, new Point(-1, -1)));
             }
             client.announce(CWvsContext.removeDoor(ownerId, inTown()));
         }
@@ -138,7 +141,7 @@ public class MapleDoorObject extends AbstractMapleMapObject {
 
     public void sendDestroyData(MapleClient client, boolean partyUpdate) {
         if (client != null && from.getId() == client.getPlayer().getMapId()) {
-            client.announce(CWvsContext.partyPortal(999999999, 999999999, new Point(-1, -1)));
+            client.announce(CWvsContext.partyPortal(999999999, 999999999, 0, new Point(-1, -1)));
             client.announce(CWvsContext.removeDoor(ownerId, inTown()));
         }
     }

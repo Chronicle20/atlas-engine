@@ -661,6 +661,8 @@ public enum RecvOpcode {
 
     // CQuickslotKeyMappedMan::SaveQuickslotKeyMap
     CHANGE_QUICKSLOT(0xBB),
+
+    // CMob::GenerateMovePath
     MOVE_LIFE(0xC2),
 
     // CMob::ApplyControl

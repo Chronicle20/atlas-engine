@@ -1,24 +1,3 @@
-/*
-    This file is part of the OdinMS Maple Story Server
-    Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
-               Matthias Butz <matze@odinms.de>
-               Jan Christian Meyer <vimes@odinms.de>
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Affero General Public License as
-    published by the Free Software Foundation version 3 as published by
-    the Free Software Foundation. You may not use, modify or distribute
-    this program under any other version of the GNU Affero General Public
-    License.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Affero General Public License for more details.
-
-    You should have received a copy of the GNU Affero General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 package net.server.channel.handlers;
 
 import client.MapleCharacter;
@@ -38,15 +17,12 @@ import tools.Randomizer;
 import tools.data.input.SeekableLittleEndianAccessor;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * @author Danny (Leifde)
- * @author ExtremeDevilz
- * @author Ronan (HeavenMS)
- */
 public final class MoveLifeHandler extends AbstractMovementPacketHandler {
 
     private static boolean inRangeInclusive(Byte pVal, Integer pMin, Integer pMax) {
@@ -83,14 +59,18 @@ public final class MoveLifeHandler extends AbstractMovementPacketHandler {
         byte slv = (byte) (skillData >> 8 & 0xFF);
         int delay = skillData >> 16;
 
+        List<Point> multiTargetForBall = new ArrayList<>();
         int nMultiTargetSize = slea.readInt();
         for (int i = 0; i < nMultiTargetSize; i++) {
-            slea.readInt(); // aMultiTargetForBall[i].x
-            slea.readInt(); // aMultiTargetForBall[i].y
+            int x = slea.readInt();
+            int y = slea.readInt();
+            multiTargetForBall.add(new Point(x, y));
         }
+
+        List<Integer> randTimeForAreaAttack = new ArrayList<>();
         int nRandTimeSize = slea.readInt();
         for (int i = 0; i < nRandTimeSize; i++) {
-            slea.readInt(); // m_aRandTimeforAreaAttack[i]
+            randTimeForAreaAttack.add(slea.readInt());
         }
 
         slea.readByte();
@@ -134,6 +114,10 @@ public final class MoveLifeHandler extends AbstractMovementPacketHandler {
 //                pOption = 0;
 //            }
         }
+
+        boolean isAttack = inRangeInclusive(nActionAndDir, 24, 41);
+        boolean isSkill = inRangeInclusive(nActionAndDir, 42, 59);
+        boolean nextMovementCouldBeSkill = !(isSkill || (dwFlag != 0));
 
         int mobMp = monster.getMp();
         if (mobMoveStartResult) {
@@ -184,7 +168,9 @@ public final class MoveLifeHandler extends AbstractMovementPacketHandler {
                 .map(Elem::getBMoveAction)
                 .forEach(monster::setStance);
 
-        map.broadcastMessage(player, CMob.moveMonster(objectid, mobMoveStartResult, nActionAndDir, skillData, res), serverStartPos);
+        map.broadcastMessage(player, CMob.moveMonster(objectid, false, mobMoveStartResult, nextMovementCouldBeSkill, nActionAndDir,
+                    skillData, multiTargetForBall, randTimeForAreaAttack, res),
+              serverStartPos);
         //updatePosition(res, monster, -2); //does this need to be done after the packet is broadcast?
         map.moveMonster(monster, monster.getPosition());
 

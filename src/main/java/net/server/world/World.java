@@ -21,10 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package net.server.world;
 
+import buddy.BuddyConstants;
 import client.AbstractMapleCharacterObject;
 import client.BuddyList;
 import client.BuddyList.BuddyAddResult;
 import client.BuddyList.BuddyOperation;
+import client.BuddyRequestInfo;
 import client.BuddylistEntry;
 import client.MapleCharacter;
 import client.MapleClient;
@@ -1308,24 +1310,24 @@ public class World {
         }
     }
 
-    public BuddyAddResult requestBuddyAdd(String addName, int channelFrom, int cidFrom, String nameFrom) {
+    public BuddyAddResult requestBuddyAdd(String addName, BuddyRequestInfo requestInfo) {
         Optional<MapleCharacter> addChar = getPlayerStorage().getCharacterByName(addName);
         if (addChar.isEmpty()) {
             return BuddyAddResult.OK;
         }
-        return requestBuddyAdd(addChar.get(), channelFrom, cidFrom, nameFrom);
+        return requestBuddyAdd(addChar.get(), requestInfo);
     }
 
-    private BuddyAddResult requestBuddyAdd(MapleCharacter character, int channelFrom, int characterIdFrom, String nameFrom) {
+    private BuddyAddResult requestBuddyAdd(MapleCharacter character, BuddyRequestInfo requestInfo) {
         BuddyList buddylist = character.getBuddylist();
         if (buddylist.isFull()) {
             return BuddyAddResult.BUDDYLIST_FULL;
         }
-        if (!buddylist.contains(characterIdFrom)) {
-            buddylist.addBuddyRequest(character.getClient(), characterIdFrom, nameFrom, channelFrom);
+        if (!buddylist.contains(requestInfo.characterId())) {
+            buddylist.addBuddyRequest(character.getClient(), requestInfo);
             return BuddyAddResult.OK;
         }
-        if (buddylist.containsVisible(characterIdFrom)) {
+        if (buddylist.containsVisible(requestInfo.characterId())) {
             return BuddyAddResult.ALREADY_ON_LIST;
         }
         return BuddyAddResult.OK;
@@ -1345,14 +1347,14 @@ public class World {
     private static void buddyDeleted(int cidFrom, String name, MapleCharacter addChar) {
         if (addChar.getBuddylist().contains(cidFrom)) {
             Optional<BuddylistEntry> entry = addChar.getBuddylist().get(cidFrom);
-            addChar.getBuddylist().put(new BuddylistEntry(name, "Default Group", cidFrom, (byte) -1, entry.map(BuddylistEntry::isVisible).orElse(false)));
+            addChar.getBuddylist().put(new BuddylistEntry(name, BuddyConstants.DEFAULT_GROUP, cidFrom, (byte) -1, entry.map(BuddylistEntry::isVisible).orElse(false)));
             addChar.announce(CWvsContext.updateBuddyChannel(cidFrom, (byte) -1));
         }
     }
 
     private static void buddyAdded(int cidFrom, String name, int channel, MapleCharacter addChar) {
         if (addChar.getBuddylist().contains(cidFrom)) {
-            addChar.getBuddylist().put(new BuddylistEntry(name, "Default Group", cidFrom, channel, true));
+            addChar.getBuddylist().put(new BuddylistEntry(name, BuddyConstants.DEFAULT_GROUP, cidFrom, channel, true));
             addChar.announce(CWvsContext.updateBuddyChannel(cidFrom, (byte) (channel - 1)));
         }
     }

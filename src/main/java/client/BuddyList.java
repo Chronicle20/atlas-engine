@@ -21,6 +21,7 @@
 */
 package client;
 
+import buddy.BuddyConstants;
 import connection.packets.CWvsContext;
 import net.server.PlayerStorage;
 import tools.DatabaseConnection;
@@ -41,7 +42,7 @@ import java.util.Optional;
 public class BuddyList {
     private final Map<Integer, BuddylistEntry> buddies = new LinkedHashMap<>();
     private int capacity;
-    private final Deque<CharacterNameAndId> pendingRequests = new LinkedList<>();
+    private final Deque<BuddyRequestInfo> pendingRequests = new LinkedList<>();
 
     public BuddyList(int capacity) {
         this.capacity = capacity;
@@ -135,7 +136,8 @@ public class BuddyList {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 if (rs.getInt("pending") == 1) {
-                    pendingRequests.push(new CharacterNameAndId(rs.getInt("buddyid"), rs.getString("buddyname")));
+                    pendingRequests.push(new BuddyRequestInfo(0, rs.getInt("buddyid"), rs.getString("buddyname"), 0, 0,
+                          rs.getString("group")));
                 } else {
                     put(new BuddylistEntry(rs.getString("buddyname"), rs.getString("group"), rs.getInt("buddyid"), (byte) -1, true));
                 }
@@ -152,16 +154,16 @@ public class BuddyList {
         }
     }
 
-    public CharacterNameAndId pollPendingRequest() {
+    public BuddyRequestInfo pollPendingRequest() {
         return pendingRequests.pollLast();
     }
 
-    public void addBuddyRequest(MapleClient c, int cidFrom, String nameFrom, int channelFrom) {
-        put(new BuddylistEntry(nameFrom, "Default Group", cidFrom, channelFrom, false));
+    public void addBuddyRequest(MapleClient c, BuddyRequestInfo requestInfo) {
+        put(new BuddylistEntry(requestInfo.characterName(), BuddyConstants.DEFAULT_GROUP, requestInfo.characterId(), requestInfo.channelId(), false));
         if (pendingRequests.isEmpty()) {
-            c.announce(CWvsContext.requestBuddylistAdd(cidFrom, c.getPlayer().getId(), nameFrom));
+            c.announce(CWvsContext.requestBuddylistAdd(requestInfo));
         } else {
-            pendingRequests.push(new CharacterNameAndId(cidFrom, nameFrom));
+            pendingRequests.push(requestInfo);
         }
     }
 

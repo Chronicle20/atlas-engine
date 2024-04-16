@@ -92,6 +92,13 @@ public interface LittleEndianWriter {
     void writeNullTerminatedAsciiString(String s);
 
     /**
+     * Writes a null-terminated ASCII string to the sequence.
+     *
+     * @param s The ASCII string to write.
+     */
+    void writeNullTerminatedAsciiString(String s, int size);
+
+    /**
      * Writes a maple-convention ASCII string to the sequence.
      *
      * @param s The ASCII string to use maple-convention to write.

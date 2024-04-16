@@ -135,6 +135,19 @@ public class GenericLittleEndianWriter implements LittleEndianWriter {
    }
 
    /**
+    * Writes a null-terminated ASCII string to the stream.
+    *
+    * @param s The ASCII string to write.
+    */
+   @Override
+   public void writeNullTerminatedAsciiString(String s, int size){
+      writeAsciiString(s);
+      for(int i = s.length(); i < size; i++){
+         write(0);
+      }
+   }
+
+   /**
     * Writes a maple-convention ASCII string to the stream.
     *
     * @param s The ASCII string to use maple-convention to write.

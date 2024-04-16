@@ -3494,9 +3494,9 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
    }
 
    private void nextPendingRequest(MapleClient c) {
-      CharacterNameAndId pendingBuddyRequest = c.getPlayer().getBuddylist().pollPendingRequest();
+      BuddyRequestInfo pendingBuddyRequest = c.getPlayer().getBuddylist().pollPendingRequest();
       if (pendingBuddyRequest != null) {
-         c.announce(CWvsContext.requestBuddylistAdd(pendingBuddyRequest.id(), c.getPlayer().getId(), pendingBuddyRequest.name()));
+         c.announce(CWvsContext.requestBuddylistAdd(pendingBuddyRequest));
       }
    }
 

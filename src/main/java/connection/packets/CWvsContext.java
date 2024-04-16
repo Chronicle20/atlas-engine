@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import buddy.BuddyConstants;
+import client.BuddyRequestInfo;
 import client.BuddylistEntry;
 import client.MapleCharacter;
 import client.MapleClient;
@@ -30,6 +32,8 @@ import client.inventory.MapleInventoryType;
 import client.inventory.MaplePet;
 import client.inventory.ModifyInventory;
 import client.newyear.NewYearCardRecord;
+import connection.constants.BuddylistErrorMode;
+import connection.constants.BuddylistMode;
 import connection.constants.PartyOperationMode;
 import connection.constants.SendOpcode;
 import connection.constants.ShowStatusInfoMessageType;
@@ -1068,7 +1072,7 @@ public class CWvsContext {
    public static byte[] updateBuddylist(Collection<BuddylistEntry> buddylist) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       mplew.writeShort(SendOpcode.BUDDYLIST.getValue());
-      mplew.write(7);
+      mplew.write(BuddylistMode.RESET.getMode());
       mplew.write(buddylist.size());
       for (BuddylistEntry buddy : buddylist) {
          if (buddy.isVisible()) {
@@ -1076,37 +1080,39 @@ public class CWvsContext {
             mplew.writeAsciiString(CCommon.getRightPaddedStr(buddy.getName(), '\0', 13));
             mplew.write(0); // opposite status
             mplew.writeInt(buddy.getChannel() - 1);
-            mplew.writeAsciiString(CCommon.getRightPaddedStr(buddy.getGroup(), '\0', 13));
-            mplew.writeInt(0);//mapid?
+            mplew.writeAsciiString(CCommon.getRightPaddedStr(buddy.getGroup(), '\0', 17));
          }
       }
-      for (int x = 0; x < buddylist.size(); x++) {
-         mplew.writeInt(0);//mapid?
+      for (BuddylistEntry buddy : buddylist) {
+         if (buddy.isVisible()) {
+            mplew.writeInt(0); // InShop
+         }
       }
       return mplew.getPacket();
    }
 
-   public static byte[] buddylistMessage(byte message) {
+   public static byte[] buddylistMessage(BuddylistErrorMode message) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       mplew.writeShort(SendOpcode.BUDDYLIST.getValue());
-      mplew.write(message);
+      mplew.write(message.getMode());
       return mplew.getPacket();
    }
 
-   public static byte[] requestBuddylistAdd(int cidFrom, int cid, String nameFrom) {
+   public static byte[] requestBuddylistAdd(BuddyRequestInfo requestInfo) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       mplew.writeShort(SendOpcode.BUDDYLIST.getValue());
-      mplew.write(9);
-      mplew.writeInt(cidFrom);
-      mplew.writeMapleAsciiString(nameFrom);
-      mplew.writeInt(cidFrom);
-      mplew.writeAsciiString(CCommon.getRightPaddedStr(nameFrom, '\0', 11));
-      mplew.write(0x09);
-      mplew.write(0xf0);
-      mplew.write(0x01);
-      mplew.writeInt(0x0f);
-      mplew.writeNullTerminatedAsciiString("Default Group");
-      mplew.writeInt(cid);
+      mplew.write(BuddylistMode.REQUEST_BUDDY_ADD.getMode());
+      mplew.writeInt(requestInfo.characterId());
+      mplew.writeMapleAsciiString(requestInfo.characterName());
+      mplew.writeInt(requestInfo.level());
+      mplew.writeInt(requestInfo.jobId());
+
+      mplew.writeInt(requestInfo.characterId());
+      mplew.writeAsciiString(CCommon.getRightPaddedStr(requestInfo.characterName(), '\0', 13));
+      mplew.write(0); // nFlag ? could be 3/4 in a is_online check
+      mplew.writeInt(requestInfo.channelId() - 1); // nChannelID
+      mplew.writeNullTerminatedAsciiString(BuddyConstants.DEFAULT_GROUP, 17);
+      mplew.write(0); // InShop
       return mplew.getPacket();
    }
 

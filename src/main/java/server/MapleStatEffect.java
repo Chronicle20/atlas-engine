@@ -29,14 +29,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import client.TemporaryStatValue;
-import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleDisease;
 import client.MapleJob;
 import client.MapleMount;
 import client.Skill;
 import client.SkillFactory;
+import client.TemporaryStatType;
+import client.TemporaryStatValue;
 import client.inventory.Item;
 import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
@@ -233,7 +233,7 @@ public class MapleStatEffect {
       }
       ret.sourceid = sourceid;
       try {
-      ret.skillLevel = Integer.parseInt(source.getName());
+         ret.skillLevel = Integer.parseInt(source.getName());
       } catch (NumberFormatException e) {
          ret.skillLevel = 0;
       }
@@ -467,7 +467,8 @@ public class MapleStatEffect {
             case Beginner.BALROG_MOUNT:
             case Noblesse.BALROG_MOUNT:
             case Legend.BALROG_MOUNT:
-               statups.add(new Pair<>(TemporaryStatType.MONSTER_RIDING, new TemporaryStatValue(sourceid, ret.skillLevel, sourceid)));
+               statups.add(
+                     new Pair<>(TemporaryStatType.MONSTER_RIDING, new TemporaryStatValue(sourceid, ret.skillLevel, sourceid)));
                break;
             case Beginner.INVINCIBLE_BARRIER:
             case Noblesse.INVINCIBLE_BARRIER:
@@ -511,10 +512,12 @@ public class MapleStatEffect {
                statups.add(new Pair<>(TemporaryStatType.STANCE, new TemporaryStatValue(sourceid, ret.skillLevel, iprop)));
                break;
             case DawnWarrior.FINAL_ATTACK:
-               statups.add(new Pair<>(TemporaryStatType.SOUL_MASTER_FINAL, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
+               statups.add(
+                     new Pair<>(TemporaryStatType.SOUL_MASTER_FINAL, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             case WindArcher.FINAL_ATTACK:
-               statups.add(new Pair<>(TemporaryStatType.WIND_BREAKER_FINAL, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
+               statups.add(
+                     new Pair<>(TemporaryStatType.WIND_BREAKER_FINAL, new TemporaryStatValue(sourceid, ret.skillLevel, ret.x)));
                break;
             // MAGICIAN
             case Magician.MAGIC_GUARD:
@@ -581,7 +584,8 @@ public class MapleStatEffect {
                break;
             case Bowmaster.SHARP_EYES:
             case Marksman.SHARP_EYES:
-               statups.add(new Pair<>(TemporaryStatType.SHARP_EYES, new TemporaryStatValue(sourceid, ret.skillLevel, (ret.x << 8 | ret.y))));
+               statups.add(new Pair<>(TemporaryStatType.SHARP_EYES,
+                     new TemporaryStatValue(sourceid, ret.skillLevel, (ret.x << 8 | ret.y))));
                break;
             case WindArcher.WIND_WALK:
                statups.add(new Pair<>(TemporaryStatType.WIND_WALK, new TemporaryStatValue(sourceid, ret.skillLevel, 1)));
@@ -878,11 +882,7 @@ public class MapleStatEffect {
          return false;
       }
 
-      if (cardStats.party && !partyHunting) {
-         return false;
-      }
-
-      return true;
+      return !cardStats.party || partyHunting;
    }
 
    public boolean isActive(MapleCharacter applyto) {
@@ -1294,14 +1294,16 @@ public class MapleStatEffect {
    }
 
    public final void applyBeaconBuff(final MapleCharacter applyto, int objectid) {
-      applyto.announce(CWvsContext.giveBuff(applyto, 1, sourceid, Collections.singletonList(new Pair<>(TemporaryStatType.HOMING_BEACON,
-            new TemporaryStatValue(0, 0, objectid)))));
+      applyto.announce(
+            CWvsContext.giveBuff(applyto, 1, sourceid, Collections.singletonList(new Pair<>(TemporaryStatType.HOMING_BEACON,
+                  new TemporaryStatValue(0, 0, objectid)))));
 
       final long starttime = Server.getInstance().getCurrentTime();
       applyto.registerEffect(this, starttime, Long.MAX_VALUE, false);
    }
 
-   public void updateBuffEffect(MapleCharacter target, List<Pair<TemporaryStatType, TemporaryStatValue>> activeStats, long starttime) {
+   public void updateBuffEffect(MapleCharacter target, List<Pair<TemporaryStatType, TemporaryStatValue>> activeStats,
+                                long starttime) {
       int localDuration = getBuffLocalDuration();
       localDuration = alchemistModifyVal(target, localDuration, false);
 
@@ -1378,12 +1380,14 @@ public class MapleStatEffect {
             buff = CWvsContext.giveBuff(applyto, sourceid, seconds, localstatups);
             mbuff = CUserRemote.giveForeignPirateBuff(applyto.getId(), sourceid, seconds, localstatups);
          } else if (isDs()) {
-            List<Pair<TemporaryStatType, TemporaryStatValue>> dsstat = Collections.singletonList(new Pair<>(TemporaryStatType.DARKSIGHT,
-                  TemporaryStatValue.empty()));
+            List<Pair<TemporaryStatType, TemporaryStatValue>> dsstat =
+                  Collections.singletonList(new Pair<>(TemporaryStatType.DARKSIGHT,
+                        TemporaryStatValue.empty()));
             mbuff = CUserRemote.giveForeignBuff(applyto, dsstat);
          } else if (isWw()) {
-            List<Pair<TemporaryStatType, TemporaryStatValue>> dsstat = Collections.singletonList(new Pair<>(TemporaryStatType.WIND_WALK,
-                  TemporaryStatValue.empty()));
+            List<Pair<TemporaryStatType, TemporaryStatValue>> dsstat =
+                  Collections.singletonList(new Pair<>(TemporaryStatType.WIND_WALK,
+                        TemporaryStatValue.empty()));
             mbuff = CUserRemote.giveForeignBuff(applyto, dsstat);
          } else if (isCombo()) {
             Integer comboCount = applyto.getBuffedValue(TemporaryStatType.COMBO);
@@ -1721,11 +1725,8 @@ public class MapleStatEffect {
    private boolean isCureAllAbnormalStatus() {
       if (skill) {
          return isHerosWill(sourceid);
-      } else if (sourceid == 2022544) {
-         return true;
       }
-
-      return false;
+      return sourceid == 2022544;
    }
 
    private boolean isWkCharge() {

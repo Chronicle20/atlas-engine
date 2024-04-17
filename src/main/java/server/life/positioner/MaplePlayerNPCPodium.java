@@ -49,10 +49,10 @@ public class MaplePlayerNPCPodium {
     }
 
     private static int getPlatformPosY(int platform) {
-       return switch (platform) {
-          case 0 -> -47;
-          default -> 40;
-       };
+       if (platform == 0) {
+          return -47;
+       }
+       return 40;
     }
 
     private static Point calcNextPos(int rank, int step) {

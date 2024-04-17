@@ -2572,11 +2572,11 @@ public class MapleMap {
             aggroMonitor.startAggroCoordinator();
          }
 
-         if (onFirstUserEnter.length() != 0) {
+         if (!onFirstUserEnter.isEmpty()) {
             msm.runMapScript(chr.getClient(), "onFirstUserEnter/" + onFirstUserEnter, true);
          }
       }
-      if (onUserEnter.length() != 0) {
+      if (!onUserEnter.isEmpty()) {
          if (onUserEnter.equals("cygnusTest") && (mapid < 913040000 || mapid > 913040006)) {
             chr.saveLocation("INTRO");
          }

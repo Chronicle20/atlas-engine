@@ -6,15 +6,6 @@ public record TemporaryStatValue(int sourceId, int sourceLevel, int value) {
    }
 
    @Override
-   public int hashCode() {
-      int hash = 7;
-      hash = 89 * hash + this.sourceLevel;
-      hash = 89 * hash + this.sourceId;
-      hash = 89 * hash + this.value;
-      return hash;
-   }
-
-   @Override
    public boolean equals(Object obj) {
       if (obj == null) {
          return false;
@@ -29,9 +20,15 @@ public record TemporaryStatValue(int sourceId, int sourceLevel, int value) {
       if (this.sourceId != other.sourceId) {
          return false;
       }
-      if (this.value != other.value) {
-         return false;
-      }
-      return true;
+      return this.value == other.value;
+   }
+
+   @Override
+   public int hashCode() {
+      int hash = 7;
+      hash = 89 * hash + this.sourceLevel;
+      hash = 89 * hash + this.sourceId;
+      hash = 89 * hash + this.value;
+      return hash;
    }
 }

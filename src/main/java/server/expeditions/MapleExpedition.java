@@ -344,7 +344,7 @@ public class MapleExpedition {
       MapleCharacter mc = iterator.next();
       int mapId = mc.getMapId();
 
-      for (; iterator.hasNext(); ) {
+      while (iterator.hasNext()) {
          mc = iterator.next();
          if (mc.getMapId() != mapId) {
             return false;

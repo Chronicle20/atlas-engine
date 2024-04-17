@@ -564,10 +564,7 @@ public class GameConstants {
             return true;
         }
 
-       return switch (map.getId()) {
-          case 910000000 -> true;
-          default -> false;
-       };
+       return map.getId() == 910000000;
     }
 
     public static boolean isBossRush(int mapid) {

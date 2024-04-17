@@ -82,9 +82,7 @@ public class MapleShop {
         }
 
         if (!ItemConstants.isRechargeable(item.getItemId())) {
-            if (iQuant == 0 || quantity > iQuant) {
-                return false;
-            }
+           return iQuant != 0 && quantity <= iQuant;
         }
 
         return true;

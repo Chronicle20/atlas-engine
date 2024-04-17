@@ -24,13 +24,10 @@ public class CStoreBankDlg {
       mplew.writeShort(SendOpcode.FREDRICK.getValue());
       mplew.write(op);
 
-      switch (op) {
-         case 0x24:
-            mplew.skip(8);
-            break;
-         default:
-            mplew.write(0);
-            break;
+      if (op == 0x24) {
+         mplew.skip(8);
+      } else {
+         mplew.write(0);
       }
 
       return mplew.getPacket();

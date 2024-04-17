@@ -459,7 +459,7 @@ public class MapleGuild {
                 }
                 try {
                     for (Integer b : Server.getInstance().getOpenChannels(world)) {
-                        if (notifications.get(b).size() > 0) {
+                        if (!notifications.get(b).isEmpty()) {
                             if (bcop == BCOp.DISBAND) {
                                 Server.getInstance().getWorld(world).ifPresent(w -> w.setGuildAndRank(notifications.get(b), 0, 5, exceptionId));
                             } else if (bcop == BCOp.EMBLEMCHANGE) {

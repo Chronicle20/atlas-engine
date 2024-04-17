@@ -87,7 +87,6 @@ public class Wedding {
     * @param ReservedGroomName The groom IGN of the wedding
     * @param ReservedBrideName The bride IGN of the wedding
     * @param m_dwField         The current field id (the id of the cake map, ex. 680000300)
-    * @param m_uCount          The current user count (equal to m_dwUsers.size)
     * @param m_dwUsers         The List of all MapleCharacter guests within the current cake map to be encoded
     * @return mplew (MaplePacket) Byte array to be converted and read for byte[]->ImageIO
     */

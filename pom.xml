@@ -26,7 +26,7 @@
         <!-- Dependencies -->
         <slf4j-api.version>2.0.9</slf4j-api.version> <!-- Logging facade -->
         <log4j.version>2.20.0</log4j.version> <!-- Slf4j implementation -->
-        <graalvm.version>23.0.3</graalvm.version> <!-- ScriptEngine implementation -->
+        <graalvm.version>24.0.1</graalvm.version> <!-- ScriptEngine implementation -->
         <yamlbeans.version>1.17</yamlbeans.version> <!-- Config file -->
         <jcip-annotations.version>1.0</jcip-annotations.version> <!-- Annotations for concurrency documentation -->
         <HikariCP.version>5.1.0</HikariCP.version> <!-- Database connection pool -->
@@ -78,7 +78,7 @@
 
         <!-- Scripting -->
         <dependency>
-            <groupId>org.graalvm.js</groupId>
+            <groupId>org.graalvm.polyglot</groupId>
             <artifactId>js</artifactId>
             <version>${graalvm.version}</version>
         </dependency>
@@ -113,7 +113,11 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>0.4</version>
+        </dependency>
         <dependency>
             <groupId>com.github.jasminb</groupId>
             <artifactId>jsonapi-converter</artifactId>

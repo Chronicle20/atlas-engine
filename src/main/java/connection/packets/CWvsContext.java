@@ -2529,13 +2529,7 @@ public class CWvsContext {
          case GACHAEXP:
             mplew.writeInt(statupdate.getRight());
             break;
-         case PETSN:
-            mplew.writeLong(0);
-            break;
-         case PETSN2:
-            mplew.writeLong(0);
-            break;
-         case PETSN3:
+         case PETSN, PETSN2, PETSN3:
             mplew.writeLong(0);
             break;
       }

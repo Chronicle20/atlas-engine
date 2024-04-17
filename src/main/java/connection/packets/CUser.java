@@ -13,15 +13,7 @@ import tools.data.output.MaplePacketLittleEndianWriter;
 import java.awt.*;
 
 public class CUser {
-    /**
-     * Gets a general chat packet.
-     *
-     * @param cidfrom The character ID who sent the chat.
-     * @param text    The text of the chat.
-     * @param whiteBG
-     * @param show
-     * @return The general chat packet.
-     */
+
     public static byte[] getChatText(int cidfrom, String text, boolean gm, int show) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort(SendOpcode.CHATTEXT.getValue());

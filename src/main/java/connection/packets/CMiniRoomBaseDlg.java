@@ -112,12 +112,6 @@ public class CMiniRoomBaseDlg {
       return mplew.getPacket();
    }
 
-   /**
-    * @param c
-    * @param shop
-    * @param owner
-    * @return
-    */
    public static byte[] getPlayerShop(MaplePlayerShop shop, boolean owner) {
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       mplew.writeShort(SendOpcode.PLAYER_INTERACTION.getValue());

@@ -149,12 +149,6 @@ public class CUserRemote {
       return mplew.getPacket();
    }
 
-   /**
-    * @param cid
-    * @param statups
-    * @param mount
-    * @return
-    */
    public static byte[] showMonsterRiding(int cid, MapleMount mount) { //Gtfo with this, this is just giveForeignBuff
       final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
       mplew.writeShort(SendOpcode.GIVE_FOREIGN_BUFF.getValue());

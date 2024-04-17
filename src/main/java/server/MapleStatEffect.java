@@ -215,7 +215,7 @@ public class MapleStatEffect {
       ret.repeatEffect = MapleDataTool.getInt("repeatEffect", source, 0) > 0;
 
       MapleData mdd = source.getChildByPath("0");
-      if (mdd != null && mdd.getChildren().size() > 0) {
+      if (mdd != null && !mdd.getChildren().isEmpty()) {
          ret.mobSkill = (short) MapleDataTool.getInt("mobSkill", mdd, 0);
          ret.mobSkillLevel = (short) MapleDataTool.getInt("level", mdd, 0);
          ret.target = MapleDataTool.getInt("target", mdd, 0);
@@ -227,7 +227,7 @@ public class MapleStatEffect {
 
       MapleData mdds = source.getChildByPath("mob");
       if (mdds != null) {
-         if (mdds.getChildren() != null && mdds.getChildren().size() > 0) {
+         if (mdds.getChildren() != null && !mdds.getChildren().isEmpty()) {
             ret.mob = MapleDataTool.getInt("mob", mdds, 0);
          }
       }
@@ -1157,7 +1157,7 @@ public class MapleStatEffect {
                }
             }
          }
-      } else if (cureDebuffs.size() > 0) {
+      } else if (!cureDebuffs.isEmpty()) {
          for (final MapleDisease debuff : cureDebuffs) {
             applyfrom.dispelDebuff(debuff);
          }
@@ -1365,7 +1365,7 @@ public class MapleStatEffect {
          localDuration = alchemistModifyVal(applyfrom, localDuration, false);
          applyto.getMap().broadcastMessage(applyto, CUser.showBuffeffect(applyto.getId(), sourceid, 1, (byte) 3), false);
       }
-      if (localstatups.size() > 0) {
+      if (!localstatups.isEmpty()) {
          byte[] buff = null;
          byte[] mbuff = null;
          if (this.isActive(applyto)) {

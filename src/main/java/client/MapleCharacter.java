@@ -2311,7 +2311,7 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
       if (client.getChannelServer().getPlayerStorage().getCharacterById(getId()).isPresent()) {
          updateLocalStats();
          client.announce(CWvsContext.cancelBuff(buffstats));
-         if (buffstats.size() > 0) {
+         if (!buffstats.isEmpty()) {
             getMap().broadcastMessage(this, CUserRemote.cancelForeignBuff(getId(), buffstats), false);
          }
       }

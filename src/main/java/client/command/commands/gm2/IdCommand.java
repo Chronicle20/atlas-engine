@@ -45,7 +45,7 @@ public class IdCommand extends Command {
                 Map<String, String> resultList = fetchResults(itemMap.get(params[0]), queryItem);
                 StringBuilder sb = new StringBuilder();
 
-                if (resultList.size() > 0) {
+                if (!resultList.isEmpty()) {
                     int count = 0;
                     for (Map.Entry<String, String> entry : resultList.entrySet()) {
                         sb.append(String.format("Id for %s is: #b%s#k", entry.getKey(), entry.getValue())).append("\r\n");

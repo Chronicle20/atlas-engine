@@ -42,7 +42,7 @@ public class MapleMiniGame extends AbstractMapleMapObject {
    }
 
    public boolean checkPassword(String sentPw) {
-      return this.password.length() == 0 || sentPw.toLowerCase().contentEquals(this.password.toLowerCase());
+      return this.password.isEmpty() || sentPw.toLowerCase().contentEquals(this.password.toLowerCase());
    }
 
    public boolean hasFreeSlot() {

@@ -53,9 +53,8 @@ public enum MapleInventoryType {
             case "Install" -> SETUP;
             case "Consume" -> USE;
             case "Etc" -> ETC;
-            case "Cash" -> CASH;
-            case "Pet" -> CASH;
-            default -> UNDEFINED;
+            case "Cash", "Pet" -> CASH;
+           default -> UNDEFINED;
         };
     }
 

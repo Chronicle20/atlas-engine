@@ -91,7 +91,7 @@ public class CMob {
          for (Integer ref : reflection) {
             mplew.writeInt(ref);
          }
-         if (reflection.size() > 0) {
+         if (!reflection.isEmpty()) {
             size /= 2; // This gives 2 buffs per reflection but it's really one buff
          }
       }

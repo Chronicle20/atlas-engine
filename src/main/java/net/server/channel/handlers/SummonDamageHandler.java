@@ -21,6 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package net.server.channel.handlers;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import client.MapleCharacter;
 import client.MapleClient;
 import client.Skill;
@@ -40,114 +43,117 @@ import server.maps.MapleSummon;
 import tools.FilePrinter;
 import tools.data.input.SeekableLittleEndianAccessor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public final class SummonDamageHandler extends AbstractDealDamageHandler {
 
-    private static int calcMaxDamage(MapleStatEffect summonEffect, MapleCharacter player, boolean magic) {
-        double maxDamage;
+   private static int calcMaxDamage(MapleStatEffect summonEffect, MapleCharacter player, boolean magic) {
+      double maxDamage;
 
-        if (magic) {
-            int matk = Math.max(player.getTotalMagic(), 14);
-            maxDamage = player.calculateMaxBaseMagicDamage(matk) * (0.05 * summonEffect.getMatk());
-        } else {
-            int watk = Math.max(player.getTotalWatk(), 14);
-            Item weapon_item = player.getInventory(MapleInventoryType.EQUIPPED).getItem((short) -11);
+      if (magic) {
+         int matk = Math.max(player.getTotalMagic(), 14);
+         maxDamage = player.calculateMaxBaseMagicDamage(matk) * (0.05 * summonEffect.getMatk());
+      } else {
+         int watk = Math.max(player.getTotalWatk(), 14);
+         Item weapon_item = player.getInventory(MapleInventoryType.EQUIPPED).getItem((short) -11);
 
-            int maxBaseDmg;  // thanks Conrad, Atoot for detecting some summons legitimately hitting over the calculated limit
-            if (weapon_item != null) {
-                maxBaseDmg = player.calculateMaxBaseDamage(watk, ItemInformationProvider.getInstance().getWeaponType(weapon_item.getItemId()));
-            } else {
-                maxBaseDmg = player.calculateMaxBaseDamage(watk, MapleWeaponType.SWORD1H);
+         int maxBaseDmg;  // thanks Conrad, Atoot for detecting some summons legitimately hitting over the calculated limit
+         if (weapon_item != null) {
+            maxBaseDmg =
+                  player.calculateMaxBaseDamage(watk, ItemInformationProvider.getInstance().getWeaponType(weapon_item.getItemId()));
+         } else {
+            maxBaseDmg = player.calculateMaxBaseDamage(watk, MapleWeaponType.SWORD1H);
+         }
+
+         float summonDmgMod = (maxBaseDmg >= 438) ? 0.054f : 0.077f;
+         maxDamage = maxBaseDmg * (summonDmgMod * summonEffect.getWatk());
+      }
+
+      return (int) maxDamage;
+   }
+
+   @Override
+   public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+      int oid = slea.readInt();
+      MapleCharacter player = c.getPlayer();
+      if (!player.isAlive()) {
+         return;
+      }
+      MapleSummon summon = null;
+      for (MapleSummon sum : player.getSummonsValues()) {
+         if (sum.getObjectId() == oid) {
+            summon = sum;
+         }
+      }
+      if (summon == null) {
+         return;
+      }
+      Skill summonSkill = SkillFactory.getSkill(summon.getSkill()).orElseThrow();
+      MapleStatEffect summonEffect = summonSkill.getEffect(summon.getSkillLevel());
+      slea.skip(4);
+      List<SummonAttackEntry> allDamage = new ArrayList<>();
+      byte direction = slea.readByte();
+      int numAttacked = slea.readByte();
+      slea.skip(8); // I failed lol (mob x,y and summon x,y), Thanks Gerald
+      for (int x = 0; x < numAttacked; x++) {
+         int monsterOid = slea.readInt(); // attacked oid
+         slea.skip(18);
+         int damage = slea.readInt();
+         allDamage.add(new SummonAttackEntry(monsterOid, damage));
+      }
+      player.getMap()
+            .broadcastMessage(player, CSummonedPool.summonAttack(player.getId(), summon.getObjectId(), direction, allDamage),
+                  summon.getPosition());
+
+      if (player.getMap().isOwnershipRestricted(player)) {
+         return;
+      }
+
+      boolean magic = summonEffect.getWatk() == 0;
+      int maxDmg = calcMaxDamage(summonEffect, player, magic);    // thanks Darter (YungMoozi) for reporting unchecked max dmg
+      for (SummonAttackEntry attackEntry : allDamage) {
+         int damage = attackEntry.getDamage();
+         MapleMonster target = player.getMap().getMonsterByOid(attackEntry.getMonsterOid()).orElse(null);
+         if (target != null) {
+            if (damage > maxDmg) {
+               AutobanFactory.DAMAGE_HACK.alert(c.getPlayer(), "Possible packet editing summon damage exploit.");
+
+               FilePrinter.printError(FilePrinter.EXPLOITS + c.getPlayer().getName() + ".txt",
+                     c.getPlayer().getName() + " used a summon of skillid " + summon.getSkill() + " to attack "
+                           + MonsterInformationProvider.getInstance().getMobNameFromId(target.getId()) + " with damage " + damage
+                           + " (max: " + maxDmg + ")");
+               damage = maxDmg;
             }
 
-            float summonDmgMod = (maxBaseDmg >= 438) ? 0.054f : 0.077f;
-            maxDamage = maxBaseDmg * (summonDmgMod * summonEffect.getWatk());
-        }
-
-        return (int) maxDamage;
-    }
-
-    @Override
-    public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-        int oid = slea.readInt();
-        MapleCharacter player = c.getPlayer();
-        if (!player.isAlive()) {
-            return;
-        }
-        MapleSummon summon = null;
-        for (MapleSummon sum : player.getSummonsValues()) {
-            if (sum.getObjectId() == oid) {
-                summon = sum;
+            if (damage > 0 && !summonEffect.getMonsterStati().isEmpty()) {
+               if (summonEffect.makeChanceResult()) {
+                  target.applyStatus(player, new MonsterStatusEffect(summonEffect.getMonsterStati(), summonSkill, null, false),
+                        summonEffect.isPoison(), 4000);
+               }
             }
-        }
-        if (summon == null) {
-            return;
-        }
-        Skill summonSkill = SkillFactory.getSkill(summon.getSkill()).orElseThrow();
-        MapleStatEffect summonEffect = summonSkill.getEffect(summon.getSkillLevel());
-        slea.skip(4);
-        List<SummonAttackEntry> allDamage = new ArrayList<>();
-        byte direction = slea.readByte();
-        int numAttacked = slea.readByte();
-        slea.skip(8); // I failed lol (mob x,y and summon x,y), Thanks Gerald
-        for (int x = 0; x < numAttacked; x++) {
-            int monsterOid = slea.readInt(); // attacked oid
-            slea.skip(18);
-            int damage = slea.readInt();
-            allDamage.add(new SummonAttackEntry(monsterOid, damage));
-        }
-        player.getMap().broadcastMessage(player, CSummonedPool.summonAttack(player.getId(), summon.getObjectId(), direction, allDamage), summon.getPosition());
+            player.getMap().damageMonster(player, target, damage);
+         }
+      }
 
-        if (player.getMap().isOwnershipRestricted(player)) {
-            return;
-        }
+      if (summon.getSkill() == Outlaw.GAVIOTA) {  // thanks Periwinks for noticing Gaviota not cancelling after grenade toss
+         player.cancelEffect(summonEffect, false, -1);
+      }
+   }
 
-        boolean magic = summonEffect.getWatk() == 0;
-        int maxDmg = calcMaxDamage(summonEffect, player, magic);    // thanks Darter (YungMoozi) for reporting unchecked max dmg
-        for (SummonAttackEntry attackEntry : allDamage) {
-            int damage = attackEntry.getDamage();
-            MapleMonster target = player.getMap().getMonsterByOid(attackEntry.getMonsterOid()).orElse(null);
-            if (target != null) {
-                if (damage > maxDmg) {
-                    AutobanFactory.DAMAGE_HACK.alert(c.getPlayer(), "Possible packet editing summon damage exploit.");
+   public final class SummonAttackEntry {
 
-                    FilePrinter.printError(FilePrinter.EXPLOITS + c.getPlayer().getName() + ".txt", c.getPlayer().getName() + " used a summon of skillid " + summon.getSkill() + " to attack " + MonsterInformationProvider.getInstance().getMobNameFromId(target.getId()) + " with damage " + damage + " (max: " + maxDmg + ")");
-                    damage = maxDmg;
-                }
+      private int monsterOid;
+      private int damage;
 
-                if (damage > 0 && summonEffect.getMonsterStati().size() > 0) {
-                    if (summonEffect.makeChanceResult()) {
-                        target.applyStatus(player, new MonsterStatusEffect(summonEffect.getMonsterStati(), summonSkill, null, false), summonEffect.isPoison(), 4000);
-                    }
-                }
-                player.getMap().damageMonster(player, target, damage);
-            }
-        }
+      public SummonAttackEntry(int monsterOid, int damage) {
+         this.monsterOid = monsterOid;
+         this.damage = damage;
+      }
 
-        if (summon.getSkill() == Outlaw.GAVIOTA) {  // thanks Periwinks for noticing Gaviota not cancelling after grenade toss
-            player.cancelEffect(summonEffect, false, -1);
-        }
-    }
+      public int getMonsterOid() {
+         return monsterOid;
+      }
 
-    public final class SummonAttackEntry {
-
-        private int monsterOid;
-        private int damage;
-
-        public SummonAttackEntry(int monsterOid, int damage) {
-            this.monsterOid = monsterOid;
-            this.damage = damage;
-        }
-
-        public int getMonsterOid() {
-            return monsterOid;
-        }
-
-        public int getDamage() {
-            return damage;
-        }
-
-    }
+      public int getDamage() {
+         return damage;
+      }
+   }
 }

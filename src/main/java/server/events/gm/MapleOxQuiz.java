@@ -52,7 +52,7 @@ public final class MapleOxQuiz {
     }
 
     private static int getOXAnswer(int imgdir, int id) {
-        return MapleDataTool.getInt(stringData.getData("OXQuiz.img").getChildByPath("" + imgdir + "").getChildByPath("" + id + "").getChildByPath("a"));
+        return MapleDataTool.getInt(stringData.getData("OXQuiz.img").getChildByPath("" + imgdir).getChildByPath("" + id).getChildByPath("a"));
     }
 
     private boolean isCorrectAnswer(MapleCharacter chr, int answer) {

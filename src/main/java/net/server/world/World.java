@@ -1674,7 +1674,7 @@ public class World {
          toRemove = registeredTimedMapObjects.entrySet().stream()
                .filter(e -> e.getValue() <= timeNow)
                .map(Entry::getKey)
-               .collect(Collectors.toList());
+               .toList();
          toRemove.forEach(registeredTimedMapObjects::remove);
       } finally {
          timedMapObjectLock.unlock();

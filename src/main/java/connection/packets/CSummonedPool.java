@@ -14,7 +14,6 @@ public class CSummonedPool {
      * Gets a packet to spawn a special map object.
      *
      * @param summon
-     * @param skillLevel The level of the skill used.
      * @param animated   Animated spawn?
      * @return The spawn packet for the map object.
      */

@@ -392,7 +392,7 @@ public final class CashOperationHandler extends AbstractMaplePacketHandler {
         }
 
         CashItem cItem = CashItemFactory.getItem(serialNumber);
-        if (!canBuy(c.getPlayer(), cItem, cs.getCash(4)) || message.length() < 1 || message.length() > 73) {
+        if (!canBuy(c.getPlayer(), cItem, cs.getCash(4)) || message.isEmpty() || message.length() > 73) {
             c.enableCSActions();
             return;
         }

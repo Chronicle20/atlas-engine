@@ -38,7 +38,7 @@ public class MapleCarnivalFactory {
     }
 
     private void initialize() {
-        if (skills.size() != 0) {
+        if (!skills.isEmpty()) {
             return;
         }
         for (MapleData z : dataRoot.getData("MCSkill.img")) {

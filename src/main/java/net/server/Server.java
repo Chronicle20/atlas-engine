@@ -1779,7 +1779,7 @@ public class Server {
             toDisconnect = inLoginState.entrySet().stream()
                     .filter(e -> timeNow > e.getValue())
                     .map(Entry::getKey)
-                    .collect(Collectors.toList());
+                    .toList();
             toDisconnect.forEach(inLoginState::remove);
         } finally {
             srvLock.unlock();

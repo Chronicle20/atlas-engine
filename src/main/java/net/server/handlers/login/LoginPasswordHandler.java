@@ -31,12 +31,14 @@ import net.server.Server;
 import net.server.coordinator.session.MapleSessionCoordinator;
 import net.server.world.World;
 import org.apache.mina.core.session.IoSession;
-import tools.BCrypt;
+import org.mindrot.jbcrypt.BCrypt;
+
 import tools.DatabaseConnection;
 import tools.HexTool;
 import tools.data.input.SeekableLittleEndianAccessor;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
@@ -51,7 +53,7 @@ public final class LoginPasswordHandler implements MaplePacketHandler {
 
     private static String hashpwSHA512(String pwd) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         MessageDigest digester = MessageDigest.getInstance("SHA-512");
-        digester.update(pwd.getBytes("UTF-8"), 0, pwd.length());
+        digester.update(pwd.getBytes(StandardCharsets.UTF_8), 0, pwd.length());
         return HexTool.toString(digester.digest()).replace(" ", "").toLowerCase();
     }
 

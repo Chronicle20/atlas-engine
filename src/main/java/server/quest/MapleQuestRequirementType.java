@@ -44,9 +44,8 @@ public enum MapleQuestRequirementType {
             case "npc" -> NPC;
             case "fieldEnter" -> FIELD_ENTER;
             case "interval" -> INTERVAL;
-            case "startscript" -> SCRIPT;
-            case "endscript" -> SCRIPT;
-            case "pet" -> PET;
+            case "startscript", "endscript" -> SCRIPT;
+           case "pet" -> PET;
             case "pettamenessmin" -> MIN_PET_TAMENESS;
             case "mbmin" -> MONSTER_BOOK;
             case "normalAutoStart" -> NORMAL_AUTO_START;

@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package client;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
@@ -50,6 +50,7 @@ import java.util.stream.Collectors;
 import javax.script.ScriptEngine;
 
 import org.apache.mina.core.session.IoSession;
+import org.mindrot.jbcrypt.BCrypt;
 
 import buddy.BuddyProcessor;
 import client.inventory.MapleInventoryType;
@@ -85,7 +86,6 @@ import server.life.MapleMonster;
 import server.maps.FieldLimit;
 import server.maps.MapleMap;
 import server.maps.MapleMiniDungeonInfo;
-import tools.BCrypt;
 import tools.DatabaseConnection;
 import tools.FilePrinter;
 import tools.HexTool;
@@ -163,12 +163,12 @@ public class MapleClient {
    private static boolean checkHash(String hash, String type, String password) {
       try {
          MessageDigest digester = MessageDigest.getInstance(type);
-         digester.update(password.getBytes("UTF-8"), 0, password.length());
+         digester.update(password.getBytes(StandardCharsets.UTF_8), 0, password.length());
          return HexTool.toString(digester.digest())
                .replace(" ", "")
                .toLowerCase()
                .equals(hash);
-      } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+      } catch (NoSuchAlgorithmException e) {
          throw new RuntimeException("Encoding the string failed", e);
       }
    }
@@ -655,10 +655,7 @@ public class MapleClient {
             case REMOTE_REACHED_LIMIT:
                return LoginStatusCode.UNABLE_TO_LOG_ON_AS_MASTER;
 
-            case REMOTE_PROCESSING:
-               return LoginStatusCode.CANNOT_PROCESS_SO_MANY_CONNECTIONS;
-
-            case MANY_ACCOUNT_ATTEMPTS:
+            case REMOTE_PROCESSING, MANY_ACCOUNT_ATTEMPTS:
                return LoginStatusCode.CANNOT_PROCESS_SO_MANY_CONNECTIONS;
 
             default:

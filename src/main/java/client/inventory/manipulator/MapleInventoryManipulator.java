@@ -27,10 +27,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleRing;
+import client.TemporaryStatType;
 import client.inventory.Equip;
 import client.inventory.Item;
 import client.inventory.MapleInventory;
@@ -87,7 +87,7 @@ public class MapleInventoryManipulator {
          short slotMax = ii.getSlotMax(c, itemId);
          List<Item> existing = inv.listById(itemId);
          if (!ItemConstants.isRechargeable(itemId) && petid == -1) {
-            if (existing.size() > 0) { // first update all existing slots to slotMax
+            if (!existing.isEmpty()) { // first update all existing slots to slotMax
                Iterator<Item> i = existing.iterator();
                while (quantity > 0) {
                   if (i.hasNext()) {
@@ -205,7 +205,7 @@ public class MapleInventoryManipulator {
          short slotMax = ii.getSlotMax(c, itemid);
          List<Item> existing = inv.listById(itemid);
          if (!ItemConstants.isRechargeable(itemid) && petId == -1) {
-            if (existing.size() > 0) { // first update all existing slots to slotMax
+            if (!existing.isEmpty()) { // first update all existing slots to slotMax
                Iterator<Item> i = existing.iterator();
                while (quantity > 0) {
                   if (i.hasNext()) {
@@ -314,8 +314,8 @@ public class MapleInventoryManipulator {
          if (ItemConstants.isRechargeable(itemid)) {
             numSlotsNeeded = 1;
          } else {
-            if (existing.size() > 0) // first update all existing slots to slotMax
-            {
+            // first update all existing slots to slotMax
+            if (!existing.isEmpty()) {
                for (Item eItem : existing) {
                   short oldQ = eItem.getQuantity();
                   if (oldQ < slotMax && owner.equals(eItem.getOwner())) {
@@ -370,9 +370,8 @@ public class MapleInventoryManipulator {
             numSlotsNeeded = 1;
          } else {
             List<Item> existing = inv.listById(itemid);
-
-            if (existing.size() > 0) // first update all existing slots to slotMax
-            {
+            // first update all existing slots to slotMax
+            if (!existing.isEmpty()) {
                for (Item eItem : existing) {
                   short oldQ = eItem.getQuantity();
                   if (oldQ < slotMax && owner.equals(eItem.getOwner())) {

@@ -37,7 +37,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -3941,8 +3940,7 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
 
                long expiration, currenttime = System.currentTimeMillis();
                Set<Skill> keys = getSkills().keySet();
-               for (Iterator<Skill> i = keys.iterator(); i.hasNext(); ) {
-                  Skill key = i.next();
+               for (Skill key : keys) {
                   SkillEntry skill = getSkills().get(key);
                   if (skill.expiration() != -1 && skill.expiration() < currenttime) {
                      changeSkillLevel(key, (byte) -1, 0, -1);
@@ -8407,8 +8405,8 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
          ps.setInt(22, remainingAp);
 
          StringBuilder sps = new StringBuilder();
-         for (int i = 0; i < remainingSp.length; i++) {
-            sps.append(remainingSp[i]);
+         for (int j : remainingSp) {
+            sps.append(j);
             sps.append(",");
          }
          String sp = sps.toString();
@@ -8573,8 +8571,8 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
             ps.setInt(11, maxhp);
             ps.setInt(12, maxmp);
             StringBuilder sps = new StringBuilder();
-            for (int i = 0; i < remainingSp.length; i++) {
-               sps.append(remainingSp[i]);
+            for (int j : remainingSp) {
+               sps.append(j);
                sps.append(",");
             }
             String sp = sps.toString();
@@ -10415,8 +10413,8 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
             setListener(null);
 
             // thanks Shavit for noticing a memory leak with inventories holding owner object
-            for (int i = 0; i < inventory.length; i++) {
-               inventory[i].dispose();
+            for (MapleInventory items : inventory) {
+               items.dispose();
             }
             inventory = null;
          }, 5 * 60 * 1000);

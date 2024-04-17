@@ -36,8 +36,8 @@ public class GenericLittleEndianWriter implements LittleEndianWriter {
     */
    @Override
    public void write(byte[] b) {
-      for (int x = 0; x < b.length; x++) {
-         bos.writeByte(b[x]);
+      for (byte value : b) {
+         bos.writeByte(value);
       }
    }
 
@@ -140,9 +140,9 @@ public class GenericLittleEndianWriter implements LittleEndianWriter {
     * @param s The ASCII string to write.
     */
    @Override
-   public void writeNullTerminatedAsciiString(String s, int size){
+   public void writeNullTerminatedAsciiString(String s, int size) {
       writeAsciiString(s);
-      for(int i = s.length(); i < size; i++){
+      for (int i = s.length(); i < size; i++) {
          write(0);
       }
    }

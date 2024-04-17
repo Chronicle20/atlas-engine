@@ -45,10 +45,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.IntStream;
 
-import client.TemporaryStatValue;
-import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleClient;
+import client.TemporaryStatType;
+import client.TemporaryStatValue;
 import client.autoban.AutobanFactory;
 import client.inventory.Equip;
 import client.inventory.Item;
@@ -2370,13 +2370,13 @@ public class MapleMap {
       final Point dropPos = new Point(pos);
       dropPos.x -= (12 * list.size());
 
-      for (int i = 0; i < list.size(); i++) {
-         if (list.get(i) == 0) {
+      for (Integer integer : list) {
+         if (integer == 0) {
             spawnMesoDrop(owner != null ? 10 * owner.getMesoRate() : 10, calcDropPos(dropPos, pos), dropper, owner, playerDrop,
                   (byte) (ffaDrop ? 2 : 0));
          } else {
             final Item drop;
-            int randomedId = list.get(i);
+            int randomedId = integer;
 
             if (ItemConstants.getInventoryType(randomedId) != MapleInventoryType.EQUIP) {
                drop = new Item(randomedId, (short) 0, (short) (rnd.nextInt(copies) + minCopies));
@@ -2679,10 +2679,10 @@ public class MapleMap {
       }
 
       MaplePet[] pets = chr.getPets();
-      for (int i = 0; i < pets.length; i++) {
-         if (pets[i] != null) {
-            pets[i].setPos(getGroundBelow(chr.getPosition()));
-            chr.announce(CUser.showPet(chr, pets[i], false, false));
+      for (MaplePet pet : pets) {
+         if (pet != null) {
+            pet.setPos(getGroundBelow(chr.getPosition()));
+            chr.announce(CUser.showPet(chr, pet, false, false));
          } else {
             break;
          }
@@ -2722,7 +2722,8 @@ public class MapleMap {
          broadcastGMSpawnPlayerMapObjectMessage(chr, chr, true);
          chr.announce(CField.getGMEffect(0x10, (byte) 1));
 
-         List<Pair<TemporaryStatType, TemporaryStatValue>> dsstat = Collections.singletonList(new Pair<>(TemporaryStatType.DARKSIGHT, new TemporaryStatValue(0, 0, 0
+         List<Pair<TemporaryStatType, TemporaryStatValue>> dsstat =
+               Collections.singletonList(new Pair<>(TemporaryStatType.DARKSIGHT, new TemporaryStatValue(0, 0, 0
                )));
          broadcastGMMessage(chr, CUserRemote.giveForeignBuff(chr, dsstat), false);
       } else {

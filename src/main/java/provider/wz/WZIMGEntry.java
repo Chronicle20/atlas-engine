@@ -21,99 +21,99 @@
 */
 package provider.wz;
 
-import provider.MapleData;
-import provider.MapleDataEntity;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import provider.MapleData;
+import provider.MapleDataEntity;
+
 public class WZIMGEntry implements MapleData {
-    private String name;
-    private MapleDataType type;
-    private List<MapleData> children = new ArrayList<>(10);
-    private Object data;
-    private MapleDataEntity parent;
+   private String name;
+   private MapleDataType type;
+   private List<MapleData> children = new ArrayList<>(10);
+   private Object data;
+   private MapleDataEntity parent;
 
-    public WZIMGEntry(MapleDataEntity parent) {
-        this.parent = parent;
-    }
+   public WZIMGEntry(MapleDataEntity parent) {
+      this.parent = parent;
+   }
 
-    @Override
-    public String getName() {
-        return name;
-    }
+   @Override
+   public String getName() {
+      return name;
+   }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+   public void setName(String name) {
+      this.name = name;
+   }
 
-    @Override
-    public MapleDataType getType() {
-        return type;
-    }
+   @Override
+   public MapleDataType getType() {
+      return type;
+   }
 
-    public void setType(MapleDataType type) {
-        this.type = type;
-    }
+   public void setType(MapleDataType type) {
+      this.type = type;
+   }
 
-    @Override
-    public List<MapleData> getChildren() {
-        return Collections.unmodifiableList(children);
-    }
+   @Override
+   public List<MapleData> getChildren() {
+      return Collections.unmodifiableList(children);
+   }
 
-    @Override
-    public MapleData getChildByPath(String path) {
-        String[] segments = path.split("/");
-        if (segments[0].equals("..")) {
-            return ((MapleData) getParent()).getChildByPath(path.substring(path.indexOf("/") + 1));
-        }
-        MapleData ret = this;
-        for (int x = 0; x < segments.length; x++) {
-            boolean foundChild = false;
-            for (MapleData child : ret.getChildren()) {
-                if (child.getName().equals(segments[x])) {
-                    ret = child;
-                    foundChild = true;
-                    break;
-                }
+   @Override
+   public MapleData getChildByPath(String path) {
+      String[] segments = path.split("/");
+      if (segments[0].equals("..")) {
+         return ((MapleData) getParent()).getChildByPath(path.substring(path.indexOf("/") + 1));
+      }
+      MapleData ret = this;
+      for (String segment : segments) {
+         boolean foundChild = false;
+         for (MapleData child : ret.getChildren()) {
+            if (child.getName().equals(segment)) {
+               ret = child;
+               foundChild = true;
+               break;
             }
-            if (!foundChild) {
-                return null;
-            }
-        }
-        return ret;
-    }
+         }
+         if (!foundChild) {
+            return null;
+         }
+      }
+      return ret;
+   }
 
-    @Override
-    public Object getData() {
-        return data;
-    }
+   @Override
+   public Object getData() {
+      return data;
+   }
 
-    public void setData(Object data) {
-        this.data = data;
-    }
+   public void setData(Object data) {
+      this.data = data;
+   }
 
-    public void addChild(WZIMGEntry entry) {
-        children.add(entry);
-    }
+   public void addChild(WZIMGEntry entry) {
+      children.add(entry);
+   }
 
-    @Override
-    public Iterator<MapleData> iterator() {
-        return getChildren().iterator();
-    }
+   @Override
+   public Iterator<MapleData> iterator() {
+      return getChildren().iterator();
+   }
 
-    @Override
-    public String toString() {
-        return getName() + ":" + getData();
-    }
+   @Override
+   public String toString() {
+      return getName() + ":" + getData();
+   }
 
-    public MapleDataEntity getParent() {
-        return parent;
-    }
+   public MapleDataEntity getParent() {
+      return parent;
+   }
 
-    public void finish() {
-        ((ArrayList<MapleData>) children).trimToSize();
-    }
+   public void finish() {
+      ((ArrayList<MapleData>) children).trimToSize();
+   }
 }

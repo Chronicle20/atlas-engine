@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 
-import client.TemporaryStatValue;
-import client.TemporaryStatType;
 import client.GuidedBullet;
 import client.MapleCharacter;
 import client.MapleClient;
@@ -18,6 +16,8 @@ import client.MapleMount;
 import client.MapleRing;
 import client.SpeedInfusion;
 import client.TemporaryStatBase;
+import client.TemporaryStatType;
+import client.TemporaryStatValue;
 import client.inventory.Equip;
 import client.inventory.Item;
 import client.inventory.MapleInventory;
@@ -228,8 +228,8 @@ public class CCommon {
    private static void addRemainingSkillInfo(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
       int[] remainingSp = chr.getRemainingSps();
       int effectiveLength = 0;
-      for (int i = 0; i < remainingSp.length; i++) {
-         if (remainingSp[i] > 0) {
+      for (int j : remainingSp) {
+         if (j > 0) {
             effectiveLength++;
          }
       }

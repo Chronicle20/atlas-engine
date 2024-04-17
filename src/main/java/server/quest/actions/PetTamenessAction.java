@@ -2,7 +2,6 @@ package server.quest.actions;
 
 import client.MapleCharacter;
 import client.MapleClient;
-import client.inventory.MaplePet;
 import provider.MapleData;
 import provider.MapleDataTool;
 import server.quest.MapleQuest;

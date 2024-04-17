@@ -51,7 +51,7 @@ public final class ViewAllCharHandler extends AbstractMaplePacketHandler {
             if (chrTotal > 9) {
                 int padRight = chrTotal % 3;
                 if (padRight > 0 && lastwchars != null) {
-                    MapleCharacter chr = lastwchars.get(lastwchars.size() - 1);
+                    MapleCharacter chr = lastwchars.getLast();
 
                     for (int i = padRight; i < 3; i++) { // filling the remaining slots with the last character loaded
                         chrTotal++;

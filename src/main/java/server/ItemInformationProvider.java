@@ -288,28 +288,15 @@ public class ItemInformationProvider {
       } else if (range > 11) {
          return 4260008;
       } else {
-         switch (range) {
-            case 5:
-               return 4260001;
-
-            case 6:
-               return 4260002;
-
-            case 7:
-               return 4260003;
-
-            case 8:
-               return 4260004;
-
-            case 9:
-               return 4260005;
-
-            case 10:
-               return 4260006;
-
-            default:
-               return 4260007;
-         }
+         return switch (range) {
+            case 5 -> 4260001;
+            case 6 -> 4260002;
+            case 7 -> 4260003;
+            case 8 -> 4260004;
+            case 9 -> 4260005;
+            case 10 -> 4260006;
+            default -> 4260007;
+         };
       }
    }
 
@@ -1153,8 +1140,7 @@ public class ItemInformationProvider {
    public Item scrollEquipWithId(Item equip, int scrollId, boolean usingWhiteScroll, int vegaItemId, boolean isGM) {
       boolean assertGM = (isGM && YamlConfig.config.server.USE_PERFECT_GM_SCROLL);
 
-      if (equip instanceof Equip) {
-         Equip nEquip = (Equip) equip;
+      if (equip instanceof Equip nEquip) {
          Map<String, Integer> stats = this.getEquipStats(scrollId);
 
          if (((nEquip.getUpgradeSlots() > 0 || ItemConstants.isCleanSlate(scrollId))) || assertGM) {
@@ -1750,20 +1736,10 @@ public class ItemInformationProvider {
    }
 
    public final boolean isTwoHanded(int itemId) {
-      switch (getWeaponType(itemId)) {
-         case GENERAL2H_SWING:
-         case BOW:
-         case CLAW:
-         case CROSSBOW:
-         case POLE_ARM_SWING:
-         case SPEAR_STAB:
-         case SWORD2H:
-         case GUN:
-         case KNUCKLE:
-            return true;
-         default:
-            return false;
-      }
+      return switch (getWeaponType(itemId)) {
+         case GENERAL2H_SWING, BOW, CLAW, CROSSBOW, POLE_ARM_SWING, SPEAR_STAB, SWORD2H, GUN, KNUCKLE -> true;
+         default -> false;
+      };
    }
 
    public boolean isCash(int itemId) {

@@ -48,10 +48,8 @@ public final class HiredMerchantRequest extends AbstractMaplePacketHandler {
 
         try {
             for (MapleMapObject mmo : chr.getMap().getMapObjectsInRange(chr.getPosition(), 23000, Arrays.asList(MapleMapObjectType.HIRED_MERCHANT, MapleMapObjectType.PLAYER))) {
-                if (mmo instanceof MapleCharacter) {
-                    MapleCharacter mc = (MapleCharacter) mmo;
-
-                    MaplePlayerShop shop = mc.getPlayerShop();
+                if (mmo instanceof MapleCharacter mc) {
+                   MaplePlayerShop shop = mc.getPlayerShop();
                     if (shop != null && shop.isOwner(mc)) {
                         chr.announce(CMiniRoomBaseDlg.getMiniRoomError(13));
                         return;

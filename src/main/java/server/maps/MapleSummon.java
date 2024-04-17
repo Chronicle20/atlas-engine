@@ -25,6 +25,9 @@ import client.MapleCharacter;
 import client.MapleClient;
 import client.SkillFactory;
 import connection.packets.CSummonedPool;
+import constants.skills.Ranger;
+import constants.skills.Sniper;
+import constants.skills.WindArcher;
 
 import java.awt.*;
 
@@ -93,12 +96,9 @@ public class MapleSummon extends AbstractAnimatedMapleMapObject {
     }
 
     public final boolean isPuppet() {
-        switch (skill) {
-            case 3111002:
-            case 3211002:
-            case 13111004:
-                return true;
-        }
-        return false;
+       return switch (skill) {
+          case Ranger.PUPPET, Sniper.PUPPET, WindArcher.PUPPET -> true;
+          default -> false;
+       };
     }
 }

@@ -1793,8 +1793,7 @@ public class CWvsContext {
          MaplePlayerShopItem item = hme.getLeft();
          AbstractMapleMapObject mo = hme.getRight();
 
-         if (mo instanceof MaplePlayerShop) {
-            MaplePlayerShop ps = (MaplePlayerShop) mo;
+         if (mo instanceof MaplePlayerShop ps) {
             MapleCharacter owner = ps.getOwner();
 
             mplew.writeMapleAsciiString(owner.getName());

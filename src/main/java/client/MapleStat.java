@@ -24,8 +24,6 @@ package client;
 import java.util.Arrays;
 import java.util.Optional;
 
-import static server.quest.MapleQuestRequirementType.PET;
-
 public enum MapleStat {
 
     SKIN(0x1),

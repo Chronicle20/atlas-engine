@@ -973,7 +973,7 @@ public class MapleMap {
                   if (registeredDrops.isEmpty()) {
                      break;
                   }
-                  mapobj = registeredDrops.remove(0)
+                  mapobj = registeredDrops.removeFirst()
                         .get();
                }
             } finally {
@@ -1600,11 +1600,11 @@ public class MapleMap {
    }
 
    public void killFriendlies(MapleMonster mob) {
-      this.killMonster(mob, (MapleCharacter) getPlayers().get(0), false);
+      this.killMonster(mob, (MapleCharacter) getPlayers().getFirst(), false);
    }
 
    public void killMonster(int mobId) {
-      MapleCharacter chr = (MapleCharacter) getPlayers().get(0);
+      MapleCharacter chr = (MapleCharacter) getPlayers().getFirst();
       List<MapleMonster> mobList = getAllMonsters();
 
       for (MapleMonster mob : mobList) {
@@ -1754,7 +1754,7 @@ public class MapleMap {
          Collections.shuffle(points);
          for (MapleMapObject o : mapobjects.values()) {
             if (o.getType() == MapleMapObjectType.REACTOR) {
-               o.setPosition(points.remove(points.size() - 1));
+               o.setPosition(points.removeLast());
             }
          }
       } finally {
@@ -1777,7 +1777,7 @@ public class MapleMap {
       Collections.shuffle(points);
       for (MapleMapObject obj : targets) {
          MapleReactor mr = (MapleReactor) obj;
-         mr.setPosition(points.remove(points.size() - 1));
+         mr.setPosition(points.removeLast());
       }
    }
 
@@ -1789,9 +1789,7 @@ public class MapleMap {
       objectRLock.lock();
       try {
          for (Object ob : list) {
-            if (ob instanceof MapleMapObject) {
-               MapleMapObject mmo = (MapleMapObject) ob;
-
+            if (ob instanceof MapleMapObject mmo) {
                if (mapobjects.containsValue(mmo) && mmo.getType() == MapleMapObjectType.REACTOR) {
                   listObjects.add(mmo);
                }
@@ -1810,7 +1808,7 @@ public class MapleMap {
       Collections.shuffle(points);
       for (MapleMapObject obj : targets) {
          MapleReactor mr = (MapleReactor) obj;
-         mr.setPosition(points.remove(points.size() - 1));
+         mr.setPosition(points.removeLast());
       }
    }
 
@@ -4353,7 +4351,7 @@ public class MapleMap {
          reactor.setGuardian(pt);
          this.buffMonsters(team, skill);
          getReactorByOid(reactor.getObjectId()).ifPresent(r -> r.hitReactor(((MapleCharacter) this.getAllPlayer()
-               .get(0)).getClient()));
+               .getFirst()).getClient()));
       } catch (Exception e) {
          e.printStackTrace();
       }

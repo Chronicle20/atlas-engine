@@ -200,7 +200,7 @@ public class MakerProcessor {
                                 c.getPlayer().setCS(false);
                             }
                         } else {
-                            toCreate = recipe.getGainItems().get(0).getLeft();
+                            toCreate = recipe.getGainItems().getFirst().getLeft();
 
                             if (stimulantid != -1) {
                                 c.getAbstractPlayerInteraction().gainItem(stimulantid, (short) -1, false);
@@ -217,11 +217,11 @@ public class MakerProcessor {
 
                         // thanks inhyuk for noticing missing MAKER_RESULT packets
                         if (type == 3) {
-                            c.announce(CUserLocal.makerResultCrystal(recipe.getGainItems().get(0).getLeft(), recipe.getReqItems().get(0).getLeft()));
+                            c.announce(CUserLocal.makerResultCrystal(recipe.getGainItems().getFirst().getLeft(), recipe.getReqItems().getFirst().getLeft()));
                         } else if (type == 4) {
-                            c.announce(CUserLocal.makerResultDesynth(recipe.getReqItems().get(0).getLeft(), recipe.getCost(), recipe.getGainItems()));
+                            c.announce(CUserLocal.makerResultDesynth(recipe.getReqItems().getFirst().getLeft(), recipe.getCost(), recipe.getGainItems()));
                         } else {
-                            c.announce(CUserLocal.makerResult(makerSucceeded, recipe.getGainItems().get(0).getLeft(), recipe.getGainItems().get(0).getRight(), recipe.getCost(), recipe.getReqItems(), stimulantid, new LinkedList<>(reagentids.keySet())));
+                            c.announce(CUserLocal.makerResult(makerSucceeded, recipe.getGainItems().getFirst().getLeft(), recipe.getGainItems().getFirst().getRight(), recipe.getCost(), recipe.getReqItems(), stimulantid, new LinkedList<>(reagentids.keySet())));
                         }
 
                         c.announce(CUser.showMakerEffect(makerSucceeded));
@@ -397,15 +397,11 @@ public class MakerProcessor {
                         String stat = s.substring(3);
 
                         if (!stat.equals("ReqLevel")) {    // improve req level... really?
-                            switch (stat) {
-                                case "MaxHP":
-                                    stat = "MHP";
-                                    break;
-
-                                case "MaxMP":
-                                    stat = "MMP";
-                                    break;
-                            }
+                           stat = switch (stat) {
+                              case "MaxHP" -> "MHP";
+                              case "MaxMP" -> "MMP";
+                              default -> stat;
+                           };
 
                             stats.merge(stat, reagentBuff.getRight() * r.getValue(), Integer::sum);
                         }

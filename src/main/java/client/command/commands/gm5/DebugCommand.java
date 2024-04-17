@@ -31,7 +31,6 @@ import scripting.event.EventInstanceManager;
 import server.TimerManager;
 import server.life.MapleMonster;
 import server.life.SpawnPoint;
-import server.maps.MapleMapObject;
 import server.maps.MapleMapObjectType;
 import server.maps.MaplePortal;
 import server.maps.MapleReactor;

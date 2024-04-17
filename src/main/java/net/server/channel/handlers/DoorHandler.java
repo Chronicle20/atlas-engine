@@ -46,9 +46,8 @@ public final class DoorHandler extends AbstractMaplePacketHandler {
         }
 
         for (MapleMapObject obj : chr.getMap().getMapObjects()) {
-            if (obj instanceof MapleDoorObject) {
-                MapleDoorObject door = (MapleDoorObject) obj;
-                if (door.getOwnerId() == ownerid) {
+            if (obj instanceof MapleDoorObject door) {
+               if (door.getOwnerId() == ownerid) {
                     door.warp(chr);
                     return;
                 }

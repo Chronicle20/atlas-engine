@@ -131,16 +131,12 @@ public class CashShop {
     }
 
     public int getCash(int type) {
-        switch (type) {
-            case 1:
-                return nxCredit;
-            case 2:
-                return maplePoint;
-            case 4:
-                return nxPrepaid;
-        }
-
-        return 0;
+       return switch (type) {
+          case 1 -> nxCredit;
+          case 2 -> maplePoint;
+          case 4 -> nxPrepaid;
+          default -> 0;
+       };
     }
 
     public void gainCash(int type, int cash) {

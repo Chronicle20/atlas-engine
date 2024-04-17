@@ -196,13 +196,8 @@ public class MaplePlayerNPC extends AbstractMapleMapObject {
     }
 
     private static int getAndIncrementRunningWorldJobRanks(int world, int job) {
-        AtomicInteger wjr = runningWorldJobRank.get(new Pair<>(world, job));
-        if (wjr == null) {
-            wjr = new AtomicInteger(1);
-            runningWorldJobRank.put(new Pair<>(world, job), wjr);
-        }
-
-        return wjr.getAndIncrement();
+       AtomicInteger wjr = runningWorldJobRank.computeIfAbsent(new Pair<>(world, job), k -> new AtomicInteger(1));
+       return wjr.getAndIncrement();
     }
 
     public static boolean canSpawnPlayerNpc(String name, int mapid) {
@@ -286,7 +281,7 @@ public class MaplePlayerNPC extends AbstractMapleMapObject {
             }
         }
 
-        return availablesBranch.remove(availablesBranch.size() - 1);
+        return availablesBranch.removeLast();
     }
 
     private static MaplePlayerNPC createPlayerNPCInternal(MapleMap map, Point pos, MapleCharacter chr) {
@@ -489,7 +484,7 @@ public class MaplePlayerNPC extends AbstractMapleMapObject {
         }
 
         List<Integer> updateMapids = processPlayerNPCInternal(null, null, chr, false).getRight();
-        int worldid = updateMapids.remove(0);
+        int worldid = updateMapids.removeFirst();
 
         for (Integer mapid : updateMapids) {
             MaplePlayerNPC pn = getPlayerNPCFromWorldMap(chr.getName(), worldid, mapid);

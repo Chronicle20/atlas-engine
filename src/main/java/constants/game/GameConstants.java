@@ -564,12 +564,10 @@ public class GameConstants {
             return true;
         }
 
-        switch (map.getId()) {
-            case 910000000:
-                return true;
-        }
-
-        return false;
+       return switch (map.getId()) {
+          case 910000000 -> true;
+          default -> false;
+       };
     }
 
     public static boolean isBossRush(int mapid) {
@@ -623,22 +621,10 @@ public class GameConstants {
     }
 
     public static boolean hasSPTable(MapleJob job) {
-        switch (job) {
-            case EVAN:
-            case EVAN1:
-            case EVAN2:
-            case EVAN3:
-            case EVAN4:
-            case EVAN5:
-            case EVAN6:
-            case EVAN7:
-            case EVAN8:
-            case EVAN9:
-            case EVAN10:
-                return true;
-            default:
-                return false;
-        }
+       return switch (job) {
+          case EVAN, EVAN1, EVAN2, EVAN3, EVAN4, EVAN5, EVAN6, EVAN7, EVAN8, EVAN9, EVAN10 -> true;
+          default -> false;
+       };
     }
 
     public static int getMonsterHP(final int level) {

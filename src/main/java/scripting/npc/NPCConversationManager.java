@@ -612,25 +612,14 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
 
     public String getSkillBookInfo(int itemid) {
         SkillBookEntry sbe = MapleSkillbookInformationProvider.getInstance().getSkillbookAvailability(itemid);
-        switch (sbe) {
-            case UNAVAILABLE:
-                return "";
-
-            case REACTOR:
-                return "    Obtainable through #rexploring#k (loot boxes).";
-
-            case SCRIPT:
-                return "    Obtainable through #rexploring#k (field interaction).";
-
-            case QUEST_BOOK:
-                return "    Obtainable through #rquestline#k (collecting book).";
-
-            case QUEST_REWARD:
-                return "    Obtainable through #rquestline#k (quest reward).";
-
-            default:
-                return "    Obtainable through #rquestline#k.";
-        }
+       return switch (sbe) {
+          case UNAVAILABLE -> "";
+          case REACTOR -> "    Obtainable through #rexploring#k (loot boxes).";
+          case SCRIPT -> "    Obtainable through #rexploring#k (field interaction).";
+          case QUEST_BOOK -> "    Obtainable through #rquestline#k (collecting book).";
+          case QUEST_REWARD -> "    Obtainable through #rquestline#k (quest reward).";
+          default -> "    Obtainable through #rquestline#k.";
+       };
     }
 
     // (CPQ + WED wishlist) by -- Drago (Dragohe4rt)

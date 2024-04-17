@@ -70,7 +70,7 @@ public class PetAutopotProcessor {
 
             toUse = null;
             while (!toUseList.isEmpty()) {
-                Item it = toUseList.remove(0);
+                Item it = toUseList.removeFirst();
 
                 if (it.getQuantity() > 0) {
                     toUse = it;

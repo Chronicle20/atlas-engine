@@ -30,7 +30,6 @@ import server.gachapon.MapleGachapon;
 
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.stream.IntStream;
 
 public class GachaCommand extends Command {

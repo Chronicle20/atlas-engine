@@ -120,18 +120,13 @@ public class XMLDomMapleData implements MapleData {
                 String value = attributes.getNamedItem("value").getNodeValue();
                 Number nval = GameConstants.parseNumber(value);
 
-                switch (type) {
-                    case DOUBLE:
-                        return nval.doubleValue();
-                    case FLOAT:
-                        return nval.floatValue();
-                    case INT:
-                        return nval.intValue();
-                    case SHORT:
-                        return nval.shortValue();
-                    default:
-                        return null;
-                }
+               return switch (type) {
+                  case DOUBLE -> nval.doubleValue();
+                  case FLOAT -> nval.floatValue();
+                  case INT -> nval.intValue();
+                  case SHORT -> nval.shortValue();
+                  default -> null;
+               };
             }
             case STRING:
             case UOL: {
@@ -157,33 +152,21 @@ public class XMLDomMapleData implements MapleData {
     public synchronized MapleDataType getType() {
         String nodeName = node.getNodeName();
 
-        switch (nodeName) {
-            case "imgdir":
-                return MapleDataType.PROPERTY;
-            case "canvas":
-                return MapleDataType.CANVAS;
-            case "convex":
-                return MapleDataType.CONVEX;
-            case "sound":
-                return MapleDataType.SOUND;
-            case "uol":
-                return MapleDataType.UOL;
-            case "double":
-                return MapleDataType.DOUBLE;
-            case "float":
-                return MapleDataType.FLOAT;
-            case "int":
-                return MapleDataType.INT;
-            case "short":
-                return MapleDataType.SHORT;
-            case "string":
-                return MapleDataType.STRING;
-            case "vector":
-                return MapleDataType.VECTOR;
-            case "null":
-                return MapleDataType.IMG_0x00;
-        }
-        return null;
+       return switch (nodeName) {
+          case "imgdir" -> MapleDataType.PROPERTY;
+          case "canvas" -> MapleDataType.CANVAS;
+          case "convex" -> MapleDataType.CONVEX;
+          case "sound" -> MapleDataType.SOUND;
+          case "uol" -> MapleDataType.UOL;
+          case "double" -> MapleDataType.DOUBLE;
+          case "float" -> MapleDataType.FLOAT;
+          case "int" -> MapleDataType.INT;
+          case "short" -> MapleDataType.SHORT;
+          case "string" -> MapleDataType.STRING;
+          case "vector" -> MapleDataType.VECTOR;
+          case "null" -> MapleDataType.IMG_0x00;
+          default -> null;
+       };
     }
 
     @Override

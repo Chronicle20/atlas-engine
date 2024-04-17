@@ -725,7 +725,7 @@ public final class Channel {
                 return null;
             }
 
-            ret = weddingReservationQueue.remove(0);
+            ret = weddingReservationQueue.removeFirst();
             if (ret == null) {
                 return null;
             }

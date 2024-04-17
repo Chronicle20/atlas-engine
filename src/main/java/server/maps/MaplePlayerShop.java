@@ -429,7 +429,7 @@ public class MaplePlayerShop extends AbstractMapleMapObject {
         synchronized (chatLog) {
             chatLog.add(new Pair<>(c.getPlayer(), chat));
             if (chatLog.size() > 25) {
-                chatLog.remove(0);
+                chatLog.removeFirst();
             }
             chatSlot.put(c.getPlayer().getId(), s);
         }

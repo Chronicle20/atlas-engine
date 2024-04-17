@@ -97,10 +97,10 @@ public class MapleAlliance {
                 .filter(c -> c.getMapId() == party.getLeader().getPlayer().map(MapleCharacter::getMapId).orElse(-1))
                 .collect(Collectors.toList());
 
-        if (!mcl.isEmpty() && !mcl.get(0).isPartyLeader()) {
+        if (!mcl.isEmpty() && !mcl.getFirst().isPartyLeader()) {
             for (int i = 1; i < mcl.size(); i++) {
                 if (mcl.get(i).isPartyLeader()) {
-                    MapleCharacter temp = mcl.get(0);
+                    MapleCharacter temp = mcl.getFirst();
                     mcl.set(0, mcl.get(i));
                     mcl.set(i, temp);
                 }
@@ -141,7 +141,7 @@ public class MapleAlliance {
 
                 Server.getInstance().addAlliance(id, alliance.get());
 
-                int worldid = guildMasters.get(0).getWorld();
+                int worldid = guildMasters.getFirst().getWorld();
                 Server.getInstance().allianceMessage(id, CWvsContext.updateAllianceInfo(alliance.get(), worldid), -1, -1);
                 Server.getInstance().allianceMessage(id, CWvsContext.getGuildAlliances(alliance.get(), worldid), -1, -1);  // thanks Vcoc for noticing guilds from other alliances being visually stacked here due to this not being updated
             } catch (Exception e) {

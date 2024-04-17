@@ -121,7 +121,7 @@ public class MapleInventory implements Iterable<Item> {
                 rcvTypes.put(itemId, item.right.getType());
             } else {
                 if (!ItemConstants.isEquipment(itemId) && !ItemConstants.isRechargeable(itemId)) {
-                    qty.set(0, qty.get(0) + item.left.getQuantity());
+                    qty.set(0, qty.getFirst() + item.left.getQuantity());
                 } else {
                     qty.add((int) item.left.getQuantity());
                 }
@@ -202,7 +202,7 @@ public class MapleInventory implements Iterable<Item> {
             } else {
                 // thanks BHB88 for pointing out an issue with rechargeable items being stacked on inventory check
                 if (!ItemConstants.isEquipment(item.left.getItemId()) && !ItemConstants.isRechargeable(item.left.getItemId())) {
-                    qty.set(0, qty.get(0) + item.left.getQuantity());
+                    qty.set(0, qty.getFirst() + item.left.getQuantity());
                 } else {
                     qty.add((int) item.left.getQuantity());
                 }

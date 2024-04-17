@@ -75,13 +75,8 @@ public class CharacterFactoryRecipe {
     }
 
     public void addStartingItem(int itemid, int quantity, MapleInventoryType itemType) {
-        AtomicInteger p = runningTypePosition.get(itemType);
-        if (p == null) {
-            p = new AtomicInteger(0);
-            runningTypePosition.put(itemType, p);
-        }
-
-        itemsWithType.add(new Pair<>(new Item(itemid, (short) p.getAndIncrement(), (short) quantity), itemType));
+       AtomicInteger p = runningTypePosition.computeIfAbsent(itemType, k -> new AtomicInteger(0));
+       itemsWithType.add(new Pair<>(new Item(itemid, (short) p.getAndIncrement(), (short) quantity), itemType));
     }
 
     public MapleJob getJob() {

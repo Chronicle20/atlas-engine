@@ -883,7 +883,7 @@ public class EventManager {
         }
 
         if (startInstance(chr.get())) {
-            exportReadyGuild(guildInstance.get(0));
+            exportReadyGuild(guildInstance.getFirst());
             return true;
         } else {
             return false;
@@ -922,7 +922,7 @@ public class EventManager {
                 return null;
             }
 
-            EventInstanceManager eim = readyInstances.remove(0);
+            EventInstanceManager eim = readyInstances.removeFirst();
             fillEimQueue();
 
             return eim;

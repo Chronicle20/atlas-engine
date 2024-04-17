@@ -48,9 +48,8 @@ public final class NPCTalkHandler extends AbstractMaplePacketHandler {
 
         int oid = slea.readInt();
         MapleMapObject obj = c.getPlayer().getMap().getMapObject(oid).orElse(null);
-        if (obj instanceof MapleNPC) {
-            MapleNPC npc = (MapleNPC) obj;
-            if (YamlConfig.config.server.USE_DEBUG == true) {
+        if (obj instanceof MapleNPC npc) {
+           if (YamlConfig.config.server.USE_DEBUG == true) {
                 c.getPlayer().dropMessage(5, "Talking to NPC " + npc.getId());
             }
 
@@ -82,9 +81,8 @@ public final class NPCTalkHandler extends AbstractMaplePacketHandler {
                     }
                 }
             }
-        } else if (obj instanceof MaplePlayerNPC) {
-            MaplePlayerNPC pnpc = (MaplePlayerNPC) obj;
-            NPCScriptManager nsm = NPCScriptManager.getInstance();
+        } else if (obj instanceof MaplePlayerNPC pnpc) {
+           NPCScriptManager nsm = NPCScriptManager.getInstance();
 
             if (pnpc.getScriptId() < 9977777 && !nsm.isNpcScriptAvailable(c, "" + pnpc.getScriptId())) {
                 nsm.start(c, pnpc.getScriptId(), "rank_user", null);

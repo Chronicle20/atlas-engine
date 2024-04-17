@@ -35,9 +35,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
-import buddy.BuddyList;
 import buddy.BuddyProcessor;
-import client.BuddyRequestInfo;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleDisease;
@@ -62,7 +60,6 @@ import net.AbstractMaplePacketHandler;
 import net.server.PlayerBuffValueHolder;
 import net.server.Server;
 import net.server.channel.Channel;
-import net.server.channel.CharacterIdChannelPair;
 import net.server.coordinator.world.MapleEventRecallCoordinator;
 import net.server.guild.MapleAlliance;
 import net.server.guild.MapleGuild;

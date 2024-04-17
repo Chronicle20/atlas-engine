@@ -940,7 +940,7 @@ public class World {
          possibleWeddings.add(selectedPw);
       }
 
-      return getMarriageQueuedCouple(possibleWeddings.get(0));
+      return getMarriageQueuedCouple(possibleWeddings.getFirst());
    }
 
    public void debugMarriageStatus() {

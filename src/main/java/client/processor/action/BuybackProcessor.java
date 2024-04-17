@@ -43,34 +43,16 @@ public class BuybackProcessor {
         }
 
         if (buyback) {
-            String jobString;
-            switch (chr.getJobStyle()) {
-                case WARRIOR:
-                    jobString = "warrior";
-                    break;
+            String jobString = switch (chr.getJobStyle()) {
+               case WARRIOR -> "warrior";
+               case MAGICIAN -> "magician";
+               case BOWMAN -> "bowman";
+               case THIEF -> "thief";
+               case BRAWLER, GUNSLINGER -> "pirate";
+               default -> "beginner";
+            };
 
-                case MAGICIAN:
-                    jobString = "magician";
-                    break;
-
-                case BOWMAN:
-                    jobString = "bowman";
-                    break;
-
-                case THIEF:
-                    jobString = "thief";
-                    break;
-
-                case BRAWLER:
-                case GUNSLINGER:
-                    jobString = "pirate";
-                    break;
-
-                default:
-                    jobString = "beginner";
-            }
-
-            chr.healHpMp();
+           chr.healHpMp();
             chr.purgeDebuffs();
             chr.broadcastStance(chr.isFacingLeft() ? 5 : 4);
 

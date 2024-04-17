@@ -6,6 +6,7 @@
 package server.events;
 
 import client.MapleCharacter;
+import constants.skills.Beginner;
 
 /**
  * @author kevintjuh93
@@ -33,17 +34,13 @@ public class RescueGaga extends MapleEvents {
     }
 
     public void giveSkill(MapleCharacter chr) {
-        int skillid = 0;
-        switch (chr.getJobType()) {
-            case 0:
-                skillid = 1013;
-                break;
-            case 1:
-            case 2:
-                skillid = 10001014;
-        }
+        int skillid = switch (chr.getJobType()) {
+           case 0 -> Beginner.SPACESHIP;
+           case 1, 2 -> 10001014;
+           default -> 0;
+        };
 
-        long expiration = (System.currentTimeMillis() + 3600 * 24 * 20 * 1000);//20 days
+       long expiration = (System.currentTimeMillis() + 3600 * 24 * 20 * 1000);//20 days
         if (completed < 20) {
             chr.changeSkillLevel(skillid, (byte) 1, 1, expiration);
             chr.changeSkillLevel(skillid + 1, (byte) 1, 1, expiration);

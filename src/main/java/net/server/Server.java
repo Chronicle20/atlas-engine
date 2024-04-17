@@ -892,7 +892,7 @@ public class Server {
         }
 
         while (!processDiseaseAnnounceClients.isEmpty()) {
-            MapleClient c = processDiseaseAnnounceClients.remove(0);
+            MapleClient c = processDiseaseAnnounceClients.removeFirst();
             MapleCharacter player = c.getPlayer();
             if (player != null && player.isLoggedinWorld()) {
                 player.announceDiseases();
@@ -904,7 +904,7 @@ public class Server {
         try {
             // this is to force the system to wait for at least one complete tick before releasing disease info for the registered clients
             while (!registeredDiseaseAnnouncePlayers.isEmpty()) {
-                MapleClient c = registeredDiseaseAnnouncePlayers.remove(0);
+                MapleClient c = registeredDiseaseAnnouncePlayers.removeFirst();
                 processDiseaseAnnouncePlayers.add(c);
             }
         } finally {
@@ -940,9 +940,9 @@ public class Server {
                         playerRanking.add(new ArrayList<>(0));
                     }
 
-                    playerRanking.add(worldid, ranking.get(0).getRight());
+                    playerRanking.add(worldid, ranking.getFirst().getRight());
                 } else {
-                    playerRanking.add(0, ranking.get(0).getRight());
+                    playerRanking.addFirst(ranking.getFirst().getRight());
                 }
             } finally {
                 wldWLock.unlock();
@@ -958,7 +958,7 @@ public class Server {
                     return;
                 }
 
-                playerRanking.remove(playerRanking.size() - 1);
+                playerRanking.removeLast();
             } finally {
                 wldWLock.unlock();
             }
@@ -967,7 +967,7 @@ public class Server {
 
             wldWLock.lock();
             try {
-                playerRanking.add(0, ranking.get(0).getRight());
+                playerRanking.addFirst(ranking.getFirst().getRight());
             } finally {
                 wldWLock.unlock();
             }
@@ -980,7 +980,7 @@ public class Server {
             wldWLock.lock();
             try {
                 if (!YamlConfig.config.server.USE_WHOLE_SERVER_RANKING) {
-                    for (int i = playerRanking.size(); i <= rankUpdates.get(rankUpdates.size() - 1).getLeft(); i++) {
+                    for (int i = playerRanking.size(); i <= rankUpdates.getLast().getLeft(); i++) {
                         playerRanking.add(new ArrayList<>(0));
                     }
 
@@ -988,7 +988,7 @@ public class Server {
                         playerRanking.set(wranks.getLeft(), wranks.getRight());
                     }
                 } else {
-                    playerRanking.set(0, rankUpdates.get(0).getRight());
+                    playerRanking.set(0, rankUpdates.getFirst().getRight());
                 }
             } finally {
                 wldWLock.unlock();

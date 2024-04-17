@@ -48,7 +48,6 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public final class CashOperationHandler extends AbstractMaplePacketHandler {
@@ -319,9 +318,8 @@ public final class CashOperationHandler extends AbstractMaplePacketHandler {
             cs.removeFromInventory(item.get());
             c.announce(CCashShop.takeFromCashInventory(item.get()));
 
-            if (item.get() instanceof Equip) {
-                Equip equip = (Equip) item.get();
-                if (equip.getRingId() >= 0) {
+            if (item.get() instanceof Equip equip) {
+               if (equip.getRingId() >= 0) {
                     MapleRing.loadFromDb(equip.getRingId())
                             .ifPresent(c.getPlayer()::addPlayerRing);
                 }
@@ -359,9 +357,8 @@ public final class CashOperationHandler extends AbstractMaplePacketHandler {
         }
 
         // Need to check to make sure its actually an equip and the right SN...
-        if (itemRing.toItem() instanceof Equip) {
-            Equip eqp = (Equip) itemRing.toItem();
-            Pair<Integer, Integer> rings = MapleRing.createRing(itemRing.getItemId(), c.getPlayer(), partner);
+        if (itemRing.toItem() instanceof Equip eqp) {
+           Pair<Integer, Integer> rings = MapleRing.createRing(itemRing.getItemId(), c.getPlayer(), partner);
             eqp.setRingId(rings.getLeft());
             cs.addToInventory(eqp);
             c.announce(CCashShop.showBoughtCashRing(eqp, partner.getName(), c.getAccID()));
@@ -619,9 +616,8 @@ public final class CashOperationHandler extends AbstractMaplePacketHandler {
             return;
         }
 
-        if (itemRing.toItem() instanceof Equip) {
-            Equip eqp = (Equip) itemRing.toItem();
-            Pair<Integer, Integer> rings = MapleRing.createRing(itemRing.getItemId(), c.getPlayer(), partner);
+        if (itemRing.toItem() instanceof Equip eqp) {
+           Pair<Integer, Integer> rings = MapleRing.createRing(itemRing.getItemId(), c.getPlayer(), partner);
             eqp.setRingId(rings.getLeft());
             cs.addToInventory(eqp);
             c.announce(CCashShop.showBoughtCashItem(eqp, c.getAccID()));

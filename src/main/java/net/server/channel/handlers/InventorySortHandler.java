@@ -56,7 +56,7 @@ class PairedQuicksort {
         if (A.size() > 0) {
             MapleQuicksort(0, A.size() - 1, A, primarySort);
 
-            if (A.get(0).getInventoryType().equals(MapleInventoryType.USE)) {   // thanks KDA & Vcoc for suggesting stronger projectiles coming before weaker ones
+            if (A.getFirst().getInventoryType().equals(MapleInventoryType.USE)) {   // thanks KDA & Vcoc for suggesting stronger projectiles coming before weaker ones
                 reverseSortSublist(A, BinarySearchElement(A, 206));  // arrows
                 reverseSortSublist(A, BinarySearchElement(A, 207));  // stars
                 reverseSortSublist(A, BinarySearchElement(A, 233));  // bullets

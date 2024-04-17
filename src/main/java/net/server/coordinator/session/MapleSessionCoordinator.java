@@ -88,22 +88,12 @@ public class MapleSessionCoordinator {
             subdegreeTime = 1 + (3 * degree);
         }
 
-        switch (degree) {
-            case 0:
-                baseTime = 2;       // 2 hours
-                break;
-
-            case 1:
-                baseTime = 24;      // 1 day
-                break;
-
-            case 2:
-                baseTime = 168;     // 7 days
-                break;
-
-            default:
-                baseTime = 1680;    // 70 days
-        }
+       baseTime = switch (degree) {
+          case 0 -> 2;       // 2 hours
+          case 1 -> 24;      // 1 day
+          case 2 -> 168;     // 7 days
+          default -> 1680;    // 70 days
+       };
 
         return 3600000L * (baseTime + subdegreeTime);
     }
@@ -136,29 +126,27 @@ public class MapleSessionCoordinator {
 
     private static boolean associateHwidAccountIfAbsent(String remoteHwid, int accountId) {
         try {
-            Connection con = DatabaseConnection.getConnection();
-            int hwidCount = 0;
 
-            try (PreparedStatement ps = con.prepareStatement("SELECT SQL_CACHE hwid FROM hwidaccounts WHERE accountid = ?")) {
-                ps.setInt(1, accountId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        String rsHwid = rs.getString("hwid");
-                        if (rsHwid.contentEquals(remoteHwid)) {
-                            return false;
-                        }
-
-                        hwidCount++;
+           try (Connection con = DatabaseConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement("SELECT SQL_CACHE hwid FROM hwidaccounts WHERE accountid = ?")) {
+              int hwidCount = 0;
+              ps.setInt(1, accountId);
+              try (ResultSet rs = ps.executeQuery()) {
+                 while (rs.next()) {
+                    String rsHwid = rs.getString("hwid");
+                    if (rsHwid.contentEquals(remoteHwid)) {
+                       return false;
                     }
-                }
 
-                if (hwidCount < YamlConfig.config.server.MAX_ALLOWED_ACCOUNT_HWID) {
-                    registerAccessAccount(con, remoteHwid, accountId);
-                    return true;
-                }
-            } finally {
-                con.close();
-            }
+                    hwidCount++;
+                 }
+              }
+
+              if (hwidCount < YamlConfig.config.server.MAX_ALLOWED_ACCOUNT_HWID) {
+                 registerAccessAccount(con, remoteHwid, accountId);
+                 return true;
+              }
+           }
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
@@ -168,35 +156,33 @@ public class MapleSessionCoordinator {
 
     private static boolean attemptAccessAccount(String nibbleHwid, int accountId, boolean routineCheck) {
         try {
-            Connection con = DatabaseConnection.getConnection();
-            int hwidCount = 0;
 
-            try (PreparedStatement ps = con.prepareStatement("SELECT SQL_CACHE * FROM hwidaccounts WHERE accountid = ?")) {
-                ps.setInt(1, accountId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        String rsHwid = rs.getString("hwid");
-                        if (rsHwid.endsWith(nibbleHwid)) {
-                            if (!routineCheck) {
-                                // better update HWID relevance as soon as the login is authenticated
+           try (Connection con = DatabaseConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement("SELECT SQL_CACHE * FROM hwidaccounts WHERE accountid = ?")) {
+              int hwidCount = 0;
+              ps.setInt(1, accountId);
+              try (ResultSet rs = ps.executeQuery()) {
+                 while (rs.next()) {
+                    String rsHwid = rs.getString("hwid");
+                    if (rsHwid.endsWith(nibbleHwid)) {
+                       if (!routineCheck) {
+                          // better update HWID relevance as soon as the login is authenticated
 
-                                int loginRelevance = rs.getInt("relevance");
-                                updateAccessAccount(con, rsHwid, accountId, loginRelevance);
-                            }
+                          int loginRelevance = rs.getInt("relevance");
+                          updateAccessAccount(con, rsHwid, accountId, loginRelevance);
+                       }
 
-                            return true;
-                        }
-
-                        hwidCount++;
+                       return true;
                     }
-                }
 
-                if (hwidCount < YamlConfig.config.server.MAX_ALLOWED_ACCOUNT_HWID) {
-                    return true;
-                }
-            } finally {
-                con.close();
-            }
+                    hwidCount++;
+                 }
+              }
+
+              if (hwidCount < YamlConfig.config.server.MAX_ALLOWED_ACCOUNT_HWID) {
+                 return true;
+              }
+           }
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
@@ -548,12 +534,10 @@ public class MapleSessionCoordinator {
 
     public void runUpdateHwidHistory() {
         try {
-            Connection con = DatabaseConnection.getConnection();
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM hwidaccounts WHERE expiresat < CURRENT_TIMESTAMP")) {
-                ps.execute();
-            } finally {
-                con.close();
-            }
+           try (Connection con = DatabaseConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement("DELETE FROM hwidaccounts WHERE expiresat < CURRENT_TIMESTAMP")) {
+              ps.execute();
+           }
         } catch (SQLException ex) {
             ex.printStackTrace();
         }

@@ -50,8 +50,8 @@ public class IntervalBuilder {
 
         float newLimitX1, newLimitX2;
         if (!checkLimits.isEmpty()) {
-            Line2D firstLimit = checkLimits.get(0);
-            Line2D lastLimit = checkLimits.get(checkLimits.size() - 1);
+            Line2D firstLimit = checkLimits.getFirst();
+            Line2D lastLimit = checkLimits.getLast();
 
             newLimitX1 = (float) ((newFrom < firstLimit.getX1()) ? newFrom : firstLimit.getX1());
             newLimitX2 = (float) ((newTo > lastLimit.getX2()) ? newTo : lastLimit.getX2());

@@ -12,7 +12,6 @@ import tools.StringUtil;
 import tools.data.output.LittleEndianWriter;
 import tools.data.output.MaplePacketLittleEndianWriter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class CShopDlg {

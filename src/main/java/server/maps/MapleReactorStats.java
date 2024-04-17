@@ -75,7 +75,7 @@ public class MapleReactorStats {
     }
 
     public byte getTimeoutState(byte state) {
-        return stateInfo.get(state).get(stateInfo.get(state).size() - 1).getNextState();
+        return stateInfo.get(state).getLast().getNextState();
     }
 
     public byte getStateSize(byte state) {
@@ -106,7 +106,7 @@ public class MapleReactorStats {
     public int getType(byte state) {
         List<StateData> list = stateInfo.get(state);
         if (list != null) {
-            return list.get(0).getType();
+            return list.getFirst().getType();
         } else {
             return -1;
         }

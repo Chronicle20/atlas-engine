@@ -46,14 +46,12 @@ public class BanProcessor {
          ps.setString(1, id);
          rs = ps.executeQuery();
          if (rs.next()) {
-            Connection con2 = DatabaseConnection.getConnection();
 
-            try (PreparedStatement psb = con2.prepareStatement("UPDATE accounts SET banned = 1, banreason = ? WHERE id = ?")) {
+            try (Connection con2 = DatabaseConnection.getConnection();
+                 PreparedStatement psb = con2.prepareStatement("UPDATE accounts SET banned = 1, banreason = ? WHERE id = ?")) {
                psb.setString(1, reason);
                psb.setInt(2, rs.getInt(1));
                psb.executeUpdate();
-            } finally {
-               con2.close();
             }
             ret = true;
          }

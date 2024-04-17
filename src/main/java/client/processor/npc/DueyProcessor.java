@@ -157,7 +157,7 @@ public class DueyProcessor {
             DueyPackage dueypack;
 
             if (!dueyItems.isEmpty()) {     // in a duey package there's only one item
-                dueypack = new DueyPackage(packageId, dueyItems.get(0).getLeft());
+                dueypack = new DueyPackage(packageId, dueyItems.getFirst().getLeft());
             } else {
                 dueypack = new DueyPackage(packageId);
             }

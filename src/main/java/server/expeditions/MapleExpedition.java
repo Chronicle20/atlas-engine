@@ -322,7 +322,7 @@ public class MapleExpedition {
         }
 
         if (leaderEntry != null) {
-            memberList.add(0, leaderEntry);
+            memberList.addFirst(leaderEntry);
         }
 
         return memberList;

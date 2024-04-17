@@ -206,7 +206,7 @@ public class ReactorActionManager extends AbstractPlayerInteraction {
                     return;
                 }
 
-                ReactorDropEntry d = dropItems.remove(0);
+                ReactorDropEntry d = dropItems.removeFirst();
                 if (d.itemId() == 0) {
                     int range = maxMeso - minMeso;
                     int displayDrop = (int) (Math.random() * range) + minMeso;

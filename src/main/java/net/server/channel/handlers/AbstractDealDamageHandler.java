@@ -389,7 +389,7 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
                         List<Integer> dropPool = MonsterInformationProvider.getInstance()
                               .retrieveDropPool(monster.getId());
                         if (!dropPool.isEmpty()) {
-                           int rndPool = (int) Math.floor(Math.random() * dropPool.get(dropPool.size() - 1));
+                           int rndPool = (int) Math.floor(Math.random() * dropPool.getLast());
 
                            int i = 0;
                            while (rndPool >= dropPool.get(i)) {

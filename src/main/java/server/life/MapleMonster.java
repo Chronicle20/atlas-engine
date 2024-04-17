@@ -852,7 +852,7 @@ public class MapleMonster extends AbstractLoadedMapleLife {
             MapleMap map = m.getMap();
             List<MapleCharacter> chrList = map.getAllPlayers();
             if (!chrList.isEmpty()) {
-                MapleCharacter chr = chrList.get(0);
+                MapleCharacter chr = chrList.getFirst();
                 map.getEventInstance().ifPresent(e -> e.friendlyItemDrop(m));
                 map.dropFromFriendlyMonster(chr, m);
             }

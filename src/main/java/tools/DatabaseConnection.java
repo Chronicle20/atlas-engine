@@ -84,15 +84,13 @@ public class DatabaseConnection {
 
     private static int getNumberOfAccounts() {
         try {
-            Connection con = DriverManager.getConnection(YamlConfig.config.server.DB_URL, YamlConfig.config.server.DB_USER, YamlConfig.config.server.DB_PASS);
-            try (PreparedStatement ps = con.prepareStatement("SELECT count(*) FROM accounts")) {
-                try (ResultSet rs = ps.executeQuery()) {
-                    rs.next();
-                    return rs.getInt(1);
-                }
-            } finally {
-                con.close();
-            }
+           try (Connection con = DriverManager.getConnection(YamlConfig.config.server.DB_URL, YamlConfig.config.server.DB_USER,
+                 YamlConfig.config.server.DB_PASS); PreparedStatement ps = con.prepareStatement("SELECT count(*) FROM accounts")) {
+              try (ResultSet rs = ps.executeQuery()) {
+                 rs.next();
+                 return rs.getInt(1);
+              }
+           }
         } catch (SQLException sqle) {
             return 20;
         }

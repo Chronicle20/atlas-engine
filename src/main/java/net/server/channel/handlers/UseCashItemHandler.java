@@ -452,29 +452,15 @@ public final class UseCashItemHandler extends AbstractMaplePacketHandler {
             int jobid = slea.readInt();
             int improveSp = slea.readInt();
 
-            int createStatus;
-            switch (jobid) {
-                case 0:
-                    createStatus = WarriorCreator.createCharacter(c, name, face, hair + haircolor, skin, gender, improveSp);
-                    break;
+            int createStatus = switch (jobid) {
+               case 0 -> WarriorCreator.createCharacter(c, name, face, hair + haircolor, skin, gender, improveSp);
+               case 1 -> MagicianCreator.createCharacter(c, name, face, hair + haircolor, skin, gender, improveSp);
+               case 2 -> BowmanCreator.createCharacter(c, name, face, hair + haircolor, skin, gender, improveSp);
+               case 3 -> ThiefCreator.createCharacter(c, name, face, hair + haircolor, skin, gender, improveSp);
+               default -> PirateCreator.createCharacter(c, name, face, hair + haircolor, skin, gender, improveSp);
+            };
 
-                case 1:
-                    createStatus = MagicianCreator.createCharacter(c, name, face, hair + haircolor, skin, gender, improveSp);
-                    break;
-
-                case 2:
-                    createStatus = BowmanCreator.createCharacter(c, name, face, hair + haircolor, skin, gender, improveSp);
-                    break;
-
-                case 3:
-                    createStatus = ThiefCreator.createCharacter(c, name, face, hair + haircolor, skin, gender, improveSp);
-                    break;
-
-                default:
-                    createStatus = PirateCreator.createCharacter(c, name, face, hair + haircolor, skin, gender, improveSp);
-            }
-
-            if (createStatus == 0) {
+           if (createStatus == 0) {
                 c.announce(CField.sendMapleLifeError(0));   // success!
 
                 player.showHint("#bSuccess#k on creation of the new character through the Maple Life card.");

@@ -37,23 +37,16 @@ public enum Element {
     }
 
     public static Element getFromChar(char c) {
-        switch (Character.toUpperCase(c)) {
-            case 'F':
-                return FIRE;
-            case 'I':
-                return ICE;
-            case 'L':
-                return LIGHTING;
-            case 'S':
-                return POISON;
-            case 'H':
-                return HOLY;
-            case 'D':
-                return DARKNESS;
-            case 'P':
-                return NEUTRAL;
-        }
-        throw new IllegalArgumentException("unknown elemnt char " + c);
+       return switch (Character.toUpperCase(c)) {
+          case 'F' -> FIRE;
+          case 'I' -> ICE;
+          case 'L' -> LIGHTING;
+          case 'S' -> POISON;
+          case 'H' -> HOLY;
+          case 'D' -> DARKNESS;
+          case 'P' -> NEUTRAL;
+          default -> throw new IllegalArgumentException("unknown elemnt char " + c);
+       };
     }
 
     public boolean isSpecial() {

@@ -90,9 +90,8 @@ public final class PlayerInteractionHandler extends AbstractMaplePacketHandler {
     private static boolean canPlaceStore(MapleCharacter chr) {
         try {
             for (MapleMapObject mmo : chr.getMap().getMapObjectsInRange(chr.getPosition(), 23000, Arrays.asList(MapleMapObjectType.HIRED_MERCHANT, MapleMapObjectType.PLAYER))) {
-                if (mmo instanceof MapleCharacter) {
-                    MapleCharacter mc = (MapleCharacter) mmo;
-                    if (mc.getId() == chr.getId()) {
+                if (mmo instanceof MapleCharacter mc) {
+                   if (mc.getId() == chr.getId()) {
                         continue;
                     }
 
@@ -279,15 +278,13 @@ public final class PlayerInteractionHandler extends AbstractMaplePacketHandler {
 
                     int oid = slea.readInt();
                     MapleMapObject ob = chr.getMap().getMapObject(oid).orElse(null);
-                    if (ob instanceof MaplePlayerShop) {
-                        MaplePlayerShop shop = (MaplePlayerShop) ob;
-                        shop.visitShop(chr);
-                    } else if (ob instanceof MapleMiniGame) {
+                    if (ob instanceof MaplePlayerShop shop) {
+                       shop.visitShop(chr);
+                    } else if (ob instanceof MapleMiniGame game) {
                         slea.skip(1);
                         String pw = slea.available() > 1 ? slea.readMapleAsciiString() : "";
 
-                        MapleMiniGame game = (MapleMiniGame) ob;
-                        if (game.checkPassword(pw)) {
+                       if (game.checkPassword(pw)) {
                             if (game.hasFreeSlot() && !game.isVisitor(chr)) {
                                 game.addVisitor(chr);
                                 chr.setMiniGame(game);
@@ -305,9 +302,8 @@ public final class PlayerInteractionHandler extends AbstractMaplePacketHandler {
                         } else {
                             chr.announce(CMiniRoomBaseDlg.getMiniRoomError(22));
                         }
-                    } else if (ob instanceof MapleHiredMerchant && chr.getHiredMerchant() == null) {
-                        MapleHiredMerchant merchant = (MapleHiredMerchant) ob;
-                        merchant.visitShop(chr);
+                    } else if (ob instanceof MapleHiredMerchant merchant && chr.getHiredMerchant().isEmpty()) {
+                       merchant.visitShop(chr);
                     }
                 }
             } else if (mode == Action.CHAT.getCode()) { // chat lol

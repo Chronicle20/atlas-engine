@@ -59,6 +59,7 @@ import java.util.stream.Stream;
 
 import org.apache.mina.util.ConcurrentHashSet;
 
+import buddy.BuddyProcessor;
 import client.autoban.AutobanManager;
 import client.creator.CharacterFactoryRecipe;
 import client.inventory.Equip;
@@ -304,7 +305,6 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
    private String dataString;
    private String search = null;
    private int merchantmeso;
-   private BuddyList buddylist;
    private EventInstanceManager eventInstance = null;
    private MapleHiredMerchant hiredMerchant = null;
    private MapleClient client;
@@ -488,7 +488,6 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
       ret.job = MapleJob.BEGINNER;
       ret.level = 1;
       ret.accountid = c.getAccID();
-      ret.buddylist = new BuddyList(20);
       ret.maplemount = null;
       ret.getInventory(MapleInventoryType.EQUIP).setSlotLimit(24);
       ret.getInventory(MapleInventoryType.USE).setSlotLimit(24);
@@ -557,23 +556,7 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
             }
          }
 
-         try (PreparedStatement ps = con.prepareStatement("SELECT buddyid FROM buddies WHERE characterid = ?")) {
-            ps.setInt(1, cid);
-
-            try (ResultSet rs = ps.executeQuery()) {
-               while (rs.next()) {
-                  int buddyid = rs.getInt("buddyid");
-                  Server.getInstance().getWorld(world)
-                        .map(World::getPlayerStorage)
-                        .flatMap(w -> w.getCharacterById(buddyid))
-                        .ifPresent(b -> b.deleteBuddy(cid));
-               }
-            }
-         }
-         try (PreparedStatement ps = con.prepareStatement("DELETE FROM buddies WHERE characterid = ?")) {
-            ps.setInt(1, cid);
-            ps.executeUpdate();
-         }
+         BuddyProcessor.getInstance().deleteCharacter(con, player);
 
          try (PreparedStatement ps = con.prepareStatement("SELECT threadid FROM bbs_threads WHERE postercid = ?")) {
             ps.setInt(1, cid);
@@ -1223,8 +1206,6 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
          ret.dojoStage = rs.getInt("lastDojoStage");
          ret.dataString = rs.getString("dataString");
          ret.mgc = new MapleGuildCharacter(ret);
-         int buddyCapacity = rs.getInt("buddyCapacity");
-         ret.buddylist = new BuddyList(buddyCapacity);
          ret.lastExpGainTime = rs.getTimestamp("lastExpGainTime").getTime();
          ret.canRecvPartySearchInvite = rs.getBoolean("partySearch");
 
@@ -1568,7 +1549,6 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
             }
             rs.close();
             ps.close();
-            ret.buddylist.loadFromDb(charid);
             ret.storage = wserv.orElseThrow().getAccountStorage(ret.accountid);
 
             int startHp = ret.hp, startMp = ret.mp;
@@ -2666,7 +2646,7 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
    }
 
    public void broadcastAcquaintances(byte[] packet) {
-      buddylist.broadcast(packet, getWorldServer().getPlayerStorage());
+      BuddyProcessor.getInstance().broadcast(getWorld(), getId(), packet);
 
       getFamily().ifPresent(f -> f.broadcast(packet, id));
       getGuild().ifPresent(g -> g.broadcast(packet, id));
@@ -3491,31 +3471,6 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
       } catch (SQLException ex) {
          ex.printStackTrace();
       }
-   }
-
-   private void nextPendingRequest(MapleClient c) {
-      BuddyRequestInfo pendingBuddyRequest = c.getPlayer().getBuddylist().pollPendingRequest();
-      if (pendingBuddyRequest != null) {
-         c.announce(CWvsContext.requestBuddylistAdd(pendingBuddyRequest));
-      }
-   }
-
-   private void notifyRemoteChannel(MapleClient c, int remoteChannel, int otherCid, BuddyList.BuddyOperation operation) {
-      MapleCharacter player = c.getPlayer();
-      if (remoteChannel != -1) {
-         c.getWorldServer().buddyChanged(otherCid, player.getId(), player.getName(), c.getChannel(), operation);
-      }
-   }
-
-   public void deleteBuddy(int otherCid) {
-      BuddyList bl = getBuddylist();
-
-      if (bl.containsVisible(otherCid)) {
-         notifyRemoteChannel(client, getWorldServer().find(otherCid), otherCid, BuddyList.BuddyOperation.DELETED);
-      }
-      bl.remove(otherCid);
-      client.announce(CWvsContext.updateBuddylist(getBuddylist().getBuddies()));
-      nextPendingRequest(client);
    }
 
    private void deleteWhereCharacterId(Connection con, String sql) throws SQLException {
@@ -4356,10 +4311,6 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
 
    public void setBattleshipHp(int battleshipHp) {
       this.battleshipHp = battleshipHp;
-   }
-
-   public BuddyList getBuddylist() {
-      return buddylist;
    }
 
    public Long getBuffedStarttime(TemporaryStatType effect) {
@@ -8727,7 +8678,8 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
             prtLock.unlock();
          }
 
-         ps.setInt(26, buddylist.getCapacity());
+         int capacity = BuddyProcessor.getInstance().getBuddyList(getWorld(), getId()).capacity();
+         ps.setInt(26, capacity);
          if (messenger != null) {
             ps.setInt(27, messenger.getId());
             ps.setInt(28, messengerposition);
@@ -8918,18 +8870,7 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
          ps.executeBatch();
          ps.close();
 
-         deleteWhereCharacterId(con, "DELETE FROM buddies WHERE characterid = ? AND pending = 0");
-         ps = con.prepareStatement("INSERT INTO buddies (characterid, `buddyid`, `pending`, `group`) VALUES (?, ?, 0, ?)");
-         ps.setInt(1, id);
-         for (BuddylistEntry entry : buddylist.getBuddies()) {
-            if (entry.isVisible()) {
-               ps.setInt(2, entry.getCharacterId());
-               ps.setString(3, entry.getGroup());
-               ps.addBatch();
-            }
-         }
-         ps.executeBatch();
-         ps.close();
+         BuddyProcessor.getInstance().storeBuddies(getWorld(), getId(), con);
 
          deleteWhereCharacterId(con, "DELETE FROM area_info WHERE charid = ?");
          ps = con.prepareStatement("INSERT INTO area_info (id, charid, area, info) VALUES (DEFAULT, ?, ?, ?)");
@@ -9104,11 +9045,6 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
 
    public void sendNote(String to, String msg, byte fame) {
       sendNote(to, this.getName(), msg, fame);
-   }
-
-   public void setBuddyCapacity(int capacity) {
-      buddylist.setCapacity(capacity);
-      client.announce(CWvsContext.updateBuddyCapacity(capacity));
    }
 
    public void setBuffedValue(TemporaryStatType effect, int value) {

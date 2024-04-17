@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package scripting.npc;
 
+import buddy.BuddyProcessor;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleJob;
@@ -1145,5 +1146,13 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
         }
 
         return false;
+    }
+
+    public void setBuddyListCapacity(int capacity) {
+        BuddyProcessor.getInstance().setBuddyCapacity(getPlayer(), capacity);
+    }
+
+    public int getBuddyListCapacity() {
+        return BuddyProcessor.getInstance().getBuddyList(getPlayer().getWorld(), getPlayer().getId()).capacity();
     }
 }

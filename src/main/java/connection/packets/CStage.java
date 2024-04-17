@@ -1,5 +1,6 @@
 package connection.packets;
 
+import buddy.BuddyProcessor;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleQuestStatus;
@@ -162,8 +163,7 @@ public class CStage {
         mplew.writeLong(-1); // dbcharFlag
         mplew.write(0); // something about SN, I believe this is size of list
         CCommon.addCharStats(mplew, chr);
-        mplew.write(chr.getBuddylist()
-                .getCapacity());
+        mplew.write(BuddyProcessor.getInstance().getBuddyList(chr.getWorld(), chr.getId()).capacity());
 
         if (chr.getLinkedName() == null) {
             mplew.write(0);

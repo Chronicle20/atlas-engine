@@ -35,7 +35,8 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
-import client.BuddyList;
+import buddy.BuddyList;
+import buddy.BuddyProcessor;
 import client.BuddyRequestInfo;
 import client.MapleCharacter;
 import client.MapleClient;
@@ -307,18 +308,8 @@ public final class PlayerLoggedinHandler extends AbstractMaplePacketHandler {
             player.get().getMap().addPlayer(player.get());
             player.get().visitMap(player.get().getMap());
 
-            BuddyList bl = player.get().getBuddylist();
-            int[] buddyIds = bl.getBuddyIds();
-            wserv.get().loggedOn(player.get().getId(), c.getChannel(), buddyIds);
-
-            //TODO clean this up
-            for (CharacterIdChannelPair onlineBuddy : wserv.get().multiBuddyFind(player.get().getId(), buddyIds)) {
-               bl.get(onlineBuddy.getCharacterId()).ifPresent(buddy -> {
-                  buddy.setChannel(onlineBuddy.getChannel());
-                  bl.put(buddy);
-               });
-            }
-            c.announce(CWvsContext.updateBuddylist(bl.getBuddies()));
+            BuddyProcessor.getInstance().notifyLogon(player.get().getWorld(), player.get().getId(), c.getChannel());
+            BuddyProcessor.getInstance().updateBuddyChannels(player.get());
 
             c.announce(CWvsContext.loadFamily(player.get()));
             if (player.get().getFamilyId() > 0) {
@@ -392,12 +383,8 @@ public final class PlayerLoggedinHandler extends AbstractMaplePacketHandler {
                eqpInv.unlockInventory();
             }
 
-            c.announce(CWvsContext.updateBuddylist(player.get().getBuddylist().getBuddies()));
-
-            BuddyRequestInfo pendingBuddyRequest = c.getPlayer().getBuddylist().pollPendingRequest();
-            if (pendingBuddyRequest != null) {
-               c.announce(CWvsContext.requestBuddylistAdd(pendingBuddyRequest));
-            }
+            BuddyProcessor.getInstance().refreshBuddies(player.get());
+            BuddyProcessor.getInstance().nextPendingRequest(player.get());
 
             //                c.announce(CWvsContext.updateGender(player.get()));
             player.get().checkMessenger();

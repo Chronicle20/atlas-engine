@@ -431,21 +431,6 @@ public final class Channel {
         }
     }
 
-    public int[] multiBuddyFind(int charIdFrom, int[] characterIds) {
-        List<Integer> ret = Arrays.stream(characterIds)
-                .mapToObj(id -> getPlayerStorage().getCharacterById(id))
-                .flatMap(Optional::stream)
-                .filter(c -> c.getBuddylist().containsVisible(charIdFrom))
-                .map(MapleCharacter::getId)
-                .toList();
-        int[] retArr = new int[ret.size()];
-        int pos = 0;
-        for (Integer i : ret) {
-            retArr[pos++] = i;
-        }
-        return retArr;
-    }
-
     public boolean addExpedition(MapleExpedition exped) {
         synchronized (expeditions) {
             if (expeditions.containsKey(exped.getType())) {

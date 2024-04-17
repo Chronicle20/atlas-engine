@@ -79,13 +79,26 @@
         <!-- Scripting -->
         <dependency>
             <groupId>org.graalvm.polyglot</groupId>
-            <artifactId>js</artifactId>
+            <artifactId>polyglot</artifactId>
             <version>${graalvm.version}</version>
         </dependency>
         <dependency>
             <groupId>org.graalvm.js</groupId>
             <artifactId>js-scriptengine</artifactId>
             <version>${graalvm.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>js-community</artifactId>
+            <version>${graalvm.version}</version>
+            <type>pom</type>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.truffle</groupId>
+            <artifactId>truffle-enterprise</artifactId>
+            <version>${graalvm.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Testing -->

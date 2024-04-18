@@ -1,31 +1,13 @@
-/*
-This file is part of the OdinMS Maple Story Server
-Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
-Matthias Butz <matze@odinms.de>
-Jan Christian Meyer <vimes@odinms.de>
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as
-published by the Free Software Foundation version 3 as published by
-the Free Software Foundation. You may not use, modify or distribute
-this program under any other version of the GNU Affero General Public
-License.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package net.server.channel.handlers;
 
-import client.TemporaryStatType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import client.MapleCharacter;
 import client.MapleClient;
 import client.Skill;
 import client.SkillFactory;
+import client.TemporaryStatType;
 import client.inventory.Item;
 import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
@@ -44,15 +26,17 @@ import constants.skills.NightWalker;
 import constants.skills.Shadower;
 import constants.skills.ThunderBreaker;
 import constants.skills.WindArcher;
+import net.packet.InPacket;
+import net.packet.Packet;
 import server.ItemInformationProvider;
 import server.MapleStatEffect;
 import tools.Randomizer;
-import tools.data.input.SeekableLittleEndianAccessor;
 
 public final class RangedAttackHandler extends AbstractDealDamageHandler {
+   private static final Logger log = LoggerFactory.getLogger(RangedAttackHandler.class);
 
    @Override
-   public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+   public void handlePacket(InPacket p, MapleClient c) {
       MapleCharacter chr = c.getPlayer();
         
         /*long timeElapsed = currentServerTime() - chr.getAutobanManager().getLastSpam(8);
@@ -61,7 +45,7 @@ public final class RangedAttackHandler extends AbstractDealDamageHandler {
         }
         chr.getAutobanManager().spam(8);*/
 
-      AttackInfo attack = parseDamage(slea, chr, true, false);
+      AttackInfo attack = parseDamage(p, chr, true, false);
 
       if (chr.getBuffEffect(TemporaryStatType.MORPH) != null) {
          if (chr.getBuffEffect(TemporaryStatType.MORPH).isMorphWithoutAttack()) {
@@ -73,7 +57,7 @@ public final class RangedAttackHandler extends AbstractDealDamageHandler {
 
       if (GameConstants.isDojo(chr.getMap().getId()) && attack.numAttacked > 0) {
          chr.setDojoEnergy(chr.getDojoEnergy() + YamlConfig.config.server.DOJO_ENERGY_ATK);
-         c.announce(CWvsContext.getEnergy("energy", chr.getDojoEnergy()));
+         c.sendPacket(CWvsContext.getEnergy("energy", chr.getDojoEnergy()));
       }
 
       if (attack.skill == Buccaneer.ENERGY_ORB || attack.skill == ThunderBreaker.SPARK || attack.skill == Shadower.TAUNT
@@ -119,7 +103,7 @@ public final class RangedAttackHandler extends AbstractDealDamageHandler {
             effect = attack.getAttackEffect(chr, null).orElseThrow();
             bulletCount = effect.getBulletCount();
             if (effect.getCooldown() > 0) {
-               c.announce(CUserLocal.skillCooldown(attack.skill, effect.getCooldown()));
+               c.sendPacket(CUserLocal.skillCooldown(attack.skill, effect.getCooldown()));
             }
 
             if (attack.skill == 4111004) {   // shadow meso
@@ -185,7 +169,7 @@ public final class RangedAttackHandler extends AbstractDealDamageHandler {
                }
 
                if (slot < 0) {
-                  System.out.println("<ERROR> Projectile to use was unable to be found.");
+                  log.error("Projectile to use was unable to be found.");
                } else {
                   MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.USE, slot, bulletConsume, false, true);
                }
@@ -211,7 +195,7 @@ public final class RangedAttackHandler extends AbstractDealDamageHandler {
                visProjectile = 0;
             }
 
-            byte[] packet;
+            Packet packet;
             switch (attack.skill) {
                case 3121004: // Hurricane
                case 3221001: // Pierce
@@ -236,7 +220,7 @@ public final class RangedAttackHandler extends AbstractDealDamageHandler {
                   if (chr.skillIsCooling(attack.skill)) {
                      return;
                   } else {
-                     c.announce(CUserLocal.skillCooldown(attack.skill, effect_.getCooldown()));
+                     c.sendPacket(CUserLocal.skillCooldown(attack.skill, effect_.getCooldown()));
                      chr.addCooldown(attack.skill, currentServerTime(), effect_.getCooldown() * 1000L);
                   }
                }

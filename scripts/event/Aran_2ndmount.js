@@ -62,7 +62,7 @@ function playerEntry(eim, player) {
     em.setProperty("noEntry", "true");
 
     const CField = Java.type('connection.packets.CField');
-    player.getClient().announce(CField.getClock(eventTime * 60));
+    player.getClient().sendPacket(CField.getClock(eventTime * 60));
     eim.startEventTimer(eventTime * 60000);
 }
 

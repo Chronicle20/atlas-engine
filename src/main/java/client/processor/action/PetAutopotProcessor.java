@@ -87,7 +87,7 @@ public class PetAutopotProcessor {
             MapleClient c = this.c;
             MapleCharacter chr = c.getPlayer();
             if (!chr.isAlive()) {
-                c.announce(CWvsContext.enableActions());
+                c.sendPacket(CWvsContext.enableActions());
                 return;
             }
 
@@ -106,7 +106,7 @@ public class PetAutopotProcessor {
                 toUse = useInv.getItem(slot);
                 if (toUse != null) {
                     if (toUse.getItemId() != itemId) {
-                        c.announce(CWvsContext.enableActions());
+                        c.sendPacket(CWvsContext.enableActions());
                         return;
                     }
 
@@ -115,7 +115,7 @@ public class PetAutopotProcessor {
                     // from now on, toUse becomes the "cursor" for the current pot being used
                     if (toUse.getQuantity() <= 0) {
                         if (!cursorOnNextAvailablePot(chr)) {
-                            c.announce(CWvsContext.enableActions());
+                            c.sendPacket(CWvsContext.enableActions());
                             return;
                         }
                     }
@@ -187,7 +187,7 @@ public class PetAutopotProcessor {
                 }
             }
 
-            chr.announce(CWvsContext.enableActions());
+            chr.sendPacket(CWvsContext.enableActions());
         }
     }
 

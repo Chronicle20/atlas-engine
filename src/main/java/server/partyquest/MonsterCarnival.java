@@ -378,12 +378,12 @@ public class MonsterCarnival {
 
             MapleCharacter mc = mpc.getPlayer().get();
             if (redWin) {
-                mc.announce(CField.showEffect("quest/carnival/win"));
-                mc.announce(CField.playSound("MobCarnival/Win"));
+                mc.sendPacket(CField.showEffect("quest/carnival/win"));
+                mc.sendPacket(CField.playSound("MobCarnival/Win"));
                 mc.dispelDebuffs();
             } else {
-                mc.announce(CField.showEffect("quest/carnival/lose"));
-                mc.announce(CField.playSound("MobCarnival/Lose"));
+                mc.sendPacket(CField.showEffect("quest/carnival/lose"));
+                mc.sendPacket(CField.playSound("MobCarnival/Lose"));
                 mc.dispelDebuffs();
             }
         }
@@ -394,12 +394,12 @@ public class MonsterCarnival {
 
             MapleCharacter mc = mpc.getPlayer().get();
             if (!redWin) {
-                mc.announce(CField.showEffect("quest/carnival/win"));
-                mc.announce(CField.playSound("MobCarnival/Win"));
+                mc.sendPacket(CField.showEffect("quest/carnival/win"));
+                mc.sendPacket(CField.playSound("MobCarnival/Win"));
                 mc.dispelDebuffs();
             } else {
-                mc.announce(CField.showEffect("quest/carnival/lose"));
-                mc.announce(CField.playSound("MobCarnival/Lose"));
+                mc.sendPacket(CField.showEffect("quest/carnival/lose"));
+                mc.sendPacket(CField.playSound("MobCarnival/Lose"));
                 mc.dispelDebuffs();
             }
         }

@@ -1,61 +1,62 @@
 package server.maps;
 
+import java.awt.*;
+
 import client.MapleCharacter;
 import client.MapleClient;
 import connection.packets.CMessageBoxPool;
-
-import java.awt.*;
+import net.packet.Packet;
 
 public class MapleKite extends AbstractMapleMapObject {
 
-    private Point pos;
-    private MapleCharacter owner;
-    private String text;
-    private int ft;
-    private int itemid;
+   private final Point pos;
+   private final MapleCharacter owner;
+   private final String text;
+   private final int ft;
+   private final int itemid;
 
-    public MapleKite(MapleCharacter owner, String text, int itemid) {
-        this.owner = owner;
-        this.pos = owner.getPosition();
-        this.ft = owner.getFh();
-        this.text = text;
-        this.itemid = itemid;
-    }
+   public MapleKite(MapleCharacter owner, String text, int itemid) {
+      this.owner = owner;
+      this.pos = owner.getPosition();
+      this.ft = owner.getFh();
+      this.text = text;
+      this.itemid = itemid;
+   }
 
-    @Override
-    public MapleMapObjectType getType() {
-        return MapleMapObjectType.KITE;
-    }
+   @Override
+   public MapleMapObjectType getType() {
+      return MapleMapObjectType.KITE;
+   }
 
-    @Override
-    public Point getPosition() {
-        return pos.getLocation();
-    }
+   @Override
+   public Point getPosition() {
+      return pos.getLocation();
+   }
 
-    @Override
-    public void setPosition(Point position) {
-        throw new UnsupportedOperationException();
-    }
+   @Override
+   public void setPosition(Point position) {
+      throw new UnsupportedOperationException();
+   }
 
-    public MapleCharacter getOwner() {
-        return owner;
-    }
+   public MapleCharacter getOwner() {
+      return owner;
+   }
 
-    @Override
-    public void sendDestroyData(MapleClient client) {
-        client.announce(makeDestroyData());
-    }
+   @Override
+   public void sendSpawnData(MapleClient client) {
+      client.sendPacket(makeSpawnData());
+   }
 
-    @Override
-    public void sendSpawnData(MapleClient client) {
-        client.announce(makeSpawnData());
-    }
+   @Override
+   public void sendDestroyData(MapleClient client) {
+      client.sendPacket(makeDestroyData());
+   }
 
-    public final byte[] makeSpawnData() {
-        return CMessageBoxPool.spawnKite(getObjectId(), itemid, owner.getName(), text, pos, ft);
-    }
+   public final Packet makeSpawnData() {
+      return CMessageBoxPool.spawnKite(getObjectId(), itemid, owner.getName(), text, pos, ft);
+   }
 
-    public final byte[] makeDestroyData() {
-        return CMessageBoxPool.removeKite(getObjectId(), 0);
-    }
+   public final Packet makeDestroyData() {
+      return CMessageBoxPool.removeKite(getObjectId(), 0);
+   }
 }

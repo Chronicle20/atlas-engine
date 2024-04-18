@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 import client.MapleCharacter;
 import connection.packets.CField;
 import connection.packets.CWvsContext;
+import net.packet.Packet;
 import net.server.Server;
 import net.server.audit.locks.MonitoredLockType;
 import net.server.audit.locks.MonitoredReentrantLock;
@@ -121,11 +122,11 @@ public class MapleExpedition {
 
    public void beginRegistration() {
       registering = true;
-      leader.announce(CField.getClock(type.getRegistrationTime() * 60));
+      leader.sendPacket(CField.getClock(type.getRegistrationTime() * 60));
       if (!silent) {
          startMap.broadcastMessage(leader, CWvsContext.serverNotice(6, "[Expedition] " + leader.getName()
                + " has been declared the expedition captain. Please register for the expedition."), false);
-         leader.announce(CWvsContext.serverNotice(6,
+         leader.sendPacket(CWvsContext.serverNotice(6,
                "[Expedition] You have become the expedition captain. Gather enough people for your team then talk to the NPC to start."));
       }
       scheduleRegistrationEnd();
@@ -193,7 +194,7 @@ public class MapleExpedition {
       }
 
       members.put(player.getId(), player.getName());
-      player.announce(CField.getClock((int) (startTime - System.currentTimeMillis()) / 1000));
+      player.sendPacket(CField.getClock((int) (startTime - System.currentTimeMillis()) / 1000));
       if (!silent) {
          broadcastExped(CWvsContext.serverNotice(6, "[Expedition] " + player.getName() + " has joined the expedition!"));
       }
@@ -212,7 +213,7 @@ public class MapleExpedition {
       }
 
       members.put(player.getId(), player.getName());
-      player.announce(CField.getClock((int) (startTime - System.currentTimeMillis()) / 1000));
+      player.sendPacket(CField.getClock((int) (startTime - System.currentTimeMillis()) / 1000));
       if (!silent) {
          broadcastExped(CWvsContext.serverNotice(6, "[Expedition] " + player.getName() + " has joined the expedition!"));
       }
@@ -227,15 +228,15 @@ public class MapleExpedition {
       }
    }
 
-   private void broadcastExped(byte[] packet) {
+   private void broadcastExped(Packet packet) {
       for (MapleCharacter chr : getActiveMembers()) {
-         chr.announce(packet);
+         chr.sendPacket(packet);
       }
    }
 
    public boolean removeMember(MapleCharacter chr) {
       if (members.remove(chr.getId()) != null) {
-         chr.announce(CField.removeClock());
+         chr.sendPacket(CField.removeClock());
          if (!silent) {
             broadcastExped(CWvsContext.serverNotice(6, "[Expedition] " + chr.getName() + " has left the expedition."));
             chr.dropMessage(6, "[Expedition] You have left this expedition.");
@@ -258,7 +259,7 @@ public class MapleExpedition {
 
          Optional<MapleCharacter> player = startMap.getWorldServer().getPlayerStorage().getCharacterById(cid);
          if (player.isPresent() && player.get().isLoggedinWorld()) {
-            player.get().announce(CField.removeClock());
+            player.get().sendPacket(CField.removeClock());
             if (!silent) {
                player.get().dropMessage(6, "[Expedition] You have been banned from this expedition.");
             }

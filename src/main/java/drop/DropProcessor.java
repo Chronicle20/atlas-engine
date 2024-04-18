@@ -14,8 +14,12 @@ import java.util.Optional;
 
 import com.github.jasminb.jsonapi.JSONAPIDocument;
 import com.github.jasminb.jsonapi.ResourceConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DropProcessor {
+   private static final Logger log = LoggerFactory.getLogger(DropProcessor.class);
+
    private static DropProcessor instance = null;
 
    private final Map<Integer, List<DropEntry>> dropCache;
@@ -63,7 +67,7 @@ public class DropProcessor {
                   .map(this::transform)
                   .toList();
          } else {
-            System.out.println("Error: HTTP request failed with status code " + responseCode);
+            log.error("Error: HTTP request failed with status code {}", responseCode);
          }
 
          connection.disconnect();
@@ -105,7 +109,7 @@ public class DropProcessor {
                   .map(dr -> transformContinentDrop(continentid, dr))
                   .toList();
          } else {
-            System.out.println("Error: HTTP request failed with status code " + responseCode);
+            log.error("Error: HTTP request failed with status code {}", responseCode);
          }
 
          connection.disconnect();
@@ -137,7 +141,7 @@ public class DropProcessor {
                   .map(Integer::parseInt)
                   .toList();
          } else {
-            System.out.println("Error: HTTP request failed with status code " + responseCode);
+            log.error("Error: HTTP request failed with status code {}", responseCode);
          }
 
          connection.disconnect();

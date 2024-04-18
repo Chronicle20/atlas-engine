@@ -1,100 +1,94 @@
 package connection.packets;
 
+import java.util.Collection;
+
 import client.inventory.Item;
 import client.inventory.MapleInventoryType;
 import connection.constants.SendOpcode;
-import tools.data.output.MaplePacketLittleEndianWriter;
-
-import java.util.Collection;
+import net.packet.OutPacket;
+import net.packet.Packet;
 
 public class CTrunkDlg {
-    public static byte[] getStorage(int npcId, byte slots, Collection<Item> items, int meso) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.STORAGE.getValue());
-        mplew.write(0x16);
-        mplew.writeInt(npcId);
-        mplew.write(slots);
-        mplew.writeShort(0x7E);
-        mplew.writeShort(0);
-        mplew.writeInt(0);
-        mplew.writeInt(meso);
-        mplew.writeShort(0);
-        mplew.write((byte) items.size());
-        for (Item item : items) {
-            CCommon.addItemInfo(mplew, item, true);
-        }
-        mplew.writeShort(0);
-        mplew.write(0);
-        return mplew.getPacket();
-    }
+   public static Packet getStorage(int npcId, byte slots, Collection<Item> items, int meso) {
+      final OutPacket p = OutPacket.create(SendOpcode.STORAGE);
+      p.writeByte(0x16);
+      p.writeInt(npcId);
+      p.writeByte(slots);
+      p.writeShort(0x7E);
+      p.writeShort(0);
+      p.writeInt(0);
+      p.writeInt(meso);
+      p.writeShort(0);
+      p.writeByte((byte) items.size());
+      for (Item item : items) {
+         CCommon.addItemInfo(p, item, true);
+      }
+      p.writeShort(0);
+      p.writeByte(0);
+      return p;
+   }
 
-    /*
-     * 0x0A = Inv full
-     * 0x0B = You do not have enough mesos
-     * 0x0C = One-Of-A-Kind error
-     */
-    public static byte[] getStorageError(byte i) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.STORAGE.getValue());
-        mplew.write(i);
-        return mplew.getPacket();
-    }
+   /*
+    * 0x0A = Inv full
+    * 0x0B = You do not have enough mesos
+    * 0x0C = One-Of-A-Kind error
+    */
+   public static Packet getStorageError(byte i) {
+      final OutPacket p = OutPacket.create(SendOpcode.STORAGE);
+      p.writeByte(i);
+      return p;
+   }
 
-    public static byte[] mesoStorage(byte slots, int meso) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.STORAGE.getValue());
-        mplew.write(0x13);
-        mplew.write(slots);
-        mplew.writeShort(2);
-        mplew.writeShort(0);
-        mplew.writeInt(0);
-        mplew.writeInt(meso);
-        return mplew.getPacket();
-    }
+   public static Packet mesoStorage(byte slots, int meso) {
+      final OutPacket p = OutPacket.create(SendOpcode.STORAGE);
+      p.writeByte(0x13);
+      p.writeByte(slots);
+      p.writeShort(2);
+      p.writeShort(0);
+      p.writeInt(0);
+      p.writeInt(meso);
+      return p;
+   }
 
-    public static byte[] storeStorage(byte slots, MapleInventoryType type, Collection<Item> items) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.STORAGE.getValue());
-        mplew.write(0xD);
-        mplew.write(slots);
-        mplew.writeShort(type.getBitfieldEncoding());
-        mplew.writeShort(0);
-        mplew.writeInt(0);
-        mplew.write(items.size());
-        for (Item item : items) {
-            CCommon.addItemInfo(mplew, item, true);
-        }
-        return mplew.getPacket();
-    }
+   public static Packet storeStorage(byte slots, MapleInventoryType type, Collection<Item> items) {
+      final OutPacket p = OutPacket.create(SendOpcode.STORAGE);
+      p.writeByte(0xD);
+      p.writeByte(slots);
+      p.writeShort(type.getBitfieldEncoding());
+      p.writeShort(0);
+      p.writeInt(0);
+      p.writeByte(items.size());
+      for (Item item : items) {
+         CCommon.addItemInfo(p, item, true);
+      }
+      return p;
+   }
 
-    public static byte[] takeOutStorage(byte slots, MapleInventoryType type, Collection<Item> items) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.STORAGE.getValue());
-        mplew.write(0x9);
-        mplew.write(slots);
-        mplew.writeShort(type.getBitfieldEncoding());
-        mplew.writeShort(0);
-        mplew.writeInt(0);
-        mplew.write(items.size());
-        for (Item item : items) {
-            CCommon.addItemInfo(mplew, item, true);
-        }
-        return mplew.getPacket();
-    }
+   public static Packet takeOutStorage(byte slots, MapleInventoryType type, Collection<Item> items) {
+      final OutPacket p = OutPacket.create(SendOpcode.STORAGE);
+      p.writeByte(0x9);
+      p.writeByte(slots);
+      p.writeShort(type.getBitfieldEncoding());
+      p.writeShort(0);
+      p.writeInt(0);
+      p.writeByte(items.size());
+      for (Item item : items) {
+         CCommon.addItemInfo(p, item, true);
+      }
+      return p;
+   }
 
-    public static byte[] arrangeStorage(byte slots, Collection<Item> items) {
-        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-
-        mplew.writeShort(SendOpcode.STORAGE.getValue());
-        mplew.write(0xF);
-        mplew.write(slots);
-        mplew.write(124);
-        mplew.skip(10);
-        mplew.write(items.size());
-        for (Item item : items) {
-            CCommon.addItemInfo(mplew, item, true);
-        }
-        mplew.write(0);
-        return mplew.getPacket();
-    }
+   public static Packet arrangeStorage(byte slots, Collection<Item> items) {
+      final OutPacket p = OutPacket.create(SendOpcode.STORAGE);
+      p.writeByte(0xF);
+      p.writeByte(slots);
+      p.writeByte(124);
+      p.skip(10);
+      p.writeByte(items.size());
+      for (Item item : items) {
+         CCommon.addItemInfo(p, item, true);
+      }
+      p.writeByte(0);
+      return p;
+   }
 }

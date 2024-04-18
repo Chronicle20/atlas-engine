@@ -207,7 +207,7 @@ public class MapleMapItem extends AbstractMapleMapObject {
         if (chr.needQuestItem(questid, getItemId())) {
             this.lockItem();
             try {
-                client.announce(CDropPool.dropItemFromMapObject(chr, this, null, getPosition(), (byte) 2));
+                client.sendPacket(CDropPool.dropItemFromMapObject(chr, this, null, getPosition(), (byte) 2));
             } finally {
                 this.unlockItem();
             }
@@ -216,6 +216,6 @@ public class MapleMapItem extends AbstractMapleMapObject {
 
     @Override
     public void sendDestroyData(final MapleClient client) {
-        client.announce(CDropPool.removeItemFromMap(getObjectId(), 1, 0));
+        client.sendPacket(CDropPool.removeItemFromMap(getObjectId(), 1, 0));
     }
 }

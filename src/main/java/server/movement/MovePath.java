@@ -1,43 +1,45 @@
 package server.movement;
 
-import tools.data.input.LittleEndianAccessor;
-import tools.data.output.LittleEndianWriter;
-
 import java.awt.*;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import net.packet.InPacket;
+import net.packet.OutPacket;
+
 public class MovePath {
-    private final List<Elem> lElem = new LinkedList<>();
-    private Point startPosition;
+   private final List<Elem> lElem = new LinkedList<>();
+   private Point startPosition;
 
-    public void decode(LittleEndianAccessor lea) {
-        startPosition = lea.readPos();
-        byte size = lea.readByte();
-        for (int i = 0; i < size; i++) {
-            Elem elem = new Elem(startPosition);
-            elem.decode(lea);
-            lElem.add(elem);
-        }
-    }
+   public static MovePath idle(Point position, byte stance) {
+      MovePath movePath = new MovePath();
+      movePath.startPosition = position;
+      movePath.lElem.add(
+            new Elem(position, stance, (byte) 0, (short) position.x, (short) position.y, (short) 0, (short) 0, (short) 0, (short) 0,
+                  (short) 0, (short) 0, (short) 0, (byte) 0));
+      return movePath;
+   }
 
-    public void encode(LittleEndianWriter lew) {
-        lew.writePos(startPosition);
-        lew.write(lElem.size());
-        for (Elem elem : lElem) {
-            elem.encode(lew);
-        }
-    }
+   public void decode(InPacket p) {
+      startPosition = p.readPos();
+      byte size = p.readByte();
+      for (int i = 0; i < size; i++) {
+         Elem elem = new Elem(startPosition);
+         elem.decode(p);
+         lElem.add(elem);
+      }
+   }
 
-    public static MovePath idle(Point position, byte stance) {
-        MovePath movePath = new MovePath();
-        movePath.startPosition = position;
-        movePath.lElem.add(new Elem(position, stance, (byte) 0, (short) position.x, (short) position.y, (short) 0, (short) 0, (short) 0, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0));
-        return movePath;
-    }
+   public void encode(OutPacket p) {
+      p.writePos(startPosition);
+      p.writeByte(lElem.size());
+      for (Elem elem : lElem) {
+         elem.encode(p);
+      }
+   }
 
-    public List<Elem> Movement() {
-        return Collections.unmodifiableList(lElem);
-    }
+   public List<Elem> Movement() {
+      return Collections.unmodifiableList(lElem);
+   }
 }

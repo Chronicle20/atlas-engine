@@ -60,7 +60,7 @@ public class BuybackProcessor {
             map.broadcastMessage(CField.playSound("Buyback/" + jobString));
             map.broadcastMessage(CWvsContext.earnTitleMessage(chr.getName() + " just bought back into the game!"));
 
-            chr.announce(CUser.showBuybackEffect());
+            chr.sendPacket(CUser.showBuybackEffect());
             map.broadcastMessage(chr, CUser.showForeignBuybackEffect(chr.getId()), false);
         }
     }

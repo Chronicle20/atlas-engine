@@ -25,13 +25,13 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import client.TemporaryStatValue;
-import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleJob;
 import client.Skill;
 import client.SkillFactory;
+import client.TemporaryStatType;
+import client.TemporaryStatValue;
 import config.YamlConfig;
 import connection.packets.CUserLocal;
 import connection.packets.CUserRemote;
@@ -44,14 +44,14 @@ import constants.skills.Hero;
 import constants.skills.NightWalker;
 import constants.skills.Rogue;
 import constants.skills.WindArcher;
+import net.packet.InPacket;
 import server.MapleStatEffect;
 import tools.Pair;
-import tools.data.input.SeekableLittleEndianAccessor;
 
 public final class CloseRangeDamageHandler extends AbstractDealDamageHandler {
 
    @Override
-   public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+   public void handlePacket(InPacket p, MapleClient c) {
       MapleCharacter chr = c.getPlayer();
         
         /*long timeElapsed = currentServerTime() - chr.getAutobanManager().getLastSpam(8);
@@ -60,7 +60,7 @@ public final class CloseRangeDamageHandler extends AbstractDealDamageHandler {
         }
         chr.getAutobanManager().spam(8);*/
 
-      AttackInfo attack = parseDamage(slea, chr, false, false);
+      AttackInfo attack = parseDamage(p, chr, false, false);
       if (chr.getBuffEffect(TemporaryStatType.MORPH) != null) {
          if (chr.getBuffEffect(TemporaryStatType.MORPH).isMorphWithoutAttack()) {
             // How are they attacking when the client won't let them?
@@ -76,7 +76,7 @@ public final class CloseRangeDamageHandler extends AbstractDealDamageHandler {
       }
       if (GameConstants.isDojo(chr.getMap().getId()) && attack.numAttacked > 0) {
          chr.setDojoEnergy(chr.getDojoEnergy() + YamlConfig.config.server.DOJO_ENERGY_ATK);
-         c.announce(CWvsContext.getEnergy("energy", chr.getDojoEnergy()));
+         c.sendPacket(CWvsContext.getEnergy("energy", chr.getDojoEnergy()));
       }
 
       chr.getMap().broadcastMessage(chr,
@@ -127,11 +127,11 @@ public final class CloseRangeDamageHandler extends AbstractDealDamageHandler {
                   }
 
                   int duration = combo.getEffect(olv).getDuration();
-                  List<Pair<TemporaryStatType, TemporaryStatValue>> stat = Collections.singletonList(new Pair<>(TemporaryStatType.COMBO,
-                        new TemporaryStatValue(0, 0, neworbcount)));
+                  List<Pair<TemporaryStatType, TemporaryStatValue>> stat =
+                        Collections.singletonList(new Pair<>(TemporaryStatType.COMBO, new TemporaryStatValue(0, 0, neworbcount)));
                   chr.setBuffedValue(TemporaryStatType.COMBO, neworbcount);
                   duration -= (int) (currentServerTime() - chr.getBuffedStarttime(TemporaryStatType.COMBO));
-                  c.announce(CWvsContext.giveBuff(chr, oid, duration, stat));
+                  c.sendPacket(CWvsContext.giveBuff(chr, oid, duration, stat));
                   chr.getMap().broadcastMessage(chr, CUserRemote.giveForeignBuff(chr, stat), false);
                }
             }
@@ -175,8 +175,8 @@ public final class CloseRangeDamageHandler extends AbstractDealDamageHandler {
          }
 
          chr.setDojoEnergy(0);
-         c.announce(CWvsContext.getEnergy("energy", chr.getDojoEnergy()));
-         c.announce(CWvsContext.serverNotice(5, "As you used the secret skill, your energy bar has been reset."));
+         c.sendPacket(CWvsContext.getEnergy("energy", chr.getDojoEnergy()));
+         c.sendPacket(CWvsContext.serverNotice(5, "As you used the secret skill, your energy bar has been reset."));
       } else if (attack.skill > 0) {
          Skill skill = SkillFactory.getSkill(attack.skill).orElseThrow();
          MapleStatEffect effect_ = skill.getEffect(chr.getSkillLevel(skill));
@@ -184,14 +184,15 @@ public final class CloseRangeDamageHandler extends AbstractDealDamageHandler {
             if (chr.skillIsCooling(attack.skill)) {
                return;
             } else {
-               c.announce(CUserLocal.skillCooldown(attack.skill, effect_.getCooldown()));
+               c.sendPacket(CUserLocal.skillCooldown(attack.skill, effect_.getCooldown()));
                chr.addCooldown(attack.skill, currentServerTime(), effect_.getCooldown() * 1000L);
             }
          }
       }
       if ((chr.getSkillLevel(SkillFactory.getSkill(NightWalker.VANISH).orElseThrow()) > 0
             || chr.getSkillLevel(SkillFactory.getSkill(Rogue.DARK_SIGHT).orElseThrow()) > 0)
-            && chr.getBuffedValue(TemporaryStatType.DARKSIGHT) != null) {// && chr.getBuffSource(TemporaryStatType.DARKSIGHT) != 9101004
+            && chr.getBuffedValue(TemporaryStatType.DARKSIGHT)
+            != null) {// && chr.getBuffSource(TemporaryStatType.DARKSIGHT) != 9101004
          chr.cancelEffectFromBuffStat(TemporaryStatType.DARKSIGHT);
          chr.cancelBuffStats(TemporaryStatType.DARKSIGHT);
       } else if (chr.getSkillLevel(SkillFactory.getSkill(WindArcher.WIND_WALK).orElseThrow()) > 0

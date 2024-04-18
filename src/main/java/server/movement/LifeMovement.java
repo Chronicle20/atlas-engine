@@ -24,11 +24,11 @@ package server.movement;
 import java.awt.*;
 
 public interface LifeMovement extends LifeMovementFragment {
-    Point getPosition();
+   Point getPosition();
 
-    int getNewstate();
+   int getNewstate();
 
-    int getDuration();
+   int getDuration();
 
-    int getType();
+   int getType();
 }

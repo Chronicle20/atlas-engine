@@ -194,7 +194,7 @@ public class MaplePet extends Item {
             closeness = newCloseness;
             while (newCloseness >= ExpTable.getClosenessNeededForLevel(level)) {
                level += 1;
-               owner.announce(CUser.showOwnPetLevelUp(slot));
+               owner.sendPacket(CUser.showOwnPetLevelUp(slot));
                owner.getMap().broadcastMessage(CUser.showPetLevelUp(owner, slot));
             }
          }

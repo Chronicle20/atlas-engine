@@ -1,33 +1,12 @@
-/*
-	This file is part of the OdinMS Maple Story Server
-    Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
-		       Matthias Butz <matze@odinms.de>
-		       Jan Christian Meyer <vimes@odinms.de>
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Affero General Public License as
-    published by the Free Software Foundation version 3 as published by
-    the Free Software Foundation. You may not use, modify or distribute
-    this program under any other version of the GNU Affero General Public
-    License.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Affero General Public License for more details.
-
-    You should have received a copy of the GNU Affero General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package net.server.channel.handlers;
 
 import java.util.Optional;
 
-import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.Skill;
 import client.SkillFactory;
+import client.TemporaryStatType;
 import config.YamlConfig;
 import connection.packets.CUserLocal;
 import connection.packets.CUserRemote;
@@ -37,12 +16,13 @@ import constants.skills.Bishop;
 import constants.skills.Evan;
 import constants.skills.FPArchMage;
 import constants.skills.ILArchMage;
+import net.packet.InPacket;
+import net.packet.Packet;
 import server.MapleStatEffect;
-import tools.data.input.SeekableLittleEndianAccessor;
 
 public final class MagicDamageHandler extends AbstractDealDamageHandler {
    @Override
-   public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+   public void handlePacket(InPacket p, MapleClient c) {
       MapleCharacter chr = c.getPlayer();
 
 		/*long timeElapsed = currentServerTime() - chr.getAutobanManager().getLastSpam(8);
@@ -51,7 +31,7 @@ public final class MagicDamageHandler extends AbstractDealDamageHandler {
 		}
 		chr.getAutobanManager().spam(8);*/
 
-      AttackInfo attack = parseDamage(slea, chr, false, true);
+      AttackInfo attack = parseDamage(p, chr, false, true);
 
       if (chr.getBuffEffect(TemporaryStatType.MORPH) != null) {
          if (chr.getBuffEffect(TemporaryStatType.MORPH).isMorphWithoutAttack()) {
@@ -63,12 +43,12 @@ public final class MagicDamageHandler extends AbstractDealDamageHandler {
 
       if (GameConstants.isDojo(chr.getMap().getId()) && attack.numAttacked > 0) {
          chr.setDojoEnergy(chr.getDojoEnergy() + YamlConfig.config.server.DOJO_ENERGY_ATK);
-         c.announce(CWvsContext.getEnergy("energy", chr.getDojoEnergy()));
+         c.sendPacket(CWvsContext.getEnergy("energy", chr.getDojoEnergy()));
       }
 
       int charge = (attack.skill == Evan.FIRE_BREATH || attack.skill == Evan.ICE_BREATH || attack.skill == FPArchMage.BIG_BANG
             || attack.skill == ILArchMage.BIG_BANG || attack.skill == Bishop.BIG_BANG) ? attack.charge : -1;
-      byte[] packet = CUserRemote.magicAttack(chr, attack.skill, attack.skilllevel, attack.stance, attack.numAttackedAndDamage,
+      Packet packet = CUserRemote.magicAttack(chr, attack.skill, attack.skilllevel, attack.stance, attack.numAttackedAndDamage,
             attack.allDamage, charge, attack.speed, attack.direction, attack.display);
 
       chr.getMap().broadcastMessage(chr, packet, false, true);
@@ -79,7 +59,7 @@ public final class MagicDamageHandler extends AbstractDealDamageHandler {
          if (chr.skillIsCooling(attack.skill)) {
             return;
          } else {
-            c.announce(CUserLocal.skillCooldown(attack.skill, effect_.getCooldown()));
+            c.sendPacket(CUserLocal.skillCooldown(attack.skill, effect_.getCooldown()));
             chr.addCooldown(attack.skill, currentServerTime(), effect_.getCooldown() * 1000L);
          }
       }
@@ -88,9 +68,7 @@ public final class MagicDamageHandler extends AbstractDealDamageHandler {
             .orElseThrow();// MP Eater, works with right job
       int eaterLevel = chr.getSkillLevel(eaterSkill);
       if (eaterLevel > 0) {
-         attack.allDamage.keySet().stream()
-               .map(id -> chr.getMap().getMapObject(id))
-               .flatMap(Optional::stream)
+         attack.allDamage.keySet().stream().map(id -> chr.getMap().getMapObject(id)).flatMap(Optional::stream)
                .forEach(o -> eaterSkill.getEffect(eaterLevel).applyPassive(chr, o, 0));
       }
    }

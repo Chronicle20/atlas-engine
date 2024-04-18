@@ -8,52 +8,49 @@ import client.inventory.Item;
 import client.inventory.ItemFactory;
 import client.inventory.MapleInventoryType;
 import connection.constants.SendOpcode;
+import net.packet.OutPacket;
+import net.packet.Packet;
 import tools.Pair;
-import tools.data.output.MaplePacketLittleEndianWriter;
 
 public class CStoreBankDlg {
-   public static byte[] fredrickMessage(byte operation) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.FREDRICK_MESSAGE.getValue());
-      mplew.write(operation);
-      return mplew.getPacket();
+   public static Packet fredrickMessage(byte operation) {
+      final OutPacket p = OutPacket.create(SendOpcode.FREDRICK_MESSAGE);
+      p.writeByte(operation);
+      return p;
    }
 
-   public static byte[] getFredrick(byte op) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.FREDRICK.getValue());
-      mplew.write(op);
+   public static Packet getFredrick(byte op) {
+      final OutPacket p = OutPacket.create(SendOpcode.FREDRICK);
+      p.writeByte(op);
 
       if (op == 0x24) {
-         mplew.skip(8);
+         p.skip(8);
       } else {
-         mplew.write(0);
+         p.writeByte(0);
       }
 
-      return mplew.getPacket();
+      return p;
    }
 
-   public static byte[] getFredrick(MapleCharacter chr) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.FREDRICK.getValue());
-      mplew.write(0x23);
-      mplew.writeInt(9030000); // Fredrick
-      mplew.writeInt(32272); //id
-      mplew.skip(5);
-      mplew.writeInt(chr.getMerchantNetMeso());
-      mplew.write(0);
+   public static Packet getFredrick(MapleCharacter chr) {
+      final OutPacket p = OutPacket.create(SendOpcode.FREDRICK);
+      p.writeByte(0x23);
+      p.writeInt(9030000); // Fredrick
+      p.writeInt(32272); //id
+      p.skip(5);
+      p.writeInt(chr.getMerchantNetMeso());
+      p.writeByte(0);
       try {
          List<Pair<Item, MapleInventoryType>> items = ItemFactory.MERCHANT.loadItems(chr.getId(), false);
-         mplew.write(items.size());
+         p.writeByte(items.size());
 
          for (Pair<Item, MapleInventoryType> item : items) {
-            CCommon.addItemInfo(mplew, item
-                  .getLeft(), true);
+            CCommon.addItemInfo(p, item.getLeft(), true);
          }
       } catch (SQLException e) {
          e.printStackTrace();
       }
-      mplew.skip(3);
-      return mplew.getPacket();
+      p.skip(3);
+      return p;
    }
 }

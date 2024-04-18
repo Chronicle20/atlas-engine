@@ -36,8 +36,8 @@ function playerEntry(eim, player) {
 
     const CWvsContext = Java.type('connection.packets.CWvsContext');
     const CField = Java.type('connection.packets.CField');
-    player.getClient().announce(CField.getClock(rideTime / 1000));
-    player.getClient().announce(CWvsContext.earnTitleMessage("The next stop is at Kerning " + (myRide == 0 ? "Square" : "Subway") + " Station. The exit is to your left."));
+    player.getClient().sendPacket(CField.getClock(rideTime / 1000));
+    player.getClient().sendPacket(CWvsContext.earnTitleMessage("The next stop is at Kerning " + (myRide == 0 ? "Square" : "Subway") + " Station. The exit is to your left."));
     eim.schedule("timeOut", rideTime);
 }
 

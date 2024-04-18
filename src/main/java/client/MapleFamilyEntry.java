@@ -20,6 +20,7 @@
 package client;
 
 import connection.packets.CWvsContext;
+import net.packet.Packet;
 import net.server.Server;
 import tools.DatabaseConnection;
 import tools.FilePrinter;
@@ -338,7 +339,7 @@ public class MapleFamilyEntry {
         }
         MapleCharacter chr = getChr();
         if (chr != null) {
-            chr.announce(CWvsContext.sendGainRep(gain, from != null ? from.getName() : ""));
+            chr.sendPacket(CWvsContext.sendGainRep(gain, from != null ? from.getName() : ""));
         }
     }
 
@@ -476,18 +477,18 @@ public class MapleFamilyEntry {
         this.totalJuniors = totalJuniors;
     }
 
-    public void announceToSenior(byte[] packet, boolean includeSuperSenior) {
+    public void announceToSenior(Packet packet, boolean includeSuperSenior) {
         MapleFamilyEntry senior = getSenior();
         if (senior != null) {
             MapleCharacter seniorChr = senior.getChr();
             if (seniorChr != null) {
-                seniorChr.announce(packet);
+                seniorChr.sendPacket(packet);
             }
             senior = senior.getSenior();
             if (includeSuperSenior && senior != null) {
                 seniorChr = senior.getChr();
                 if (seniorChr != null) {
-                    seniorChr.announce(packet);
+                    seniorChr.sendPacket(packet);
                 }
             }
         }
@@ -498,13 +499,13 @@ public class MapleFamilyEntry {
         if (senior != null) {
             MapleCharacter seniorChr = senior.getChr();
             if (seniorChr != null) {
-                seniorChr.announce(CWvsContext.getFamilyInfo(senior));
+                seniorChr.sendPacket(CWvsContext.getFamilyInfo(senior));
             }
             senior = senior.getSenior();
             if (includeSuperSenior && senior != null) {
                 seniorChr = senior.getChr();
                 if (seniorChr != null) {
-                    seniorChr.announce(CWvsContext.getFamilyInfo(senior));
+                    seniorChr.sendPacket(CWvsContext.getFamilyInfo(senior));
                 }
             }
         }

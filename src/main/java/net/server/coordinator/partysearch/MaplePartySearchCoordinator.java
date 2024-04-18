@@ -260,7 +260,7 @@ public class MaplePartySearchCoordinator {
 
         if (MapleInviteCoordinator.createInvite(InviteType.PARTY, leader, partyId.get(), chr.getId())) {
             chr.disablePartySearchInvite(leader.getId());
-            chr.announce(CWvsContext.partySearchInvite(leader));
+            chr.sendPacket(CWvsContext.partySearchInvite(leader));
             return true;
         } else {
             return false;

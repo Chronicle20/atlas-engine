@@ -33,10 +33,10 @@ import config.YamlConfig;
 import connection.packets.CTrunkDlg;
 import connection.packets.CWvsContext;
 import constants.inventory.ItemConstants;
+import net.packet.InPacket;
 import server.ItemInformationProvider;
 import server.MapleStorage;
 import tools.FilePrinter;
-import tools.data.input.SeekableLittleEndianAccessor;
 
 import java.util.Optional;
 
@@ -46,29 +46,29 @@ import java.util.Optional;
  */
 public class StorageProcessor {
 
-    public static void storageAction(SeekableLittleEndianAccessor slea, MapleClient c) {
+    public static void storageAction(InPacket p, MapleClient c) {
         ItemInformationProvider ii = ItemInformationProvider.getInstance();
         MapleCharacter chr = c.getPlayer();
         MapleStorage storage = chr.getStorage();
-        byte mode = slea.readByte();
+        byte mode = p.readByte();
 
         if (chr.getLevel() < 15) {
             chr.dropMessage(1, "You may only use the storage once you have reached level 15.");
-            c.announce(CWvsContext.enableActions());
+            c.sendPacket(CWvsContext.enableActions());
             return;
         }
 
         if (c.tryacquireClient()) {
             try {
                 if (mode == 4) { // take out
-                    byte typeIndex = slea.readByte();
+                    byte typeIndex = p.readByte();
                     Optional<MapleInventoryType> type = MapleInventoryType.getByType(typeIndex);
                     if (type.isEmpty()) {
                         c.disconnect(true, false);
                         return;
                     }
 
-                    byte slot = slea.readByte();
+                    byte slot = p.readByte();
                     if (slot < 0 || slot > storage.getSlots()) { // removal starts at zero
                         AutobanFactory.PACKET_EDIT.alert(c.getPlayer(), c.getPlayer().getName() + " tried to packet edit with storage.");
                         FilePrinter.print(FilePrinter.EXPLOITS + c.getPlayer().getName() + ".txt", c.getPlayer().getName() + " tried to work with storage slot " + slot);
@@ -79,13 +79,13 @@ public class StorageProcessor {
                     Item item = storage.getItem(slot);
                     if (item != null) {
                         if (ii.isPickupRestricted(item.getItemId()) && chr.haveItemWithId(item.getItemId(), true)) {
-                            c.announce(CTrunkDlg.getStorageError((byte) 0x0C));
+                            c.sendPacket(CTrunkDlg.getStorageError((byte) 0x0C));
                             return;
                         }
 
                         int takeoutFee = storage.getTakeOutFee();
                         if (chr.getMeso() < takeoutFee) {
-                            c.announce(CTrunkDlg.getStorageError((byte) 0x0B));
+                            c.sendPacket(CTrunkDlg.getStorageError((byte) 0x0B));
                             return;
                         } else {
                             chr.gainMeso(-takeoutFee, false);
@@ -103,17 +103,17 @@ public class StorageProcessor {
 
                                 storage.sendTakenOut(c, item.getInventoryType());
                             } else {
-                                c.announce(CWvsContext.enableActions());
+                                c.sendPacket(CWvsContext.enableActions());
                                 return;
                             }
                         } else {
-                            c.announce(CTrunkDlg.getStorageError((byte) 0x0A));
+                            c.sendPacket(CTrunkDlg.getStorageError((byte) 0x0A));
                         }
                     }
                 } else if (mode == 5) { // store
-                    short slot = slea.readShort();
-                    int itemId = slea.readInt();
-                    short quantity = slea.readShort();
+                    short slot = p.readShort();
+                    int itemId = p.readInt();
+                    short quantity = p.readShort();
                     MapleInventoryType invType = ItemConstants.getInventoryType(itemId);
                     MapleInventory inv = chr.getInventory(invType);
                     if (slot < 1 || slot > inv.getSlotLimit()) { //player inv starts at one
@@ -123,17 +123,17 @@ public class StorageProcessor {
                         return;
                     }
                     if (quantity < 1) {
-                        c.announce(CWvsContext.enableActions());
+                        c.sendPacket(CWvsContext.enableActions());
                         return;
                     }
                     if (storage.isFull()) {
-                        c.announce(CTrunkDlg.getStorageError((byte) 0x11));
+                        c.sendPacket(CTrunkDlg.getStorageError((byte) 0x11));
                         return;
                     }
 
                     int storeFee = storage.getStoreFee();
                     if (chr.getMeso() < storeFee) {
-                        c.announce(CTrunkDlg.getStorageError((byte) 0x0B));
+                        c.sendPacket(CTrunkDlg.getStorageError((byte) 0x0B));
                     } else {
                         Item item;
 
@@ -142,7 +142,7 @@ public class StorageProcessor {
                             item = inv.getItem(slot);
                             if (item != null && item.getItemId() == itemId && (item.getQuantity() >= quantity || ItemConstants.isRechargeable(itemId))) {
                                 if (ItemConstants.isWeddingRing(itemId) || ItemConstants.isWeddingToken(itemId)) {
-                                    c.announce(CWvsContext.enableActions());
+                                    c.sendPacket(CWvsContext.enableActions());
                                     return;
                                 }
 
@@ -152,7 +152,7 @@ public class StorageProcessor {
 
                                 MapleInventoryManipulator.removeFromSlot(c, invType, slot, quantity, false);
                             } else {
-                                c.announce(CWvsContext.enableActions());
+                                c.sendPacket(CWvsContext.enableActions());
                                 return;
                             }
 
@@ -178,22 +178,22 @@ public class StorageProcessor {
                     if (YamlConfig.config.server.USE_STORAGE_ITEM_SORT) {
                         storage.arrangeItems(c);
                     }
-                    c.announce(CWvsContext.enableActions());
+                    c.sendPacket(CWvsContext.enableActions());
                 } else if (mode == 7) { // meso
-                    int meso = slea.readInt();
+                    int meso = p.readInt();
                     int storageMesos = storage.getMeso();
                     int playerMesos = chr.getMeso();
                     if ((meso > 0 && storageMesos >= meso) || (meso < 0 && playerMesos >= -meso)) {
                         if (meso < 0 && (storageMesos - meso) < 0) {
                             meso = Integer.MIN_VALUE + storageMesos;
                             if (meso < playerMesos) {
-                                c.announce(CWvsContext.enableActions());
+                                c.sendPacket(CWvsContext.enableActions());
                                 return;
                             }
                         } else if (meso > 0 && (playerMesos + meso) < 0) {
                             meso = Integer.MAX_VALUE - playerMesos;
                             if (meso > storageMesos) {
-                                c.announce(CWvsContext.enableActions());
+                                c.sendPacket(CWvsContext.enableActions());
                                 return;
                             }
                         }
@@ -203,7 +203,7 @@ public class StorageProcessor {
                         FilePrinter.print(FilePrinter.STORAGE + c.getPlayer().getName() + ".txt", c.getPlayer().getName() + (meso > 0 ? " took out " : " stored ") + Math.abs(meso) + " mesos");
                         storage.sendMeso(c);
                     } else {
-                        c.announce(CWvsContext.enableActions());
+                        c.sendPacket(CWvsContext.enableActions());
                         return;
                     }
                 } else if (mode == 8) {// close... unless the player decides to enter cash shop!

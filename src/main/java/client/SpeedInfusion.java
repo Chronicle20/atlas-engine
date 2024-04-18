@@ -1,20 +1,20 @@
 package client;
 
-import tools.data.output.LittleEndianWriter;
+import net.packet.OutPacket;
 
 public class SpeedInfusion extends TwoStateTemporaryStat {
-    public int tCurrentTime;
+   public int tCurrentTime;
 
-    public SpeedInfusion() {
-        super(false);
-        tCurrentTime = 0;
-        usExpireTerm = 0;
-    }
+   public SpeedInfusion() {
+      super(false);
+      tCurrentTime = 0;
+      usExpireTerm = 0;
+   }
 
-    @Override
-    public void EncodeForClient(LittleEndianWriter lew) {
-        super.EncodeForClient(lew);
-        lew.writeTime(tCurrentTime);
-        lew.writeShort(usExpireTerm);
-    }
+   @Override
+   public void EncodeForClient(OutPacket p) {
+      super.EncodeForClient(p);
+      p.writeTime(tCurrentTime);
+      p.writeShort(usExpireTerm);
+   }
 }

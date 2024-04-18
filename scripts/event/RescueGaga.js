@@ -104,7 +104,7 @@ function playerEntry(eim, player) {
     player.changeMap(map, map.getPortal(0));
 
     const CWvsContext = Java.type('connection.packets.CWvsContext');
-    player.announce(CField.showEffect("event/space/start"));
+    player.sendPacket(CField.showEffect("event/space/start"));
     player.startMapEffect("Please rescue Gaga within the time limit.", 5120027);
 }
 

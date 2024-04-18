@@ -101,6 +101,7 @@ import constants.skills.ThunderBreaker;
 import constants.skills.WhiteKnight;
 import constants.skills.WindArcher;
 import door.DoorProcessor;
+import net.packet.Packet;
 import net.server.Server;
 import net.server.channel.Channel;
 import net.server.world.MapleParty;
@@ -927,7 +928,7 @@ public class MapleStatEffect {
                   if (absorbMp > 0) {
                      mob.setMp(mob.getMp() - absorbMp);
                      applyto.addMP(absorbMp);
-                     applyto.announce(CUser.showOwnBuffEffect(sourceid, ShowItemGainInChatCode.SKILL_USE));
+                     applyto.sendPacket(CUser.showOwnBuffEffect(sourceid, ShowItemGainInChatCode.SKILL_USE));
                      applyto.getMap().broadcastMessage(applyto, CUser.showBuffeffect(applyto.getId(), sourceid, 1), false);
                   }
                }
@@ -977,7 +978,7 @@ public class MapleStatEffect {
       if (primary) {
          if (itemConNo != 0) {
             if (!applyto.getAbstractPlayerInteraction().hasItem(itemCon, itemConNo)) {
-               applyto.announce(CWvsContext.enableActions());
+               applyto.sendPacket(CWvsContext.enableActions());
                return false;
             }
             MapleInventoryManipulator.removeById(applyto.getClient(), ItemConstants.getInventoryType(itemCon), itemCon, itemConNo,
@@ -1002,7 +1003,7 @@ public class MapleStatEffect {
          } */
 
       if (!applyto.applyHpMpChange(hpCon, hpchange, mpchange)) {
-         applyto.announce(CWvsContext.enableActions());
+         applyto.sendPacket(CWvsContext.enableActions());
          return false;
       }
 
@@ -1079,7 +1080,7 @@ public class MapleStatEffect {
                applyto.cancelBuffStats(TemporaryStatType.SUMMON);
             }
 
-            applyto.announce(CWvsContext.enableActions());
+            applyto.sendPacket(CWvsContext.enableActions());
          }
 
          applyBuffEffect(applyfrom, applyto, primary);
@@ -1205,7 +1206,7 @@ public class MapleStatEffect {
          affectedc += affectedp.size();   // used for heal
          for (MapleCharacter affected : affectedp) {
             applyTo(applyfrom, affected, false, null, useMaxRange, affectedc);
-            affected.announce(CUser.showOwnBuffEffect(sourceid, ShowItemGainInChatCode.SKILL_AFFECTED));
+            affected.sendPacket(CUser.showOwnBuffEffect(sourceid, ShowItemGainInChatCode.SKILL_AFFECTED));
             affected.getMap().broadcastMessage(affected, CUser.showBuffeffect(affected.getId(), sourceid, 2), false);
          }
       }
@@ -1285,7 +1286,7 @@ public class MapleStatEffect {
    public final void applyComboBuff(final MapleCharacter applyto, int combo) {
       final List<Pair<TemporaryStatType, TemporaryStatValue>> stat =
             Collections.singletonList(new Pair<>(TemporaryStatType.ARAN_COMBO, new TemporaryStatValue(sourceid, 0, combo)));
-      applyto.announce(CWvsContext.giveBuff(applyto, sourceid, 99999, stat));
+      applyto.sendPacket(CWvsContext.giveBuff(applyto, sourceid, 99999, stat));
 
       final long starttime = Server.getInstance().getCurrentTime();
       //	final CancelEffectAction cancelAction = new CancelEffectAction(applyto, this, starttime);
@@ -1294,7 +1295,7 @@ public class MapleStatEffect {
    }
 
    public final void applyBeaconBuff(final MapleCharacter applyto, int objectid) {
-      applyto.announce(
+      applyto.sendPacket(
             CWvsContext.giveBuff(applyto, 1, sourceid, Collections.singletonList(new Pair<>(TemporaryStatType.HOMING_BEACON,
                   new TemporaryStatValue(0, 0, objectid)))));
 
@@ -1309,7 +1310,7 @@ public class MapleStatEffect {
 
       long leftDuration = (starttime + localDuration) - Server.getInstance().getCurrentTime();
       if (leftDuration > 0) {
-         target.announce(CWvsContext.giveBuff(target, (skill ? sourceid : -sourceid), (int) leftDuration, activeStats));
+         target.sendPacket(CWvsContext.giveBuff(target, (skill ? sourceid : -sourceid), (int) leftDuration, activeStats));
       }
    }
 
@@ -1366,8 +1367,8 @@ public class MapleStatEffect {
          applyto.getMap().broadcastMessage(applyto, CUser.showBuffeffect(applyto.getId(), sourceid, 1, (byte) 3), false);
       }
       if (!localstatups.isEmpty()) {
-         byte[] buff = null;
-         byte[] mbuff = null;
+         Packet buff = null;
+         Packet mbuff = null;
          if (this.isActive(applyto)) {
             buff = CWvsContext.giveBuff(applyto, (skill ? sourceid : -sourceid), localDuration, localstatups);
          }
@@ -1431,7 +1432,7 @@ public class MapleStatEffect {
             //Thanks flav for such a simple release! :)
             //Thanks Conrad, Atoot for noticing summons not using buff icon
 
-            applyto.announce(buff);
+            applyto.sendPacket(buff);
          }
 
          long starttime = Server.getInstance().getCurrentTime();

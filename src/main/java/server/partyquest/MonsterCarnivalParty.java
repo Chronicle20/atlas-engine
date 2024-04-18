@@ -113,7 +113,7 @@ public class MonsterCarnivalParty {
         final String effect = winner ? "quest/carnival/win" : "quest/carnival/lose";
 
         for (final MapleCharacter chr : members) {
-            chr.announce(CField.showEffect(effect));
+            chr.sendPacket(CField.showEffect(effect));
         }
     }
 

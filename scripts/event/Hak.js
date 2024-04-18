@@ -34,7 +34,7 @@ function playerEntry(eim, player) {
     player.changeMap(onRide, onRide.getPortal(0));
 
     const CField = Java.type('connection.packets.CField');
-    player.getClient().announce(CField.getClock(rideTime / 1000));
+    player.getClient().sendPacket(CField.getClock(rideTime / 1000));
     eim.schedule("timeOut", rideTime);
 }
 

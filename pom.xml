@@ -24,9 +24,10 @@
         <maven-assembly-plugin.version>3.5.0</maven-assembly-plugin.version> <!-- For packaging the executable fat jar -->
 
         <!-- Dependencies -->
-        <slf4j-api.version>2.0.9</slf4j-api.version> <!-- Logging facade -->
-        <log4j.version>2.20.0</log4j.version> <!-- Slf4j implementation -->
+        <slf4j-api.version>2.0.13</slf4j-api.version> <!-- Logging facade -->
+        <log4j.version>2.23.1</log4j.version> <!-- Slf4j implementation -->
         <graalvm.version>24.0.1</graalvm.version> <!-- ScriptEngine implementation -->
+        <netty.version>4.1.109.Final</netty.version>
         <yamlbeans.version>1.17</yamlbeans.version> <!-- Config file -->
         <jcip-annotations.version>1.0</jcip-annotations.version> <!-- Annotations for concurrency documentation -->
         <HikariCP.version>5.1.0</HikariCP.version> <!-- Database connection pool -->
@@ -46,10 +47,13 @@
             <artifactId>jcip-annotations</artifactId>
             <version>${jcip-annotations.version}</version>
         </dependency>
+
+        <!-- Networking -->
         <dependency>
-            <groupId>org.apache.mina</groupId>
-            <artifactId>mina-core</artifactId>
-            <version>2.2.3</version>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>${netty.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <!-- Database -->
@@ -71,9 +75,19 @@
             <version>${slf4j-api.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>${slf4j-api.version}</version>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j2-impl</artifactId>
+            <version>${log4j.version}</version>
         </dependency>
 
         <!-- Scripting -->

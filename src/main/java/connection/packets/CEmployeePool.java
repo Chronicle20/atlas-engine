@@ -1,52 +1,48 @@
 package connection.packets;
 
 import connection.constants.SendOpcode;
+import net.packet.OutPacket;
+import net.packet.Packet;
 import server.maps.MapleHiredMerchant;
-import tools.data.output.MaplePacketLittleEndianWriter;
 
 public class CEmployeePool {
-    public static byte[] spawnHiredMerchantBox(MapleHiredMerchant hm) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SPAWN_HIRED_MERCHANT.getValue());
-        mplew.writeInt(hm.getOwnerId());
-        mplew.writeInt(hm.getItemId());
-        mplew.writeShort((short) hm.getPosition()
-                .getX());
-        mplew.writeShort((short) hm.getPosition()
-                .getY());
-        mplew.writeShort(0);
-        mplew.writeMapleAsciiString(hm.getOwner());
-        mplew.write(0x05);
-        mplew.writeInt(hm.getObjectId());
-        mplew.writeMapleAsciiString(hm.getDescription());
-        mplew.write(hm.getItemId() % 100);
-        mplew.write(new byte[]{1, 4});
-        return mplew.getPacket();
-    }
+   public static Packet spawnHiredMerchantBox(MapleHiredMerchant hm) {
+      final OutPacket p = OutPacket.create(SendOpcode.SPAWN_HIRED_MERCHANT);
+      p.writeInt(hm.getOwnerId());
+      p.writeInt(hm.getItemId());
+      p.writeShort((short) hm.getPosition()
+            .getX());
+      p.writeShort((short) hm.getPosition()
+            .getY());
+      p.writeShort(0);
+      p.writeString(hm.getOwner());
+      p.writeByte(0x05);
+      p.writeInt(hm.getObjectId());
+      p.writeString(hm.getDescription());
+      p.writeByte(hm.getItemId() % 100);
+      p.writeBytes(new byte[]{1, 4});
+      return p;
+   }
 
-    public static byte[] removeHiredMerchantBox(int id) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.DESTROY_HIRED_MERCHANT.getValue());
-        mplew.writeInt(id);
-        return mplew.getPacket();
-    }
+   public static Packet removeHiredMerchantBox(int id) {
+      final OutPacket p = OutPacket.create(SendOpcode.DESTROY_HIRED_MERCHANT);
+      p.writeInt(id);
+      return p;
+   }
 
-    public static byte[] updateHiredMerchantBox(MapleHiredMerchant hm) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.UPDATE_HIRED_MERCHANT.getValue());
-        mplew.writeInt(hm.getOwnerId());
+   public static Packet updateHiredMerchantBox(MapleHiredMerchant hm) {
+      final OutPacket p = OutPacket.create(SendOpcode.UPDATE_HIRED_MERCHANT);
+      p.writeInt(hm.getOwnerId());
 
-        updateHiredMerchantBoxInfo(mplew, hm);
-        return mplew.getPacket();
-    }
+      updateHiredMerchantBoxInfo(p, hm);
+      return p;
+   }
 
-    private static void updateHiredMerchantBoxInfo(MaplePacketLittleEndianWriter mplew, MapleHiredMerchant hm) {
-        byte[] roomInfo = hm.getShopRoomInfo();
-
-        mplew.write(5);
-        mplew.writeInt(hm.getObjectId());
-        mplew.writeMapleAsciiString(hm.getDescription());
-        mplew.write(hm.getItemId() % 100);
-        mplew.write(roomInfo);    // visitor capacity here, thanks GabrielSin
-    }
+   private static void updateHiredMerchantBoxInfo(OutPacket p, MapleHiredMerchant hm) {
+      p.writeByte(5);
+      p.writeInt(hm.getObjectId());
+      p.writeString(hm.getDescription());
+      p.writeByte(hm.getItemId() % 100);
+      p.writeBytes(hm.getShopRoomInfo());
+   }
 }

@@ -1,104 +1,97 @@
 package connection.packets;
 
-import connection.constants.SendOpcode;
-import net.server.channel.handlers.SummonDamageHandler;
-import server.maps.MapleSummon;
-import tools.data.input.SeekableLittleEndianAccessor;
-import tools.data.output.MaplePacketLittleEndianWriter;
-
 import java.awt.*;
 import java.util.List;
 
+import connection.constants.SendOpcode;
+import net.packet.InPacket;
+import net.packet.OutPacket;
+import net.packet.Packet;
+import net.server.channel.handlers.SummonDamageHandler;
+import server.maps.MapleSummon;
+
 public class CSummonedPool {
-    /**
-     * Gets a packet to spawn a special map object.
-     *
-     * @param summon
-     * @param animated   Animated spawn?
-     * @return The spawn packet for the map object.
-     */
-    public static byte[] spawnSummon(MapleSummon summon, boolean animated) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(25);
-        mplew.writeShort(SendOpcode.SPAWN_SPECIAL_MAPOBJECT.getValue());
-        mplew.writeInt(summon.getOwner()
-                .getId());
-        mplew.writeInt(summon.getObjectId());
-        mplew.writeInt(summon.getSkill());
-        mplew.write(0x0A); //v83
-        mplew.write(summon.getSkillLevel());
-        mplew.writePos(summon.getPosition());
-        mplew.write(summon.getStance());    //bMoveAction & foothold, found thanks to Rien dev team
-        mplew.writeShort(0);
-        mplew.write(summon.getMovementType()
-                .getValue()); // 0 = don't move, 1 = follow (4th mage summons?), 2/4 = only tele follow, 3 = bird follow
-        mplew.write(summon.isPuppet() ? 0 : 1); // 0 and the summon can't attack - but puppets don't attack with 1 either ^.-
-        mplew.write(animated ? 0 : 1);
-        return mplew.getPacket();
-    }
+   /**
+    * Gets a packet to spawn a special map object.
+    *
+    * @param summon
+    * @param animated Animated spawn?
+    * @return The spawn packet for the map object.
+    */
+   public static Packet spawnSummon(MapleSummon summon, boolean animated) {
+      final OutPacket p = OutPacket.create(SendOpcode.SPAWN_SPECIAL_MAPOBJECT);
+      p.writeInt(summon.getOwner().getId());
+      p.writeInt(summon.getObjectId());
+      p.writeInt(summon.getSkill());
+      p.writeByte(0x0A); //v83
+      p.writeByte(summon.getSkillLevel());
+      p.writePos(summon.getPosition());
+      p.writeByte(summon.getStance());    //bMoveAction & foothold, found thanks to Rien dev team
+      p.writeShort(0);
+      p.writeByte(summon.getMovementType()
+            .getValue()); // 0 = don't move, 1 = follow (4th mage summons?), 2/4 = only tele follow, 3 = bird follow
+      p.writeByte(summon.isPuppet() ? 0 : 1); // 0 and the summon can't attack - but puppets don't attack with 1 either ^.-
+      p.writeByte(animated ? 0 : 1);
+      return p;
+   }
 
-    /**
-     * Gets a packet to remove a special map object.
-     *
-     * @param summon
-     * @param animated Animated removal?
-     * @return The packet removing the object.
-     */
-    public static byte[] removeSummon(MapleSummon summon, boolean animated) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(11);
-        mplew.writeShort(SendOpcode.REMOVE_SPECIAL_MAPOBJECT.getValue());
-        mplew.writeInt(summon.getOwner()
-                .getId());
-        mplew.writeInt(summon.getObjectId());
-        mplew.write(animated ? 4 : 1); // ?
-        return mplew.getPacket();
-    }
+   /**
+    * Gets a packet to remove a special map object.
+    *
+    * @param summon
+    * @param animated Animated removal?
+    * @return The packet removing the object.
+    */
+   public static Packet removeSummon(MapleSummon summon, boolean animated) {
+      final OutPacket p = OutPacket.create(SendOpcode.REMOVE_SPECIAL_MAPOBJECT);
+      p.writeInt(summon.getOwner().getId());
+      p.writeInt(summon.getObjectId());
+      p.writeByte(animated ? 4 : 1); // ?
+      return p;
+   }
 
-    public static byte[] moveSummon(int cid, int oid, Point startPos, SeekableLittleEndianAccessor movementSlea, long movementDataLength) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.MOVE_SUMMON.getValue());
-        mplew.writeInt(cid);
-        mplew.writeInt(oid);
-        mplew.writePos(startPos);
-        CCommon.rebroadcastMovementList(mplew, movementSlea, movementDataLength);
-        return mplew.getPacket();
-    }
+   public static Packet moveSummon(int cid, int oid, Point startPos, InPacket ip, long movementDataLength) {
+      final OutPacket p = OutPacket.create(SendOpcode.MOVE_SUMMON);
+      p.writeInt(cid);
+      p.writeInt(oid);
+      p.writePos(startPos);
+      CCommon.rebroadcastMovementList(p, ip, movementDataLength);
+      return p;
+   }
 
-    public static byte[] summonAttack(int cid, int summonOid, byte direction, List<SummonDamageHandler.SummonAttackEntry> allDamage) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        //b2 00 29 f7 00 00 9a a3 04 00 c8 04 01 94 a3 04 00 06 ff 2b 00
-        mplew.writeShort(SendOpcode.SUMMON_ATTACK.getValue());
-        mplew.writeInt(cid);
-        mplew.writeInt(summonOid);
-        mplew.write(0);     // char level
-        mplew.write(direction);
-        mplew.write(allDamage.size());
-        for (SummonDamageHandler.SummonAttackEntry attackEntry : allDamage) {
-            mplew.writeInt(attackEntry.getMonsterOid()); // oid
-            mplew.write(6); // who knows
-            mplew.writeInt(attackEntry.getDamage()); // damage
-        }
+   public static Packet summonAttack(int cid, int summonOid, byte direction,
+                                     List<SummonDamageHandler.SummonAttackEntry> allDamage) {
+      final OutPacket p = OutPacket.create(SendOpcode.SUMMON_ATTACK);
+      p.writeInt(cid);
+      p.writeInt(summonOid);
+      p.writeByte(0);     // char level
+      p.writeByte(direction);
+      p.writeByte(allDamage.size());
+      for (SummonDamageHandler.SummonAttackEntry attackEntry : allDamage) {
+         p.writeInt(attackEntry.getMonsterOid()); // oid
+         p.writeByte(6); // who knows
+         p.writeInt(attackEntry.getDamage()); // damage
+      }
 
-        return mplew.getPacket();
-    }
+      return p;
+   }
 
-    public static byte[] damageSummon(int cid, int oid, int damage, int monsterIdFrom) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.DAMAGE_SUMMON.getValue());
-        mplew.writeInt(cid);
-        mplew.writeInt(oid);
-        mplew.write(12);
-        mplew.writeInt(damage);         // damage display doesn't seem to work...
-        mplew.writeInt(monsterIdFrom);
-        mplew.write(0);
-        return mplew.getPacket();
-    }
+   public static Packet damageSummon(int cid, int oid, int damage, int monsterIdFrom) {
+      final OutPacket p = OutPacket.create(SendOpcode.DAMAGE_SUMMON);
+      p.writeInt(cid);
+      p.writeInt(oid);
+      p.writeByte(12);
+      p.writeInt(damage);         // damage display doesn't seem to work...
+      p.writeInt(monsterIdFrom);
+      p.writeByte(0);
+      return p;
+   }
 
-    public static byte[] summonSkill(int cid, int summonSkillId, int newStance) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SUMMON_SKILL.getValue());
-        mplew.writeInt(cid);
-        mplew.writeInt(summonSkillId);
-        mplew.write(newStance);
-        return mplew.getPacket();
-    }
+   public static Packet summonSkill(int cid, int summonSkillId, int newStance) {
+      final OutPacket p = OutPacket.create(SendOpcode.SUMMON_SKILL);
+      p.writeInt(cid);
+      p.writeInt(summonSkillId);
+      p.writeByte(newStance);
+      return p;
+   }
 }

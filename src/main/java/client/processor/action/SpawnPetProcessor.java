@@ -54,20 +54,20 @@ public class SpawnPetProcessor {
                 {
                     if (chr.haveItem(petid + 1)) {
                         chr.dropMessage(5, "You can't hatch your " + (petid == 5000028 ? "Dragon egg" : "Robo egg") + " if you already have a Baby " + (petid == 5000028 ? "Dragon." : "Robo."));
-                        c.announce(CWvsContext.enableActions());
+                        c.sendPacket(CWvsContext.enableActions());
                         return;
                     }
 
                     int evolveid = MapleDataTool.getInt("info/evol1", dataRoot.getData("Pet/" + petid + ".img"));
                     int petId = MaplePet.createPet(evolveid);
                     if (petId == -1) {
-                        c.announce(CWvsContext.enableActions());
+                        c.sendPacket(CWvsContext.enableActions());
                         return;
                     }
                     long expiration = chr.getInventory(MapleInventoryType.CASH).getItem(slot).getExpiration();
                     MapleInventoryManipulator.removeById(c, MapleInventoryType.CASH, petid, (short) 1, false, false);
                     MapleInventoryManipulator.addById(c, evolveid, (short) 1, null, petId, expiration);
-                    c.announce(CWvsContext.enableActions());
+                    c.sendPacket(CWvsContext.enableActions());
                     return;
                 }
                 if (chr.getPetIndex(pet.get()) != -1) {
@@ -91,8 +91,8 @@ public class SpawnPetProcessor {
                 pet.get().saveToDb();
                 chr.addPet(pet.get());
                 chr.getMap().broadcastMessage(c.getPlayer(), CUser.showPet(c.getPlayer(), pet.get(), false, false), true);
-                c.announce(CWvsContext.petStatUpdate(c.getPlayer()));
-                c.announce(CWvsContext.enableActions());
+                c.sendPacket(CWvsContext.petStatUpdate(c.getPlayer()));
+                c.sendPacket(CWvsContext.enableActions());
                 chr.commitExcludedItems();
                 chr.getClient().getWorldServer().registerPetHunger(chr, chr.getPetIndex(pet.get()));
             } finally {

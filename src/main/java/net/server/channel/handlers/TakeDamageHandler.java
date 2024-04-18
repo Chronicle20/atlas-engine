@@ -1,35 +1,14 @@
-/*
-This file is part of the OdinMS Maple Story Server
-Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
-Matthias Butz <matze@odinms.de>
-Jan Christian Meyer <vimes@odinms.de>
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as
-published by the Free Software Foundation version 3 as published by
-the Free Software Foundation. You may not use, modify or distribute
-this program under any other version of the GNU Affero General Public
-License.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package net.server.channel.handlers;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.Skill;
 import client.SkillFactory;
+import client.TemporaryStatType;
 import client.status.MonsterStatus;
 import client.status.MonsterStatusEffect;
 import config.YamlConfig;
@@ -41,6 +20,7 @@ import connection.packets.CWvsContext;
 import constants.game.GameConstants;
 import constants.skills.Aran;
 import net.AbstractMaplePacketHandler;
+import net.packet.InPacket;
 import server.MapleStatEffect;
 import server.life.MapleLifeFactory.loseItem;
 import server.life.MapleMonster;
@@ -51,19 +31,18 @@ import server.life.MobSkillFactory;
 import server.maps.MapleMap;
 import server.maps.MapleMapObject;
 import tools.FilePrinter;
-import tools.data.input.SeekableLittleEndianAccessor;
 
 public final class TakeDamageHandler extends AbstractMaplePacketHandler {
 
    @Override
-   public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+   public void handlePacket(InPacket p, MapleClient c) {
       List<MapleCharacter> banishPlayers = new ArrayList<>();
 
       MapleCharacter chr = c.getPlayer();
-      slea.readInt();
-      byte damagefrom = slea.readByte();
-      slea.readByte(); //Element
-      int damage = slea.readInt();
+      p.readInt();
+      byte damagefrom = p.readByte();
+      p.readByte(); //Element
+      int damage = p.readInt();
       int oid = 0, monsteridfrom = 0, pgmr = 0, direction = 0;
       int pos_x = 0, pos_y = 0, fake = 0;
       boolean is_pgmr = false, is_pg = true, is_deadly = false;
@@ -71,8 +50,8 @@ public final class TakeDamageHandler extends AbstractMaplePacketHandler {
       MapleMonster attacker = null;
       final MapleMap map = chr.getMap();
       if (damagefrom != -3 && damagefrom != -4) {
-         monsteridfrom = slea.readInt();
-         oid = slea.readInt();
+         monsteridfrom = p.readInt();
+         oid = p.readInt();
 
          try {
             MapleMapObject mmo = map.getMapObject(oid).orElse(null);
@@ -149,7 +128,7 @@ public final class TakeDamageHandler extends AbstractMaplePacketHandler {
             return;
          }
 
-         direction = slea.readByte();
+         direction = p.readByte();
       }
       if (damagefrom != -1 && damagefrom != -2 && attacker != null) {
          MobAttackInfo attackInfo = MobAttackInfoFactory.getMobAttackInfo(attacker, damagefrom);
@@ -178,7 +157,7 @@ public final class TakeDamageHandler extends AbstractMaplePacketHandler {
                      }
                      map.damageMonster(chr, attacker, bouncedamage);
                      map.broadcastMessage(chr, CMob.damageMonster(oid, bouncedamage), true);
-                     chr.announce(CUser.showOwnBuffEffect(id, ShowItemGainInChatCode.SKILL_SPECIAL));
+                     chr.sendPacket(CUser.showOwnBuffEffect(id, ShowItemGainInChatCode.SKILL_SPECIAL));
                      map.broadcastMessage(chr, CUser.showBuffeffect(chr.getId(), id, 5), false);
                   }
                }
@@ -207,15 +186,16 @@ public final class TakeDamageHandler extends AbstractMaplePacketHandler {
             if (damagefrom == -1) {
                if (chr.getBuffedValue(TemporaryStatType.POWERGUARD) != null) { // PG works on bosses, but only at half of the rate.
                   int bouncedamage =
-                        (int) (damage * (chr.getBuffedValue(TemporaryStatType.POWERGUARD).doubleValue() / (attacker.isBoss() ? 200 : 100)));
+                        (int) (damage * (chr.getBuffedValue(TemporaryStatType.POWERGUARD).doubleValue() / (attacker.isBoss() ? 200 :
+                              100)));
                   bouncedamage = Math.min(bouncedamage, attacker.getMaxHp() / 10);
                   damage -= bouncedamage;
                   map.damageMonster(chr, attacker, bouncedamage);
                   map.broadcastMessage(chr, CMob.damageMonster(oid, bouncedamage), false, true);
                   attacker.aggroMonsterDamage(chr, bouncedamage);
                }
-               MapleStatEffect bPressure =
-                     chr.getBuffEffect(TemporaryStatType.BODY_PRESSURE); // thanks Atoot for noticing an issue on Body Pressure neutralise
+               MapleStatEffect bPressure = chr.getBuffEffect(
+                     TemporaryStatType.BODY_PRESSURE); // thanks Atoot for noticing an issue on Body Pressure neutralise
                if (bPressure != null) {
                   Skill skill = SkillFactory.getSkill(Aran.BODY_PRESSURE).orElseThrow();
                   if (!attacker.alreadyBuffedStats().contains(MonsterStatus.NEUTRALISE)) {
@@ -292,7 +272,7 @@ public final class TakeDamageHandler extends AbstractMaplePacketHandler {
       }
       if (GameConstants.isDojo(map.getId())) {
          chr.setDojoEnergy(chr.getDojoEnergy() + YamlConfig.config.server.DOJO_ENERGY_DMG);
-         c.announce(CWvsContext.getEnergy("energy", chr.getDojoEnergy()));
+         c.sendPacket(CWvsContext.getEnergy("energy", chr.getDojoEnergy()));
       }
 
       for (MapleCharacter player : banishPlayers) {  // chill, if this list ever gets non-empty an attacker does exist, trust me :)

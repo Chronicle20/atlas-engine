@@ -14,9 +14,9 @@ import client.inventory.ModifyInventory;
 import config.YamlConfig;
 import connection.packets.CWvsContext;
 import net.AbstractMaplePacketHandler;
+import net.packet.InPacket;
 import net.server.Server;
 import server.ItemInformationProvider;
-import tools.data.input.SeekableLittleEndianAccessor;
 
 class PairedQuicksort {
    private final ArrayList<Integer> intersect;
@@ -265,17 +265,17 @@ class PairedQuicksort {
 
 public final class InventorySortHandler extends AbstractMaplePacketHandler {
    @Override
-   public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+   public void handlePacket(InPacket p, MapleClient c) {
       MapleCharacter chr = c.getPlayer();
-      slea.readInt();
+      p.readInt();
       chr.getAutobanManager().setTimestamp(3, Server.getInstance().getCurrentTimestamp(), 4);
 
       if (!YamlConfig.config.server.USE_ITEM_SORT) {
-         c.announce(CWvsContext.enableActions());
+         c.sendPacket(CWvsContext.enableActions());
          return;
       }
 
-      byte invType = slea.readByte();
+      byte invType = p.readByte();
       if (invType < 1 || invType > 5) {
          c.disconnect(false, false);
          return;
@@ -318,8 +318,8 @@ public final class InventorySortHandler extends AbstractMaplePacketHandler {
          inventory.unlockInventory();
       }
 
-      c.announce(CWvsContext.modifyInventory(true, mods));
-      c.announce(CWvsContext.finishedSort2(invType));
-      c.announce(CWvsContext.enableActions());
+      c.sendPacket(CWvsContext.modifyInventory(true, mods));
+      c.sendPacket(CWvsContext.finishedSort2(invType));
+      c.sendPacket(CWvsContext.enableActions());
    }
 }

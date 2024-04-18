@@ -1,400 +1,362 @@
 package connection.packets;
 
+import java.awt.*;
+
 import client.MapleCharacter;
 import client.inventory.Equip;
 import client.inventory.MaplePet;
 import connection.constants.SendOpcode;
 import connection.constants.ShowItemGainInChatCode;
+import net.packet.InPacket;
+import net.packet.OutPacket;
+import net.packet.Packet;
 import server.maps.MapleDragon;
 import server.maps.MaplePlayerShop;
-import tools.data.input.SeekableLittleEndianAccessor;
-import tools.data.output.MaplePacketLittleEndianWriter;
-
-import java.awt.*;
 
 public class CUser {
 
-    public static byte[] getChatText(int cidfrom, String text, boolean gm, int show) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.CHATTEXT.getValue());
-        mplew.writeInt(cidfrom);
-        mplew.writeBool(gm);
-        mplew.writeMapleAsciiString(text);
-        mplew.write(show);
-        return mplew.getPacket();
-    }
+   public static Packet getChatText(int cidfrom, String text, boolean gm, int show) {
+      final OutPacket p = OutPacket.create(SendOpcode.CHATTEXT);
+      p.writeInt(cidfrom);
+      p.writeBool(gm);
+      p.writeString(text);
+      p.writeByte(show);
+      return p;
+   }
 
-    public static byte[] useChalkboard(MapleCharacter chr, boolean close) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.CHALKBOARD.getValue());
-        mplew.writeInt(chr.getId());
-        if (close) {
-            mplew.write(0);
-        } else {
-            mplew.write(1);
-            mplew.writeMapleAsciiString(chr.getChalkboard()
-                    .orElse(""));
-        }
-        return mplew.getPacket();
-    }
+   public static Packet useChalkboard(MapleCharacter chr, boolean close) {
+      final OutPacket p = OutPacket.create(SendOpcode.CHALKBOARD);
+      p.writeInt(chr.getId());
+      if (close) {
+         p.writeByte(0);
+      } else {
+         p.writeByte(1);
+         p.writeString(chr.getChalkboard().orElse(""));
+      }
+      return p;
+   }
 
-    public static byte[] updatePlayerShopBox(MaplePlayerShop shop) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.UPDATE_CHAR_BOX.getValue());
-        mplew.writeInt(shop.getOwner()
-                .getId());
+   public static Packet updatePlayerShopBox(MaplePlayerShop shop) {
+      final OutPacket p = OutPacket.create(SendOpcode.UPDATE_CHAR_BOX);
+      p.writeInt(shop.getOwner().getId());
 
-        updatePlayerShopBoxInfo(mplew, shop);
-        return mplew.getPacket();
-    }
+      updatePlayerShopBoxInfo(p, shop);
+      return p;
+   }
 
-    public static byte[] removePlayerShopBox(MaplePlayerShop shop) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(7);
-        mplew.writeShort(SendOpcode.UPDATE_CHAR_BOX.getValue());
-        mplew.writeInt(shop.getOwner()
-                .getId());
-        mplew.write(0);
-        return mplew.getPacket();
-    }
+   public static Packet removePlayerShopBox(MaplePlayerShop shop) {
+      final OutPacket p = OutPacket.create(SendOpcode.UPDATE_CHAR_BOX);
+      p.writeInt(shop.getOwner().getId());
+      p.writeByte(0);
+      return p;
+   }
 
-    public static byte[] addOmokBox(MapleCharacter chr, int ammount, int type) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.UPDATE_CHAR_BOX.getValue());
-        mplew.writeInt(chr.getId());
-        CCommon.addAnnounceBox(mplew, chr.getMiniGame(), ammount, type);
-        return mplew.getPacket();
-    }
+   public static Packet addOmokBox(MapleCharacter chr, int ammount, int type) {
+      final OutPacket p = OutPacket.create(SendOpcode.UPDATE_CHAR_BOX);
+      p.writeInt(chr.getId());
+      CCommon.addAnnounceBox(p, chr.getMiniGame(), ammount, type);
+      return p;
+   }
 
-    public static byte[] addMatchCardBox(MapleCharacter chr, int ammount, int type) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.UPDATE_CHAR_BOX.getValue());
-        mplew.writeInt(chr.getId());
-        CCommon.addAnnounceBox(mplew, chr.getMiniGame(), ammount, type);
-        return mplew.getPacket();
-    }
+   public static Packet addMatchCardBox(MapleCharacter chr, int ammount, int type) {
+      final OutPacket p = OutPacket.create(SendOpcode.UPDATE_CHAR_BOX);
+      p.writeInt(chr.getId());
+      CCommon.addAnnounceBox(p, chr.getMiniGame(), ammount, type);
+      return p;
+   }
 
-    public static byte[] removeMinigameBox(MapleCharacter chr) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(7);
-        mplew.writeShort(SendOpcode.UPDATE_CHAR_BOX.getValue());
-        mplew.writeInt(chr.getId());
-        mplew.write(0);
-        return mplew.getPacket();
-    }
+   public static Packet removeMinigameBox(MapleCharacter chr) {
+      final OutPacket p = OutPacket.create(SendOpcode.UPDATE_CHAR_BOX);
+      p.writeInt(chr.getId());
+      p.writeByte(0);
+      return p;
+   }
 
-    public static byte[] getScrollEffect(int chr, Equip.ScrollResult scrollSuccess, boolean legendarySpirit, boolean whiteScroll) {   // thanks to Rien dev team
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_SCROLL_EFFECT.getValue());
-        mplew.writeInt(chr);
-        mplew.writeBool(scrollSuccess == Equip.ScrollResult.SUCCESS);
-        mplew.writeBool(scrollSuccess == Equip.ScrollResult.CURSE);
-        mplew.writeBool(legendarySpirit);
-        mplew.writeBool(whiteScroll);
-        mplew.writeBool(false); //recoverable
-        return mplew.getPacket();
-    }
+   public static Packet getScrollEffect(int chr, Equip.ScrollResult scrollSuccess, boolean legendarySpirit,
+                                        boolean whiteScroll) {   // thanks to Rien dev team
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_SCROLL_EFFECT);
+      p.writeInt(chr);
+      p.writeBool(scrollSuccess == Equip.ScrollResult.SUCCESS);
+      p.writeBool(scrollSuccess == Equip.ScrollResult.CURSE);
+      p.writeBool(legendarySpirit);
+      p.writeBool(whiteScroll);
+      p.writeBool(false); //recoverable
+      return p;
+   }
 
-    public static byte[] showPet(MapleCharacter chr, MaplePet pet, boolean remove, boolean hunger) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SPAWN_PET.getValue());
-        mplew.writeInt(chr.getId());
-        mplew.write(chr.getPetIndex(pet));
-        if (remove) {
-            mplew.write(0);
-            mplew.write(hunger ? 1 : 0);
-        } else {
-            CCommon.addPetInfo(mplew, pet, true);
-        }
-        return mplew.getPacket();
-    }
+   public static Packet showPet(MapleCharacter chr, MaplePet pet, boolean remove, boolean hunger) {
+      final OutPacket p = OutPacket.create(SendOpcode.SPAWN_PET);
+      p.writeInt(chr.getId());
+      p.writeByte(chr.getPetIndex(pet));
+      if (remove) {
+         p.writeByte(0);
+         p.writeByte(hunger ? 1 : 0);
+      } else {
+         CCommon.addPetInfo(p, pet, true);
+      }
+      return p;
+   }
 
-    public static byte[] spawnDragon(MapleDragon dragon) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SPAWN_DRAGON.getValue());
-        mplew.writeInt(dragon.getOwner()
-                .getId());//objectid = owner id
-        mplew.writeShort(dragon.getPosition().x);
-        mplew.writeShort(0);
-        mplew.writeShort(dragon.getPosition().y);
-        mplew.writeShort(0);
-        mplew.write(dragon.getStance());
-        mplew.write(0);
-        mplew.writeShort(dragon.getOwner()
-                .getJob()
-                .getId());
-        return mplew.getPacket();
-    }
+   public static Packet spawnDragon(MapleDragon dragon) {
+      final OutPacket p = OutPacket.create(SendOpcode.SPAWN_DRAGON);
+      p.writeInt(dragon.getOwner().getId());//objectid = owner id
+      p.writeShort(dragon.getPosition().x);
+      p.writeShort(0);
+      p.writeShort(dragon.getPosition().y);
+      p.writeShort(0);
+      p.writeByte(dragon.getStance());
+      p.writeByte(0);
+      p.writeShort(dragon.getOwner().getJob().getId());
+      return p;
+   }
 
-    public static byte[] moveDragon(MapleDragon dragon, Point startPos, SeekableLittleEndianAccessor movementSlea, long movementDataLength) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.MOVE_DRAGON.getValue());
-        mplew.writeInt(dragon.getOwner()
-                .getId());
-        mplew.writePos(startPos);
-        CCommon.rebroadcastMovementList(mplew, movementSlea, movementDataLength);
-        return mplew.getPacket();
-    }
+   public static Packet moveDragon(MapleDragon dragon, Point startPos, InPacket ip, long movementDataLength) {
+      final OutPacket p = OutPacket.create(SendOpcode.MOVE_DRAGON);
+      p.writeInt(dragon.getOwner().getId());
+      p.writePos(startPos);
+      CCommon.rebroadcastMovementList(p, ip, movementDataLength);
+      return p;
+   }
 
-    /**
-     * Sends a request to remove Mir<br>
-     *
-     * @param charid - Needs the specific Character ID
-     * @return The packet
-     */
-    public static byte[] removeDragon(int chrid) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.REMOVE_DRAGON.getValue());
-        mplew.writeInt(chrid);
-        return mplew.getPacket();
-    }
+   /**
+    * Sends a request to remove Mir<br>
+    *
+    * @param chrid - Needs the specific Character ID
+    * @return The packet
+    */
+   public static Packet removeDragon(int chrid) {
+      final OutPacket p = OutPacket.create(SendOpcode.REMOVE_DRAGON);
+      p.writeInt(chrid);
+      return p;
+   }
 
-    public static byte[] showHpHealed(int cid, int amount) {
-        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_FOREIGN_EFFECT.getValue());
-        mplew.writeInt(cid);
-        mplew.write(0x0A); //Type
-        mplew.write(amount);
-        return mplew.getPacket();
-    }
+   public static Packet showHpHealed(int cid, int amount) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_FOREIGN_EFFECT);
+      p.writeInt(cid);
+      p.writeByte(0x0A); //Type
+      p.writeByte(amount);
+      return p;
+   }
 
-    public static byte[] showBuffeffect(int cid, int skillid, int effectid, byte direction) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_FOREIGN_EFFECT.getValue());
-        mplew.writeInt(cid);
-        mplew.write(effectid); //buff level
-        mplew.writeInt(skillid);
-        mplew.write(direction);
-        mplew.write(1);
-        mplew.writeLong(0);
-        return mplew.getPacket();
-    }
+   public static Packet showBuffeffect(int cid, int skillid, int effectid, byte direction) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_FOREIGN_EFFECT);
+      p.writeInt(cid);
+      p.writeByte(effectid); //buff level
+      p.writeInt(skillid);
+      p.writeByte(direction);
+      p.writeByte(1);
+      p.writeLong(0);
+      return p;
+   }
 
-    public static byte[] showBuffeffect(int cid, int skillid, int skilllv, int effectid, byte direction) {   // updated packet structure found thanks to Rien dev team
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_FOREIGN_EFFECT.getValue());
-        mplew.writeInt(cid);
-        mplew.write(effectid);
-        mplew.writeInt(skillid);
-        mplew.write(0);
-        mplew.write(skilllv);
-        mplew.write(direction);
+   public static Packet showBuffeffect(int cid, int skillid, int skilllv, int effectid,
+                                       byte direction) {   // updated packet structure found thanks to Rien dev team
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_FOREIGN_EFFECT);
+      p.writeInt(cid);
+      p.writeByte(effectid);
+      p.writeInt(skillid);
+      p.writeByte(0);
+      p.writeByte(skilllv);
+      p.writeByte(direction);
 
-        return mplew.getPacket();
-    }
+      return p;
+   }
 
-    public static byte[] showBerserk(int cid, int skilllevel, boolean Berserk) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_FOREIGN_EFFECT.getValue());
-        mplew.writeInt(cid);
-        mplew.write(1);
-        mplew.writeInt(1320006);
-        mplew.write(0xA9);
-        mplew.write(skilllevel);
-        mplew.write(Berserk ? 1 : 0);
-        return mplew.getPacket();
-    }
+   public static Packet showBerserk(int cid, int skilllevel, boolean Berserk) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_FOREIGN_EFFECT);
+      p.writeInt(cid);
+      p.writeByte(1);
+      p.writeInt(1320006);
+      p.writeByte(0xA9);
+      p.writeByte(skilllevel);
+      p.writeByte(Berserk ? 1 : 0);
+      return p;
+   }
 
-    public static byte[] showPetLevelUp(MapleCharacter chr, byte index) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_FOREIGN_EFFECT.getValue());
-        mplew.writeInt(chr.getId());
-        mplew.write(4);
-        mplew.write(0);
-        mplew.write(index);
-        return mplew.getPacket();
-    }
+   public static Packet showPetLevelUp(MapleCharacter chr, byte index) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_FOREIGN_EFFECT);
+      p.writeInt(chr.getId());
+      p.writeByte(4);
+      p.writeByte(0);
+      p.writeByte(index);
+      return p;
+   }
 
-    public static byte[] showForeignCardEffect(int id) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(7);
-        mplew.writeShort(SendOpcode.SHOW_FOREIGN_EFFECT.getValue());
-        mplew.writeInt(id);
-        mplew.write(0x0D);
-        return mplew.getPacket();
-    }
+   public static Packet showForeignCardEffect(int id) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_FOREIGN_EFFECT);
+      p.writeInt(id);
+      p.writeByte(0x0D);
+      return p;
+   }
 
-    public static byte[] showForeignInfo(int cid, String path) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_FOREIGN_EFFECT.getValue());
-        mplew.writeInt(cid);
-        mplew.write(0x17);
-        mplew.writeMapleAsciiString(path);
-        mplew.writeInt(1);
-        return mplew.getPacket();
-    }
+   public static Packet showForeignInfo(int cid, String path) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_FOREIGN_EFFECT);
+      p.writeInt(cid);
+      p.writeByte(0x17);
+      p.writeString(path);
+      p.writeInt(1);
+      return p;
+   }
 
-    public static byte[] showForeignBuybackEffect(int cid) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_FOREIGN_EFFECT.getValue());
-        mplew.writeInt(cid);
-        mplew.write(11);
-        mplew.writeInt(0);
+   public static Packet showForeignBuybackEffect(int cid) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_FOREIGN_EFFECT);
+      p.writeInt(cid);
+      p.writeByte(11);
+      p.writeInt(0);
 
-        return mplew.getPacket();
-    }
+      return p;
+   }
 
-    public static byte[] showForeignMakerEffect(int cid, boolean makerSucceeded) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_FOREIGN_EFFECT.getValue());
-        mplew.writeInt(cid);
-        mplew.write(16);
-        mplew.writeInt(makerSucceeded ? 0 : 1);
-        return mplew.getPacket();
-    }
+   public static Packet showForeignMakerEffect(int cid, boolean makerSucceeded) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_FOREIGN_EFFECT);
+      p.writeInt(cid);
+      p.writeByte(16);
+      p.writeInt(makerSucceeded ? 0 : 1);
+      return p;
+   }
 
-    public static byte[] showForeignEffect(int effect) {
-        return showForeignEffect(-1, effect);
-    }
+   public static Packet showForeignEffect(int effect) {
+      return showForeignEffect(-1, effect);
+   }
 
-    public static byte[] showForeignEffect(int cid, int effect) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_FOREIGN_EFFECT.getValue());
-        mplew.writeInt(cid);
-        mplew.write(effect);
-        return mplew.getPacket();
-    }
+   public static Packet showForeignEffect(int cid, int effect) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_FOREIGN_EFFECT);
+      p.writeInt(cid);
+      p.writeByte(effect);
+      return p;
+   }
 
-    public static byte[] showRecovery(int cid, byte amount) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_FOREIGN_EFFECT.getValue());
-        mplew.writeInt(cid);
-        mplew.write(0x0A);
-        mplew.write(amount);
-        return mplew.getPacket();
-    }
+   public static Packet showRecovery(int cid, byte amount) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_FOREIGN_EFFECT);
+      p.writeInt(cid);
+      p.writeByte(0x0A);
+      p.writeByte(amount);
+      return p;
+   }
 
-    public static byte[] showOwnBuffEffect(int skillid, ShowItemGainInChatCode effect) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_ITEM_GAIN_INCHAT.getValue());
-        mplew.write(effect.getCode());
-        mplew.writeInt(skillid);
-        mplew.write(0xA9);
-        mplew.write(1);
-        return mplew.getPacket();
-    }
+   public static Packet showOwnBuffEffect(int skillid, ShowItemGainInChatCode effect) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_ITEM_GAIN_INCHAT);
+      p.writeByte(effect.getCode());
+      p.writeInt(skillid);
+      p.writeByte(0xA9);
+      p.writeByte(1);
+      return p;
+   }
 
-    public static byte[] showOwnBerserk(int skilllevel, boolean Berserk) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_ITEM_GAIN_INCHAT.getValue());
-        mplew.write(ShowItemGainInChatCode.SKILL_USE.getCode());
-        mplew.writeInt(1320006);
-        mplew.write(0xA9);
-        mplew.write(skilllevel);
-        mplew.write(Berserk ? 1 : 0);
-        return mplew.getPacket();
-    }
+   public static Packet showOwnBerserk(int skilllevel, boolean Berserk) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_ITEM_GAIN_INCHAT);
+      p.writeByte(ShowItemGainInChatCode.SKILL_USE.getCode());
+      p.writeInt(1320006);
+      p.writeByte(0xA9);
+      p.writeByte(skilllevel);
+      p.writeByte(Berserk ? 1 : 0);
+      return p;
+   }
 
-    public static byte[] showOwnPetLevelUp(byte index) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_ITEM_GAIN_INCHAT.getValue());
-        mplew.write(ShowItemGainInChatCode.PET.getCode());
-        mplew.write(0);
-        mplew.write(index); // Pet Index
-        return mplew.getPacket();
-    }
+   public static Packet showOwnPetLevelUp(byte index) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_ITEM_GAIN_INCHAT);
+      p.writeByte(ShowItemGainInChatCode.PET.getCode());
+      p.writeByte(0);
+      p.writeByte(index); // Pet Index
+      return p;
+   }
 
-    public static byte[] showGainCard() {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(3);
-        mplew.writeShort(SendOpcode.SHOW_ITEM_GAIN_INCHAT.getValue());
-        mplew.write(ShowItemGainInChatCode.MONSTER_BOOK_CARD_GET.getCode());
-        return mplew.getPacket();
-    }
+   public static Packet showGainCard() {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_ITEM_GAIN_INCHAT);
+      p.writeByte(ShowItemGainInChatCode.MONSTER_BOOK_CARD_GET.getCode());
+      return p;
+   }
 
-    public static byte[] showIntro(String path) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_ITEM_GAIN_INCHAT.getValue());
-        mplew.write(ShowItemGainInChatCode.SQUIB_EFFECT.getCode());
-        mplew.writeMapleAsciiString(path);
-        return mplew.getPacket();
-    }
+   public static Packet showIntro(String path) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_ITEM_GAIN_INCHAT);
+      p.writeByte(ShowItemGainInChatCode.SQUIB_EFFECT.getCode());
+      p.writeString(path);
+      return p;
+   }
 
-    public static byte[] showInfo(String path) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_ITEM_GAIN_INCHAT.getValue());
-        mplew.write(ShowItemGainInChatCode.EXP_ITEM_CONSUMED.getCode());
-        mplew.writeMapleAsciiString(path);
-        mplew.writeInt(1);
-        return mplew.getPacket();
-    }
+   public static Packet showInfo(String path) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_ITEM_GAIN_INCHAT);
+      p.writeByte(ShowItemGainInChatCode.EXP_ITEM_CONSUMED.getCode());
+      p.writeString(path);
+      p.writeInt(1);
+      return p;
+   }
 
-    public static byte[] showBuybackEffect() {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_ITEM_GAIN_INCHAT.getValue());
-        mplew.write(ShowItemGainInChatCode.BUFF_ITEM_EFFECT.getCode());
-        mplew.writeInt(0);
+   public static Packet showBuybackEffect() {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_ITEM_GAIN_INCHAT);
+      p.writeByte(ShowItemGainInChatCode.BUFF_ITEM_EFFECT.getCode());
+      p.writeInt(0);
 
-        return mplew.getPacket();
-    }
+      return p;
+   }
 
-    /**
-     * 0 = Levelup 6 = Exp did not drop (Safety Charms) 7 = Enter portal sound
-     * 8 = Job change 9 = Quest complete 10 = Recovery 11 = Buff effect
-     * 14 = Monster book pickup 15 = Equipment levelup 16 = Maker Skill Success
-     * 17 = Buff effect w/ sfx 19 = Exp card [500, 200, 50] 21 = Wheel of destiny
-     * 26 = Spirit Stone
-     *
-     * @param effect
-     * @return
-     */
-    public static byte[] showSpecialEffect(ShowItemGainInChatCode effect) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_ITEM_GAIN_INCHAT.getValue());
-        mplew.write(effect.getCode());
-        return mplew.getPacket();
-    }
+   /**
+    * 0 = Levelup 6 = Exp did not drop (Safety Charms) 7 = Enter portal sound
+    * 8 = Job change 9 = Quest complete 10 = Recovery 11 = Buff effect
+    * 14 = Monster book pickup 15 = Equipment levelup 16 = Maker Skill Success
+    * 17 = Buff effect w/ sfx 19 = Exp card [500, 200, 50] 21 = Wheel of destiny
+    * 26 = Spirit Stone
+    *
+    * @param effect
+    * @return
+    */
+   public static Packet showSpecialEffect(ShowItemGainInChatCode effect) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_ITEM_GAIN_INCHAT);
+      p.writeByte(effect.getCode());
+      return p;
+   }
 
-    public static byte[] showMakerEffect(boolean makerSucceeded) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_ITEM_GAIN_INCHAT.getValue());
-        mplew.write(ShowItemGainInChatCode.ITEM_MAKER.getCode());
-        mplew.writeInt(makerSucceeded ? 0 : 1);
-        return mplew.getPacket();
-    }
+   public static Packet showMakerEffect(boolean makerSucceeded) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_ITEM_GAIN_INCHAT);
+      p.writeByte(ShowItemGainInChatCode.ITEM_MAKER.getCode());
+      p.writeInt(makerSucceeded ? 0 : 1);
+      return p;
+   }
 
-    public static byte[] showOwnRecovery(byte heal) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_ITEM_GAIN_INCHAT.getValue());
-        mplew.write(ShowItemGainInChatCode.INC_DEC_HP_EFFECT.getCode());
-        mplew.write(heal);
-        return mplew.getPacket();
-    }
+   public static Packet showOwnRecovery(byte heal) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_ITEM_GAIN_INCHAT);
+      p.writeByte(ShowItemGainInChatCode.INC_DEC_HP_EFFECT.getCode());
+      p.writeByte(heal);
+      return p;
+   }
 
-    public static byte[] showWheelsLeft(int left) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SHOW_ITEM_GAIN_INCHAT.getValue());
-        mplew.write(ShowItemGainInChatCode.ITEM_LEVEL_UP.getCode());
-        mplew.write(left);
-        return mplew.getPacket();
-    }
+   public static Packet showWheelsLeft(int left) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_ITEM_GAIN_INCHAT);
+      p.writeByte(ShowItemGainInChatCode.ITEM_LEVEL_UP.getCode());
+      p.writeByte(left);
+      return p;
+   }
 
-    private static void updatePlayerShopBoxInfo(final MaplePacketLittleEndianWriter mplew, MaplePlayerShop shop) {
-        byte[] roomInfo = shop.getShopRoomInfo();
+   private static void updatePlayerShopBoxInfo(OutPacket p, MaplePlayerShop shop) {
+      byte[] roomInfo = shop.getShopRoomInfo();
 
-        mplew.write(4);
-        mplew.writeInt(shop.getObjectId());
-        mplew.writeMapleAsciiString(shop.getDescription());
-        mplew.write(0);                 // pw
-        mplew.write(shop.getItemId() % 100);
-        mplew.write(roomInfo[0]);       // curPlayers
-        mplew.write(roomInfo[1]);       // maxPlayers
-        mplew.write(0);
-    }
+      p.writeByte(4);
+      p.writeInt(shop.getObjectId());
+      p.writeString(shop.getDescription());
+      p.writeByte(0);                 // pw
+      p.writeByte(shop.getItemId() % 100);
+      p.writeByte(roomInfo[0]);       // curPlayers
+      p.writeByte(roomInfo[1]);       // maxPlayers
+      p.writeByte(0);
+   }
 
-    public static byte[] playPortalSound() {
-        return showSpecialEffect(ShowItemGainInChatCode.PLAY_PORTAL_SE);
-    }
+   public static Packet playPortalSound() {
+      return showSpecialEffect(ShowItemGainInChatCode.PLAY_PORTAL_SE);
+   }
 
-    public static byte[] showMonsterBookPickup() {
-        return showSpecialEffect(ShowItemGainInChatCode.MONSTER_BOOK_CARD_GET);
-    }
+   public static Packet showMonsterBookPickup() {
+      return showSpecialEffect(ShowItemGainInChatCode.MONSTER_BOOK_CARD_GET);
+   }
 
-    public static byte[] showEquipmentLevelUp() {
-        return showSpecialEffect(ShowItemGainInChatCode.ITEM_LEVEL_UP);
-    }
+   public static Packet showEquipmentLevelUp() {
+      return showSpecialEffect(ShowItemGainInChatCode.ITEM_LEVEL_UP);
+   }
 
-    public static byte[] showItemLevelup() {
-        return showSpecialEffect(ShowItemGainInChatCode.ITEM_LEVEL_UP);
-    }
+   public static Packet showItemLevelup() {
+      return showSpecialEffect(ShowItemGainInChatCode.ITEM_LEVEL_UP);
+   }
 
-    public static byte[] showBuffeffect(int cid, int skillid, int effectid) {
-        return showBuffeffect(cid, skillid, effectid, (byte) 3);
-    }
+   public static Packet showBuffeffect(int cid, int skillid, int effectid) {
+      return showBuffeffect(cid, skillid, effectid, (byte) 3);
+   }
 }

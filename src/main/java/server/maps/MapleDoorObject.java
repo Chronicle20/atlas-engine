@@ -95,10 +95,10 @@ public class MapleDoorObject extends AbstractMapleMapObject {
     public void warp(final MapleCharacter chr) {
         Optional<MapleParty> party = chr.getParty();
         if (chr.getId() != ownerId && (party.isEmpty() || party.flatMap(p -> p.getMemberById(ownerId)).isEmpty())) {
-            chr.announce(CMapLoadable.blockedMessage(6));
-            chr.announce(CWvsContext.enableActions());
+            chr.sendPacket(CMapLoadable.blockedMessage(6));
+            chr.sendPacket(CWvsContext.enableActions());
         } else {
-            chr.announce(CUser.playPortalSound());
+            chr.sendPacket(CUser.playPortalSound());
 
             if (!inTown() && party.isEmpty()) {
                 chr.changeMap(to, getLinkedPortalId());
@@ -117,12 +117,12 @@ public class MapleDoorObject extends AbstractMapleMapObject {
         MapleCharacter chr = client.getPlayer();
         if (this.getFrom().getId() == chr.getMapId()) {
             if (chr.getParty().isPresent() && (this.getOwnerId() == chr.getId() || chr.getParty().flatMap(p -> p.getMemberById(getOwnerId())).isPresent())) {
-                chr.announce(CWvsContext.partyPortal(this.getFrom().getId(), this.getTo().getId(), this.skillId, this.getPosition()));
+                chr.sendPacket(CWvsContext.partyPortal(this.getFrom().getId(), this.getTo().getId(), this.skillId, this.getPosition()));
             }
 
-            chr.announce(CWvsContext.spawnPortal(this.getFrom().getId(), this.getTo().getId(), this.skillId, this.toPosition()));
+            chr.sendPacket(CWvsContext.spawnPortal(this.getFrom().getId(), this.getTo().getId(), this.skillId, this.toPosition()));
             if (!this.inTown()) {
-                chr.announce(CTownPortalPool.spawnDoor(this.getOwnerId(), this.getPosition(), launched));
+                chr.sendPacket(CTownPortalPool.spawnDoor(this.getOwnerId(), this.getPosition(), launched));
             }
         }
     }
@@ -133,16 +133,16 @@ public class MapleDoorObject extends AbstractMapleMapObject {
         if (from.getId() == chr.getMapId()) {
             Optional<MapleParty> party = chr.getParty();
             if (party.isPresent() && (ownerId == chr.getId() || party.flatMap(p -> p.getMemberById(ownerId)).isPresent())) {
-                client.announce(CWvsContext.partyPortal(999999999, 999999999, this.skillId, new Point(-1, -1)));
+                client.sendPacket(CWvsContext.partyPortal(999999999, 999999999, this.skillId, new Point(-1, -1)));
             }
-            client.announce(CWvsContext.removeDoor(ownerId, inTown()));
+            client.sendPacket(CWvsContext.removeDoor(ownerId, inTown()));
         }
     }
 
     public void sendDestroyData(MapleClient client, boolean partyUpdate) {
         if (client != null && from.getId() == client.getPlayer().getMapId()) {
-            client.announce(CWvsContext.partyPortal(999999999, 999999999, 0, new Point(-1, -1)));
-            client.announce(CWvsContext.removeDoor(ownerId, inTown()));
+            client.sendPacket(CWvsContext.partyPortal(999999999, 999999999, 0, new Point(-1, -1)));
+            client.sendPacket(CWvsContext.removeDoor(ownerId, inTown()));
         }
     }
 

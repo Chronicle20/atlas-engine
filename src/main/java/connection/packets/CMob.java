@@ -8,36 +8,36 @@ import client.Skill;
 import client.status.MonsterStatus;
 import client.status.MonsterStatusEffect;
 import connection.constants.SendOpcode;
+import net.packet.OutPacket;
+import net.packet.Packet;
 import server.life.MapleMonster;
 import server.movement.MovePath;
-import tools.data.output.MaplePacketLittleEndianWriter;
 
 public class CMob {
-   public static byte[] moveMonster(int monsterId, boolean bNotForceLandingWhenDiscard, boolean bNotChangeAction,
+   public static Packet moveMonster(int monsterId, boolean bNotForceLandingWhenDiscard, boolean bNotChangeAction,
                                     boolean bNextAttackPossible, byte bLeft, int skillData,
                                     List<Point> multiTargetForBall, List<Integer> randTimeForAreaAttack,
                                     MovePath moves) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.MOVE_MONSTER.getValue());
-      mplew.writeInt(monsterId);
-      mplew.writeBool(bNotForceLandingWhenDiscard);
-      mplew.writeBool(bNotChangeAction);
-      mplew.writeBool(bNextAttackPossible);
-      mplew.write(bLeft);
-      mplew.writeInt(skillData);
-      mplew.writeInt(multiTargetForBall.size());
-      for (Point p : multiTargetForBall) {
-         mplew.writeInt(p.x);
-         mplew.writeInt(p.y);
+      final OutPacket p = OutPacket.create(SendOpcode.MOVE_MONSTER);
+      p.writeInt(monsterId);
+      p.writeBool(bNotForceLandingWhenDiscard);
+      p.writeBool(bNotChangeAction);
+      p.writeBool(bNextAttackPossible);
+      p.writeByte(bLeft);
+      p.writeInt(skillData);
+      p.writeInt(multiTargetForBall.size());
+      for (Point pt : multiTargetForBall) {
+         p.writeInt(pt.x);
+         p.writeInt(pt.y);
       }
 
-      mplew.writeInt(randTimeForAreaAttack.size());
+      p.writeInt(randTimeForAreaAttack.size());
       for (Integer time : randTimeForAreaAttack) {
-         mplew.writeInt(time);
+         p.writeInt(time);
       }
 
-      moves.encode(mplew);
-      return mplew.getPacket();
+      moves.encode(p);
+      return p;
    }
 
    /**
@@ -52,84 +52,79 @@ public class CMob {
     * @return The move response packet.
     */
 
-   public static byte[] moveMonsterResponse(int objectid, short moveid, int currentMp, boolean useSkills, int skillId,
+   public static Packet moveMonsterResponse(int objectid, short moveid, int currentMp, boolean useSkills, int skillId,
                                             int skillLevel) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(13);
-      mplew.writeShort(SendOpcode.MOVE_MONSTER_RESPONSE.getValue());
-      mplew.writeInt(objectid);
-      mplew.writeShort(moveid);
-      mplew.writeBool(useSkills);
-      mplew.writeShort(currentMp);
-      mplew.write(skillId);
-      mplew.write(skillLevel);
-      return mplew.getPacket();
+      final OutPacket p = OutPacket.create(SendOpcode.MOVE_MONSTER_RESPONSE);
+      p.writeInt(objectid);
+      p.writeShort(moveid);
+      p.writeBool(useSkills);
+      p.writeShort(currentMp);
+      p.writeByte(skillId);
+      p.writeByte(skillLevel);
+      return p;
    }
 
-   public static byte[] applyMonsterStatus(final int oid, final MonsterStatusEffect mse, final List<Integer> reflection) {
+   public static Packet applyMonsterStatus(final int oid, final MonsterStatusEffect mse, final List<Integer> reflection) {
       Map<MonsterStatus, Integer> stati = mse.getStati();
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.APPLY_MONSTER_STATUS.getValue());
-      mplew.writeInt(oid);
-      mplew.writeLong(0);
-      writeIntMask(mplew, stati);
+      final OutPacket p = OutPacket.create(SendOpcode.APPLY_MONSTER_STATUS);
+      p.writeInt(oid);
+      p.writeLong(0);
+      writeIntMask(p, stati);
       for (Map.Entry<MonsterStatus, Integer> stat : stati.entrySet()) {
-         mplew.writeShort(stat.getValue());
+         p.writeShort(stat.getValue());
          if (mse.isMonsterSkill()) {
-            mplew.writeShort(mse.getMobSkill()
+            p.writeShort(mse.getMobSkill()
                   .getSkillId());
-            mplew.writeShort(mse.getMobSkill()
+            p.writeShort(mse.getMobSkill()
                   .getSkillLevel());
          } else {
-            mplew.writeInt(mse.getSkill()
+            p.writeInt(mse.getSkill()
                   .map(Skill::id)
                   .orElse(0));
          }
-         mplew.writeShort(-1); // might actually be the buffTime but it's not displayed anywhere
+         p.writeShort(-1); // might actually be the buffTime but it's not displayed anywhere
       }
       int size = stati.size(); // size
       if (reflection != null) {
          for (Integer ref : reflection) {
-            mplew.writeInt(ref);
+            p.writeInt(ref);
          }
          if (!reflection.isEmpty()) {
             size /= 2; // This gives 2 buffs per reflection but it's really one buff
          }
       }
-      mplew.write(size); // size
-      mplew.writeInt(0);
-      return mplew.getPacket();
+      p.writeByte(size); // size
+      p.writeInt(0);
+      return p;
    }
 
-   public static byte[] cancelMonsterStatus(int oid, Map<MonsterStatus, Integer> stats) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.CANCEL_MONSTER_STATUS.getValue());
-      mplew.writeInt(oid);
-      mplew.writeLong(0);
-      writeIntMask(mplew, stats);
-      mplew.writeInt(0);
-      return mplew.getPacket();
+   public static Packet cancelMonsterStatus(int oid, Map<MonsterStatus, Integer> stats) {
+      final OutPacket p = OutPacket.create(SendOpcode.CANCEL_MONSTER_STATUS);
+      p.writeInt(oid);
+      p.writeLong(0);
+      writeIntMask(p, stats);
+      p.writeInt(0);
+      return p;
    }
 
-   static byte[] damageMonster(int oid, int damage, int curhp, int maxhp) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.DAMAGE_MONSTER.getValue());
-      mplew.writeInt(oid);
-      mplew.write(0);
-      mplew.writeInt(damage);
-      mplew.writeInt(curhp);
-      mplew.writeInt(maxhp);
-      return mplew.getPacket();
+   public static Packet damageMonster(int oid, int damage, int curhp, int maxhp) {
+      final OutPacket p = OutPacket.create(SendOpcode.DAMAGE_MONSTER);
+      p.writeInt(oid);
+      p.writeByte(0);
+      p.writeInt(damage);
+      p.writeInt(curhp);
+      p.writeInt(maxhp);
+      return p;
    }
 
-   public static byte[] MobDamageMobFriendly(MapleMonster mob, int damage, int remainingHp) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.DAMAGE_MONSTER.getValue());
-      mplew.writeInt(mob.getObjectId());
-      mplew.write(1); // direction ?
-      mplew.writeInt(damage);
-      mplew.writeInt(remainingHp);
-      mplew.writeInt(mob.getMaxHp());
-      return mplew.getPacket();
+   public static Packet MobDamageMobFriendly(MapleMonster mob, int damage, int remainingHp) {
+      final OutPacket p = OutPacket.create(SendOpcode.DAMAGE_MONSTER);
+      p.writeInt(mob.getObjectId());
+      p.writeByte(1); // direction ?
+      p.writeInt(damage);
+      p.writeInt(remainingHp);
+      p.writeInt(mob.getMaxHp());
+      return p;
    }
 
    /**
@@ -137,29 +132,26 @@ public class CMob {
     * @param remhppercentage
     * @return
     */
-   public static byte[] showMonsterHP(int oid, int remhppercentage) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.SHOW_MONSTER_HP.getValue());
-      mplew.writeInt(oid);
-      mplew.write(remhppercentage);
-      return mplew.getPacket();
+   public static Packet showMonsterHP(int oid, int remhppercentage) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_MONSTER_HP);
+      p.writeInt(oid);
+      p.writeByte(remhppercentage);
+      return p;
    }
 
-   public static byte[] catchMonster(int mobOid, byte success) {   // updated packet structure found thanks to Rien dev team
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.CATCH_MONSTER.getValue());
-      mplew.writeInt(mobOid);
-      mplew.write(success);
-      return mplew.getPacket();
+   public static Packet catchMonster(int mobOid, byte success) {   // updated packet structure found thanks to Rien dev team
+      final OutPacket p = OutPacket.create(SendOpcode.CATCH_MONSTER);
+      p.writeInt(mobOid);
+      p.writeByte(success);
+      return p;
    }
 
-   public static byte[] catchMonster(int mobOid, int itemid, byte success) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.CATCH_MONSTER_WITH_ITEM.getValue());
-      mplew.writeInt(mobOid);
-      mplew.writeInt(itemid);
-      mplew.write(success);
-      return mplew.getPacket();
+   public static Packet catchMonster(int mobOid, int itemid, byte success) {
+      final OutPacket p = OutPacket.create(SendOpcode.CATCH_MONSTER_WITH_ITEM);
+      p.writeInt(mobOid);
+      p.writeInt(itemid);
+      p.writeByte(success);
+      return p;
    }
 
    /**
@@ -171,11 +163,11 @@ public class CMob {
     * @param useSkills Can the monster use skills?
     * @return The move response packet.
     */
-   public static byte[] moveMonsterResponse(int objectid, short moveid, int currentMp, boolean useSkills) {
+   public static Packet moveMonsterResponse(int objectid, short moveid, int currentMp, boolean useSkills) {
       return moveMonsterResponse(objectid, moveid, currentMp, useSkills, 0, 0);
    }
 
-   private static void writeIntMask(final MaplePacketLittleEndianWriter mplew, Map<MonsterStatus, Integer> stats) {
+   private static void writeIntMask(OutPacket p, Map<MonsterStatus, Integer> stats) {
       int firstmask = 0;
       int secondmask = 0;
       for (MonsterStatus stat : stats.keySet()) {
@@ -185,15 +177,15 @@ public class CMob {
             secondmask |= stat.getValue();
          }
       }
-      mplew.writeInt(firstmask);
-      mplew.writeInt(secondmask);
+      p.writeInt(firstmask);
+      p.writeInt(secondmask);
    }
 
-   public static byte[] damageMonster(int oid, int damage) {
+   public static Packet damageMonster(int oid, int damage) {
       return damageMonster(oid, damage, 0, 0);
    }
 
-   public static byte[] healMonster(int oid, int heal, int curhp, int maxhp) {
+   public static Packet healMonster(int oid, int heal, int curhp, int maxhp) {
       return damageMonster(oid, -heal, curhp, maxhp);
    }
 }

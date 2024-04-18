@@ -1,86 +1,80 @@
 package connection.packets;
 
-import client.MapleCharacter;
-import connection.constants.SendOpcode;
-import server.movement.LifeMovementFragment;
-import tools.data.output.LittleEndianWriter;
-import tools.data.output.MaplePacketLittleEndianWriter;
-
 import java.util.List;
 
+import client.MapleCharacter;
+import connection.constants.SendOpcode;
+import net.packet.OutPacket;
+import net.packet.Packet;
+import server.movement.LifeMovementFragment;
+
 public class CPet {
-    public static byte[] movePet(int cid, int pid, byte slot, List<LifeMovementFragment> moves) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.MOVE_PET.getValue());
-        mplew.writeInt(cid);
-        mplew.write(slot);
-        mplew.writeInt(pid);
-        serializeMovementList(mplew, moves);
-        return mplew.getPacket();
-    }
+   public static Packet movePet(int cid, int pid, byte slot, List<LifeMovementFragment> moves) {
+      final OutPacket p = OutPacket.create(SendOpcode.MOVE_PET);
+      p.writeInt(cid);
+      p.writeByte(slot);
+      p.writeInt(pid);
+      serializeMovementList(p, moves);
+      return p;
+   }
 
-    public static byte[] petChat(int cid, byte index, int act, String text) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.PET_CHAT.getValue());
-        mplew.writeInt(cid);
-        mplew.write(index);
-        mplew.write(0);
-        mplew.write(act);
-        mplew.writeMapleAsciiString(text);
-        mplew.write(0);
-        return mplew.getPacket();
-    }
+   public static Packet petChat(int cid, byte index, int act, String text) {
+      final OutPacket p = OutPacket.create(SendOpcode.PET_CHAT);
+      p.writeInt(cid);
+      p.writeByte(index);
+      p.writeByte(0);
+      p.writeByte(act);
+      p.writeString(text);
+      p.writeByte(0);
+      return p;
+   }
 
-    public static byte[] changePetName(MapleCharacter chr, String newname, int slot) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.PET_NAMECHANGE.getValue());
-        mplew.writeInt(chr.getId());
-        mplew.write(0);
-        mplew.writeMapleAsciiString(newname);
-        mplew.write(0);
-        return mplew.getPacket();
-    }
+   public static Packet changePetName(MapleCharacter chr, String newname, int slot) {
+      final OutPacket p = OutPacket.create(SendOpcode.PET_NAMECHANGE);
+      p.writeInt(chr.getId());
+      p.writeByte(0);
+      p.writeString(newname);
+      p.writeByte(0);
+      return p;
+   }
 
-    public static byte[] loadExceptionList(final int cid, final int petId, final byte petIdx, final List<Integer> data) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.PET_EXCEPTION_LIST.getValue());
-        mplew.writeInt(cid);
-        mplew.write(petIdx);
-        mplew.writeLong(petId);
-        mplew.write(data.size());
-        for (final Integer ids : data) {
-            mplew.writeInt(ids);
-        }
-        return mplew.getPacket();
-    }
+   public static Packet loadExceptionList(final int cid, final int petId, final byte petIdx, final List<Integer> data) {
+      final OutPacket p = OutPacket.create(SendOpcode.PET_EXCEPTION_LIST);
+      p.writeInt(cid);
+      p.writeByte(petIdx);
+      p.writeLong(petId);
+      p.writeByte(data.size());
+      for (final Integer ids : data) {
+         p.writeInt(ids);
+      }
+      return p;
+   }
 
-    public static byte[] petFoodResponse(int cid, byte index, boolean success, boolean balloonType) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.PET_COMMAND.getValue());
-        mplew.writeInt(cid);
-        mplew.write(index);
-        mplew.write(1);
-        mplew.writeBool(success);
-        mplew.writeBool(balloonType);
-        return mplew.getPacket();
-    }
+   public static Packet petFoodResponse(int cid, byte index, boolean success, boolean balloonType) {
+      final OutPacket p = OutPacket.create(SendOpcode.PET_COMMAND);
+      p.writeInt(cid);
+      p.writeByte(index);
+      p.writeByte(1);
+      p.writeBool(success);
+      p.writeBool(balloonType);
+      return p;
+   }
 
-    public static byte[] commandResponse(int cid, byte index, boolean talk, int animation, boolean balloonType) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.PET_COMMAND.getValue());
-        mplew.writeInt(cid);
-        mplew.write(index);
-        mplew.write(0);
-        mplew.write(animation);
-        mplew.writeBool(!talk);
-        mplew.writeBool(balloonType);
-        return mplew.getPacket();
-    }
+   public static Packet commandResponse(int cid, byte index, boolean talk, int animation, boolean balloonType) {
+      final OutPacket p = OutPacket.create(SendOpcode.PET_COMMAND);
+      p.writeInt(cid);
+      p.writeByte(index);
+      p.writeByte(0);
+      p.writeByte(animation);
+      p.writeBool(!talk);
+      p.writeBool(balloonType);
+      return p;
+   }
 
-    private static void serializeMovementList(LittleEndianWriter lew, List<LifeMovementFragment> moves) {
-        lew.write(moves.size());
-        for (LifeMovementFragment move : moves) {
-            move.serialize(lew);
-        }
-    }
+   private static void serializeMovementList(OutPacket p, List<LifeMovementFragment> moves) {
+      p.writeByte(moves.size());
+      for (LifeMovementFragment move : moves) {
+         move.serialize(p);
+      }
+   }
 }

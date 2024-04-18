@@ -56,8 +56,8 @@ function action(mode, type, selection) {
                     if (harpNote != nextNote) {
                         cm.setQuestProgress(3114, 0);
 
-                        cm.getPlayer().announce(CField.showEffect("quest/party/wrong_kor"));
-                        cm.getPlayer().announce(CField.playSound("Party1/Failed"));
+                        cm.getPlayer().sendPacket(CField.showEffect("quest/party/wrong_kor"));
+                        cm.getPlayer().sendPacket(CField.playSound("Party1/Failed"));
 
                         cm.message("You've missed the note... Start over again.");
                     } else {
@@ -70,8 +70,8 @@ function action(mode, type, selection) {
                                 cm.message("Twinkle, twinkle, little star, how I wonder what you are.");
                                 cm.setQuestProgress(3114, 42);
 
-                                cm.getPlayer().announce(CField.showEffect("quest/party/clear"));
-                                cm.getPlayer().announce(CField.playSound("Party1/Clear"));
+                                cm.getPlayer().sendPacket(CField.showEffect("quest/party/clear"));
+                                cm.getPlayer().sendPacket(CField.playSound("Party1/Clear"));
 
                                 cm.dispose();
                                 return;

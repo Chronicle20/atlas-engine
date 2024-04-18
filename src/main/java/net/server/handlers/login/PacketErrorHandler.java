@@ -1,33 +1,37 @@
 package net.server.handlers.login;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import client.MapleClient;
 import net.AbstractMaplePacketHandler;
+import net.packet.InPacket;
 import tools.HexTool;
-import tools.data.input.SeekableLittleEndianAccessor;
 
-/**
- * @Author Arnah
- * @Website http://Vertisy.ca/
- * @since Jul 27, 2017
- */
-public class PacketErrorHandler extends AbstractMaplePacketHandler{
+public class PacketErrorHandler extends AbstractMaplePacketHandler {
 
-	@Override
-	public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c){
-		short type = slea.readShort();
-		int errortype = slea.readInt(); // example error 38
-		if(errortype == 0){ // i don't wanna log error code 0 stuffs, (usually some bounceback to login)
-			return;
-		}
-		short data_length = slea.readShort();
-		slea.skip(4); // ?B3 86 01 00 00 00 FF 00 00 00 00 00 9E 05 C8 FF 02 00 CD 05 C9 FF 7D 00 00 00 3F 00 00 00 00 00 02 77 01 00 25 06 C9 FF 7D 00 00 00 40 00 00 00 00 00 02 C1 02
-		short opcodeheader = slea.readShort();
-		String data = "Error Type: " + errortype + "\r\n" + "Data Length: " + data_length + "\r\n" + "Character: " + (c.getPlayer() == null ? "" : c.getPlayer().getName()) + " Map: " + (c.getPlayer() == null ? "" : c.getPlayer().getMap().getId()) + " - Account: " + c.getAccountName() + "\r\n" + " Opcode: " + opcodeheader + "\r\n" + HexTool.toString(slea.read((int) slea.available())) + "\r\n";
-		System.out.println(data);
-	}
+   private static final Logger log = LoggerFactory.getLogger(AbstractMaplePacketHandler.class);
 
-	@Override
-	public boolean validateState(MapleClient c){
-		return true;
-	}
+   @Override
+   public final void handlePacket(InPacket p, MapleClient c) {
+      short type = p.readShort();
+      int errortype = p.readInt(); // example error 38
+      if (errortype == 0) { // i don't wanna log error code 0 stuffs, (usually some bounceback to login)
+         return;
+      }
+      short data_length = p.readShort();
+      p.skip(4);
+      short opcodeheader = p.readShort();
+      log.debug("Error Type: {}", errortype);
+      log.debug("Data Length: {}", data_length);
+      log.debug("Character: {} Map: {} - Account: {}", c.getPlayer() == null ? "" : c.getPlayer().getName(),
+            c.getPlayer() == null ? "" : c.getPlayer().getMap().getId(), c.getAccountName());
+      log.debug("Opcode: {}", opcodeheader);
+      log.debug("{}", HexTool.toString(p.readBytes(p.available())));
+   }
+
+   @Override
+   public boolean validateState(MapleClient c) {
+      return true;
+   }
 }

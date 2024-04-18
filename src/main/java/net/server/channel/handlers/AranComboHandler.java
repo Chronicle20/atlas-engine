@@ -1,24 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License as
- published by the Free Software Foundation version 3 as published by
- the Free Software Foundation. You may not use, modify or distribute
- this program under any other version of the GNU Affero General Public
- License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package net.server.channel.handlers;
 
 import client.MapleCharacter;
@@ -26,36 +5,36 @@ import client.MapleClient;
 import client.SkillFactory;
 import constants.skills.Aran;
 import net.AbstractMaplePacketHandler;
-import tools.data.input.SeekableLittleEndianAccessor;
+import net.packet.InPacket;
 
 public class AranComboHandler extends AbstractMaplePacketHandler {
 
-    @Override
-    public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-        final MapleCharacter player = c.getPlayer();
-        int skillLevel = player.getSkillLevel(Aran.COMBO_ABILITY);
+   @Override
+   public void handlePacket(InPacket p, MapleClient c) {
+      final MapleCharacter player = c.getPlayer();
+      int skillLevel = player.getSkillLevel(Aran.COMBO_ABILITY);
 
-        if (!player.isAran() || (skillLevel <= 0 && player.getJob().getId() != 2000)) {
-            return;
-        }
+      if (!player.isAran() || (skillLevel <= 0 && player.getJob().getId() != 2000)) {
+         return;
+      }
 
-
-        final long currentTime = currentServerTime();
-        short combo = player.getCombo();
-        if ((currentTime - player.getLastCombo()) > 3000 && combo > 0) {
-            combo = 0;
-        }
-        combo++;
-        short finalCombo = combo;
-        switch (combo) {
-            case 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 -> {
-                if (player.getJob().getId() != 2000 && (combo / 10) > skillLevel) {
-                    break;
-                }
-                SkillFactory.getSkill(Aran.COMBO_ABILITY).map(s -> s.getEffect(finalCombo / 10)).ifPresent(e -> e.applyComboBuff(player, finalCombo));
+      final long currentTime = currentServerTime();
+      short combo = player.getCombo();
+      if ((currentTime - player.getLastCombo()) > 3000 && combo > 0) {
+         combo = 0;
+      }
+      combo++;
+      short finalCombo = combo;
+      switch (combo) {
+         case 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 -> {
+            if (player.getJob().getId() != 2000 && (combo / 10) > skillLevel) {
+               break;
             }
-        }
-        player.setCombo(combo);
-        player.setLastCombo(currentTime);
-    }
+            SkillFactory.getSkill(Aran.COMBO_ABILITY).map(s -> s.getEffect(finalCombo / 10))
+                  .ifPresent(e -> e.applyComboBuff(player, finalCombo));
+         }
+      }
+      player.setCombo(combo);
+      player.setLastCombo(currentTime);
+   }
 }

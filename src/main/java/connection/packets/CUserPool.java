@@ -5,17 +5,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import client.TemporaryStatType;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleMount;
+import client.TemporaryStatType;
 import client.inventory.MapleInventoryType;
 import client.newyear.NewYearCardRecord;
 import connection.constants.SendOpcode;
 import constants.inventory.ItemConstants;
+import net.packet.OutPacket;
+import net.packet.Packet;
 import net.server.guild.MapleGuildSummary;
 import tools.Pair;
-import tools.data.output.MaplePacketLittleEndianWriter;
 
 public class CUserPool {
    /**
@@ -26,133 +27,122 @@ public class CUserPool {
     * @param enteringField Whether the character to spawn is not yet present in the map or already is.
     * @return The spawn player packet.
     */
-   public static byte[] spawnPlayerMapObject(MapleClient target, MapleCharacter chr, boolean enteringField) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.SPAWN_PLAYER.getValue());
-      mplew.writeInt(chr.getId());
-      mplew.write(chr.getLevel()); //v83
-      mplew.writeMapleAsciiString(chr.getName());
+   public static Packet spawnPlayerMapObject(MapleClient target, MapleCharacter chr, boolean enteringField) {
+      final OutPacket p = OutPacket.create(SendOpcode.SPAWN_PLAYER);
+      p.writeInt(chr.getId());
+      p.writeByte(chr.getLevel()); //v83
+      p.writeString(chr.getName());
 
       if (chr.getGuildId() < 1) {
-         mplew.writeMapleAsciiString("");
-         mplew.writeShort(0);
-         mplew.write(0);
-         mplew.writeShort(0);
-         mplew.write(0);
+         p.writeString("");
+         p.writeShort(0);
+         p.writeByte(0);
+         p.writeShort(0);
+         p.writeByte(0);
       } else {
-         MapleGuildSummary gs = chr.getClient()
-               .getWorldServer()
-               .getGuildSummary(chr.getGuildId(), chr.getWorld());
+         MapleGuildSummary gs = chr.getClient().getWorldServer().getGuildSummary(chr.getGuildId(), chr.getWorld());
          if (gs != null) {
-            mplew.writeMapleAsciiString(gs.getName());
-            mplew.writeShort(gs.getLogoBG());
-            mplew.write(gs.getLogoBGColor());
-            mplew.writeShort(gs.getLogo());
-            mplew.write(gs.getLogoColor());
+            p.writeString(gs.getName());
+            p.writeShort(gs.getLogoBG());
+            p.writeByte(gs.getLogoBGColor());
+            p.writeShort(gs.getLogo());
+            p.writeByte(gs.getLogoColor());
          } else {
-            mplew.writeMapleAsciiString("");
-            mplew.writeShort(0);
-            mplew.write(0);
-            mplew.writeShort(0);
-            mplew.write(0);
+            p.writeString("");
+            p.writeShort(0);
+            p.writeByte(0);
+            p.writeShort(0);
+            p.writeByte(0);
          }
       }
 
-      writeForeignBuffs(mplew, chr);
+      writeForeignBuffs(p, chr);
 
-      mplew.writeShort(chr.getJob()
-            .getId());
+      p.writeShort(chr.getJob().getId());
 
-      CCommon.addCharLook(mplew, chr, false);
+      CCommon.addCharLook(p, chr, false);
 
-      mplew.writeInt(0);
-      mplew.writeInt(0);
-      mplew.writeInt(0);
-      mplew.writeInt(chr.getItemEffect());
-      mplew.writeInt(ItemConstants.getInventoryType(chr.getChair()) == MapleInventoryType.SETUP ? chr.getChair() : 0);
+      p.writeInt(0);
+      p.writeInt(0);
+      p.writeInt(0);
+      p.writeInt(chr.getItemEffect());
+      p.writeInt(ItemConstants.getInventoryType(chr.getChair()) == MapleInventoryType.SETUP ? chr.getChair() : 0);
 
       if (enteringField) {
          Point spawnPos = new Point(chr.getPosition());
          spawnPos.y -= 42;
-         mplew.writePos(spawnPos);
-         mplew.write(6);
+         p.writePos(spawnPos);
+         p.writeByte(6);
       } else {
-         mplew.writePos(chr.getPosition());
-         mplew.write(chr.getStance());
+         p.writePos(chr.getPosition());
+         p.writeByte(chr.getStance());
       }
 
-      mplew.writeShort(0);//chr.getFh()
-      //        mplew.write(0);
+      p.writeShort(0);//chr.getFh()
+      //        p.writeByte(0);
       //        MaplePet[] pet = chr.getPets();
       //        for (int i = 0; i < 3; i++) {
       //            if (pet[i] != null) {
-      //                CCommon.addPetInfo(mplew, pet[i], false);
+      //                CCommon.addPetInfo(p, pet[i], false);
       //            }
       //        }
-      mplew.write(0); //end of pets
+      p.writeByte(0); //end of pets
 
-      mplew.writeInt(chr.getMount()
-            .map(MapleMount::getLevel)
-            .orElse(1));
-      mplew.writeInt(chr.getMount()
-            .map(MapleMount::getExp)
-            .orElse(0));
-      mplew.writeInt(chr.getMount()
-            .map(MapleMount::getTiredness)
-            .orElse(0));
+      p.writeInt(chr.getMount().map(MapleMount::getLevel).orElse(1));
+      p.writeInt(chr.getMount().map(MapleMount::getExp).orElse(0));
+      p.writeInt(chr.getMount().map(MapleMount::getTiredness).orElse(0));
 
       //        MaplePlayerShop mps = chr.getPlayerShop();
       //        if (mps != null && mps.isOwner(chr)) {
       //            if (mps.hasFreeSlot()) {
-      //                CCommon.addAnnounceBox(mplew, mps, mps.getVisitors().length);
+      //                CCommon.addAnnounceBox(p, mps, mps.getVisitors().length);
       //            } else {
-      //                CCommon.addAnnounceBox(mplew, mps, 1);
+      //                CCommon.addAnnounceBox(p, mps, 1);
       //            }
       //        } else {
       //            MapleMiniGame miniGame = chr.getMiniGame();
       //            if (miniGame != null && miniGame.isOwner(chr)) {
       //                if (miniGame.hasFreeSlot()) {
-      //                    CCommon.addAnnounceBox(mplew, miniGame, 1, 0);
+      //                    CCommon.addAnnounceBox(p, miniGame, 1, 0);
       //                } else {
-      //                    CCommon.addAnnounceBox(mplew, miniGame, 2, miniGame.isMatchInProgress() ? 1 : 0);
+      //                    CCommon.addAnnounceBox(p, miniGame, 2, miniGame.isMatchInProgress() ? 1 : 0);
       //                }
       //            } else {
-      mplew.write(0); // mini room
+      p.writeByte(0); // mini room
       //            }
       //        }
 
       //        if (chr.getChalkboard()
       //                .isPresent()) {
-      //            mplew.write(1);
-      //            mplew.writeMapleAsciiString(chr.getChalkboard()
+      //            p.writeByte(1);
+      //            p.writeMapleAsciiString(chr.getChalkboard()
       //                    .get());
       //        } else {
-      mplew.write(0); // ad board
+      p.writeByte(0); // ad board
       //        }
-      //        CCommon.addRingLook(mplew, chr, true);  // crush
-      //        CCommon.addRingLook(mplew, chr, false); // friendship
-      //        CCommon.addMarriageRingLook(target, mplew, chr);
-      //        encodeNewYearCardInfo(mplew, chr);  // new year seems to crash sometimes...
-      //        mplew.write(0);
-      //        mplew.write(0);
-      //        mplew.write(chr.getTeam());//only needed in specific fields
-      mplew.write(0);
-      mplew.write(0);
-      mplew.write(0);
-      mplew.write(0); // getEffectMask?
-      mplew.write(0); // looks like a new years card
-      mplew.write(chr.getTeam());
-      return mplew.getPacket();
+      //        CCommon.addRingLook(p, chr, true);  // crush
+      //        CCommon.addRingLook(p, chr, false); // friendship
+      //        CCommon.addMarriageRingLook(target, p, chr);
+      //        encodeNewYearCardInfo(p, chr);  // new year seems to crash sometimes...
+      //        p.writeByte(0);
+      //        p.writeByte(0);
+      //        p.writeByte(chr.getTeam());//only needed in specific fields
+      p.writeByte(0);
+      p.writeByte(0);
+      p.writeByte(0);
+      p.writeByte(0); // getEffectMask?
+      p.writeByte(0); // looks like a new years card
+      p.writeByte(chr.getTeam());
+      return p;
    }
 
-   public static byte[] removePlayerFromMap(int cid) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.REMOVE_PLAYER_FROM_MAP.getValue());
-      mplew.writeInt(cid);
-      return mplew.getPacket();
+   public static Packet removePlayerFromMap(int cid) {
+      final OutPacket p = OutPacket.create(SendOpcode.REMOVE_PLAYER_FROM_MAP);
+      p.writeInt(cid);
+      return p;
    }
 
-   private static void writeForeignBuffs(MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
+   private static void writeForeignBuffs(OutPacket p, MapleCharacter chr) {
       int[] buffmask = new int[4];
       int monsterRiding = 0;
       List<Pair<Integer, Integer>> buffList = new ArrayList<>();
@@ -322,35 +312,35 @@ public class CUserPool {
          }
       }
       for (int i = 3; i >= 0; i--) {
-         mplew.writeInt(buffmask[i]);
+         p.writeInt(buffmask[i]);
       }
       for (Pair<Integer, Integer> buff : buffList) {
          if (buff.right == 4) {
-            mplew.writeInt(buff.left);
+            p.writeInt(buff.left);
          } else if (buff.right == 2) {
-            mplew.writeShort(buff.left);
+            p.writeShort(buff.left);
          } else if (buff.right == 1) {
-            mplew.write(buff.left);
+            p.writeByte(buff.left);
          }
       }
 
-      mplew.write(0);
-      mplew.write(0);
+      p.writeByte(0);
+      p.writeByte(0);
 
-      CCommon.getTemporaryStats(chr).forEach(ts -> ts.EncodeForClient(mplew));
+      CCommon.getTemporaryStats(chr).forEach(ts -> ts.EncodeForClient(p));
    }
 
-   private static void encodeNewYearCardInfo(MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
+   private static void encodeNewYearCardInfo(OutPacket p, MapleCharacter chr) {
       Set<NewYearCardRecord> newyears = chr.getReceivedNewYearRecords();
       if (!newyears.isEmpty()) {
-         mplew.write(1);
+         p.writeByte(1);
 
-         mplew.writeInt(newyears.size());
+         p.writeInt(newyears.size());
          for (NewYearCardRecord nyc : newyears) {
-            mplew.writeInt(nyc.getId());
+            p.writeInt(nyc.getId());
          }
       } else {
-         mplew.write(0);
+         p.writeByte(0);
       }
    }
 }

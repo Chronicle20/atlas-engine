@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 import client.MapleCharacter;
 import client.MapleClient;
 import connection.packets.CWvsContext;
+import net.packet.Packet;
 import net.server.Server;
 import net.server.coordinator.world.MapleInviteCoordinator;
 import net.server.coordinator.world.MapleInviteCoordinator.InviteType;
@@ -355,7 +356,7 @@ public class MapleAlliance {
 
    private static void sendInvitation(MapleClient c, int allianceId, MapleCharacter victim) {
       if (MapleInviteCoordinator.createInvite(InviteType.ALLIANCE, c.getPlayer(), allianceId, victim.getId())) {
-         victim.announce(CWvsContext.allianceInvite(allianceId, c.getPlayer()));
+         victim.sendPacket(CWvsContext.allianceInvite(allianceId, c.getPlayer()));
       } else {
          c.getPlayer()
                .dropMessage(5, "The master of the guild that you offered an invitation is currently managing another invite.");
@@ -541,7 +542,7 @@ public class MapleAlliance {
       }
    }
 
-   public void broadcastMessage(byte[] packet) {
+   public void broadcastMessage(Packet packet) {
       Server.getInstance().allianceMessage(allianceId, packet, -1, -1);
    }
 }

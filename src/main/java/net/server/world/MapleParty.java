@@ -44,13 +44,13 @@ public class MapleParty {
    public static boolean createParty(MapleCharacter player, boolean silentCheck) {
       if (player.getParty().isPresent()) {
          if (!silentCheck) {
-            player.announce(CWvsContext.partyStatusMessage(16));
+            player.sendPacket(CWvsContext.partyStatusMessage(16));
          }
          return false;
       }
 
       if (player.getLevel() < 10 && !YamlConfig.config.server.USE_PARTY_FOR_STARTERS) {
-         player.announce(CWvsContext.partyStatusMessage(10));
+         player.sendPacket(CWvsContext.partyStatusMessage(10));
          return false;
       }
 
@@ -69,7 +69,7 @@ public class MapleParty {
       player.updatePartySearchAvailability(false);
       player.partyOperationUpdate(party, null);
 
-      player.announce(CWvsContext.partyCreated(party, partyplayer));
+      player.sendPacket(CWvsContext.partyCreated(party, partyplayer));
       return true;
    }
 
@@ -77,20 +77,20 @@ public class MapleParty {
       World world = player.getWorldServer();
       if (player.getParty().isPresent()) {
          if (!silentCheck) {
-            player.announce(CWvsContext.serverNotice(5, "You can't join the party as you are already in one."));
+            player.sendPacket(CWvsContext.serverNotice(5, "You can't join the party as you are already in one."));
          }
          return false;
       }
 
       if (world.getParty(partyId).isEmpty()) {
-         player.announce(CWvsContext.serverNotice(5, "You couldn't join the party since it had already been disbanded."));
+         player.sendPacket(CWvsContext.serverNotice(5, "You couldn't join the party since it had already been disbanded."));
          return false;
       }
 
       MapleParty party = world.getParty(partyId).get();
       if (party.getMembers().size() >= 6) {
          if (!silentCheck) {
-            player.announce(CWvsContext.partyStatusMessage(17));
+            player.sendPacket(CWvsContext.partyStatusMessage(17));
          }
          return false;
       }

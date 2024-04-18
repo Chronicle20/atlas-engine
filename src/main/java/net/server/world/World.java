@@ -1,24 +1,3 @@
-/*
-This file is part of the OdinMS Maple Story Server
-Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
-Matthias Butz <matze@odinms.de>
-Jan Christian Meyer <vimes@odinms.de>
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as
-published by the Free Software Foundation version 3 as published by
-the Free Software Foundation. You may not use, modify or distribute
-this program under any other version of the GNU Affero General Public
-License.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package net.server.world;
 
 import java.sql.Connection;
@@ -48,6 +27,9 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import client.AbstractMapleCharacterObject;
 import client.MapleCharacter;
 import client.MapleClient;
@@ -58,6 +40,7 @@ import connection.packets.CUIMessenger;
 import connection.packets.CUserRemote;
 import connection.packets.CWvsContext;
 import constants.game.GameConstants;
+import net.packet.Packet;
 import net.server.PlayerStorage;
 import net.server.Server;
 import net.server.audit.LockCollector;
@@ -94,6 +77,7 @@ import net.server.task.TimedMapObjectTask;
 import net.server.task.TimeoutTask;
 import net.server.task.WeddingReservationTask;
 import scripting.event.EventInstanceManager;
+import server.MapleSkillbookInformationProvider;
 import server.MapleStorage;
 import server.TimerManager;
 import server.maps.AbstractMapleMapObject;
@@ -107,6 +91,7 @@ import tools.Pair;
 import tools.packets.Fishing;
 
 public class World {
+   private static final Logger log = LoggerFactory.getLogger(World.class);
 
    private final MonitoredReentrantReadWriteLock chnLock =
          new MonitoredReentrantReadWriteLock(MonitoredLockType.WORLD_CHANNELS, true);
@@ -834,7 +819,7 @@ public class World {
       setGuildAndRank(affectedPlayers, -1, -1, -1);    //respawn player
    }
 
-   public void sendPacket(List<Integer> targetIds, final byte[] packet, int exception) {
+   public void sendPacket(List<Integer> targetIds, Packet packet, int exception) {
       targetIds.stream()
             .filter(i -> i != exception)
             .map(i -> getPlayerStorage().getCharacterById(i))
@@ -944,8 +929,8 @@ public class World {
    }
 
    public void debugMarriageStatus() {
-      System.out.println("Queued marriages: " + queuedMarriages);
-      System.out.println("Guest list: " + marriageGuests);
+      log.debug("Queued marriages: {}", queuedMarriages);
+      log.debug("Guest list: {}", marriageGuests);
    }
 
    private void registerCharacterParty(Integer chrid, Integer partyid) {
@@ -1045,7 +1030,7 @@ public class World {
                chr.get().setParty(party);
                chr.get().setMPC(partychar);
             }
-            chr.get().announce(CWvsContext.updateParty(chr.get().getClient().getChannel(), party, operation, target));
+            chr.get().sendPacket(CWvsContext.updateParty(chr.get().getClient().getChannel(), party, operation, target));
          }
       }
       switch (operation) {
@@ -1053,7 +1038,7 @@ public class World {
          case EXPEL:
             Optional<MapleCharacter> chr = getPlayerStorage().getCharacterById(target.getId());
             if (chr.isPresent()) {
-               chr.get().announce(CWvsContext.updateParty(chr.get().getClient().getChannel(), party, operation, target));
+               chr.get().sendPacket(CWvsContext.updateParty(chr.get().getClient().getChannel(), party, operation, target));
                chr.get().setParty(null);
                chr.get().setMPC(null);
             }
@@ -1105,7 +1090,7 @@ public class World {
             }
             break;
          default:
-            System.out.println("Unhandled updateParty operation " + operation.name());
+            log.debug("Unhandled updateParty operation {}", operation.name());
       }
       party.ifPresent(p -> updateParty(p, operation, target));
    }
@@ -1140,7 +1125,7 @@ public class World {
    }
 
    public void partyChat(MapleParty party, String chatText, String nameFrom) {
-      byte[] packet = CField.multiChat(nameFrom, chatText, 1);
+      Packet packet = CField.multiChat(nameFrom, chatText, 1);
       party.getMembers().stream()
             .map(MaplePartyCharacter::getName)
             .filter(name -> !name.equals(nameFrom))
@@ -1176,15 +1161,15 @@ public class World {
             if (messenger.isEmpty()) {
                if (from.isPresent()) {
                   if (MapleInviteCoordinator.createInvite(InviteType.MESSENGER, from.get(), messengerId, targetChr.get().getId())) {
-                     targetChr.get().announce(CUIMessenger.messengerInvite(sender, messengerId));
-                     from.get().announce(CUIMessenger.messengerNote(target, 4, 1));
+                     targetChr.get().sendPacket(CUIMessenger.messengerInvite(sender, messengerId));
+                     from.get().sendPacket(CUIMessenger.messengerNote(target, 4, 1));
                   } else {
-                     from.get().announce(CUIMessenger.messengerChat(
+                     from.get().sendPacket(CUIMessenger.messengerChat(
                            sender + " : " + target + " is already managing a Maple Messenger invitation"));
                   }
                }
             } else {
-               from.ifPresent(character -> character.announce(
+               from.ifPresent(character -> character.sendPacket(
                      CUIMessenger.messengerChat(sender + " : " + target + " is already using Maple Messenger")));
             }
          }
@@ -1199,17 +1184,17 @@ public class World {
          }
          if (!messengerchar.name().equals(namefrom)) {
             Optional<MapleCharacter> from = getChannel(fromchannel).flatMap(c -> c.getPlayerStorage().getCharacterByName(namefrom));
-            chr.get().announce(CUIMessenger.addMessengerPlayer(namefrom, from.get(), position, (byte) (fromchannel - 1)));
-            from.get().announce(CUIMessenger.addMessengerPlayer(chr.get().getName(), chr.get(), messengerchar.position(),
+            chr.get().sendPacket(CUIMessenger.addMessengerPlayer(namefrom, from.get(), position, (byte) (fromchannel - 1)));
+            from.get().sendPacket(CUIMessenger.addMessengerPlayer(chr.get().getName(), chr.get(), messengerchar.position(),
                   (byte) (messengerchar.channelId() - 1)));
          } else {
-            chr.get().announce(CUIMessenger.joinMessenger(messengerchar.position()));
+            chr.get().sendPacket(CUIMessenger.joinMessenger(messengerchar.position()));
          }
       }
    }
 
    public void removeMessengerPlayer(MapleMessenger messenger, int position) {
-      byte[] packet = CUIMessenger.removeMessengerPlayer(position);
+      Packet packet = CUIMessenger.removeMessengerPlayer(position);
       messenger.getMembersStream()
             .map(MapleMessengerCharacter::name)
             .map(name -> getPlayerStorage().getCharacterByName(name))
@@ -1218,7 +1203,7 @@ public class World {
    }
 
    public void messengerChat(MapleMessenger messenger, String text, String nameFrom) {
-      byte[] packet = CUIMessenger.messengerChat(text);
+      Packet packet = CUIMessenger.messengerChat(text);
       messenger.getOtherMembersStream(nameFrom)
             .map(MapleMessengerCharacter::name)
             .map(name -> getPlayerStorage().getCharacterByName(name))
@@ -1233,7 +1218,7 @@ public class World {
          if (senderChr.isPresent() && messenger.isPresent()) {
             if (MapleInviteCoordinator.answerInvite(InviteType.MESSENGER, player.getId(), messenger.get().getId(), false).result
                   == InviteResult.DENIED) {
-               senderChr.get().announce(CUIMessenger.messengerNote(player.getName(), 5, 0));
+               senderChr.get().sendPacket(CUIMessenger.messengerNote(player.getName(), 5, 0));
             }
          }
       }
@@ -1259,7 +1244,7 @@ public class World {
          return;
       }
 
-      byte[] packet = CUIMessenger.updateMessengerPlayer(nameFrom, fromCharacter.get(), position, (byte) (fromChannelId - 1));
+      Packet packet = CUIMessenger.updateMessengerPlayer(nameFrom, fromCharacter.get(), position, (byte) (fromChannelId - 1));
       messenger.getOtherMembersStream(nameFrom)
             .map(MapleMessengerCharacter::name)
             .map(n -> fromChannel.flatMap(c -> c.getPlayerStorage().getCharacterByName(n)))
@@ -1300,7 +1285,7 @@ public class World {
    public void whisper(String sender, String target, int channel, String message) {
       if (isConnected(target)) {
          getPlayerStorage().getCharacterByName(target)
-               .ifPresent(c -> c.announce(CField.getWhisper(sender, channel, message)));
+               .ifPresent(c -> c.sendPacket(CField.getWhisper(sender, channel, message)));
       }
    }
 
@@ -1739,7 +1724,7 @@ public class World {
                .map(id -> players.getCharacterById(id))
                .flatMap(Optional::stream)
                .filter(MapleCharacter::isLoggedinWorld)
-               .forEach(c -> c.announce(CWvsContext.serverMessage(c.getClient().getChannelServer().getServerMessage())));
+               .forEach(c -> c.sendPacket(CWvsContext.serverMessage(c.getClient().getChannelServer().getServerMessage())));
       }
    }
 
@@ -1799,7 +1784,7 @@ public class World {
       getChannels().forEach(c -> c.setServerMessage(msg));
    }
 
-   public void broadcastPacket(final byte[] packet) {
+   public void broadcastPacket(Packet packet) {
       players.getAllCharacters().forEach(MapleCharacter.announcePacket(packet));
    }
 
@@ -2030,6 +2015,6 @@ public class World {
       players = null;
 
       clearWorldData();
-      System.out.println("Finished shutting down world " + id + "\r\n");
+      log.info("Finished shutting down world {}", id);
    }
 }

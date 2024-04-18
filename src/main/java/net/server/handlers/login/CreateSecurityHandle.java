@@ -1,30 +1,29 @@
 package net.server.handlers.login;
 
-import client.MapleClient;
-import net.AbstractMaplePacketHandler;
-import tools.data.input.SeekableLittleEndianAccessor;
-import tools.data.output.MaplePacketLittleEndianWriter;
-
 import java.util.Random;
 
+import client.MapleClient;
+import net.AbstractMaplePacketHandler;
+import net.packet.InPacket;
+import net.packet.OutPacket;
+import net.packet.Packet;
+
 public class CreateSecurityHandle extends AbstractMaplePacketHandler {
-    @Override
-    public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-        c.announce(writePacket(slea, c));
-    }
+   @Override
+   public void handlePacket(InPacket p, MapleClient c) {
+      c.sendPacket(writePacket());
+   }
 
-    @Override
-    public boolean validateState(MapleClient c) {
-        return true;
-    }
+   @Override
+   public boolean validateState(MapleClient c) {
+      return true;
+   }
 
-    private byte[] writePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-        String[] LoginScreen = {"MapLogin", "MapLogin1"};
-
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(2);
-        mplew.writeShort(connection.constants.SendOpcode.LOGIN_AUTH.getValue());
-        int index = new Random().nextInt(2);
-        mplew.writeMapleAsciiString(LoginScreen[index]);
-        return mplew.getPacket();
-    }
+   private Packet writePacket() {
+      String[] LoginScreen = {"MapLogin", "MapLogin1"};
+      final OutPacket op = OutPacket.create(connection.constants.SendOpcode.LOGIN_AUTH);
+      int index = new Random().nextInt(2);
+      op.writeString(LoginScreen[index]);
+      return op;
+   }
 }

@@ -5,8 +5,8 @@ function start(ms) {
 
     if (map.getDocked()) {
         const CField = Java.type('connection.packets.CField');
-        ms.getClient().announce(CField.musicChange("Bgm04/ArabPirate"));
-        ms.getClient().announce(CField.crogBoatPacket(true));
+        ms.getClient().sendPacket(CField.musicChange("Bgm04/ArabPirate"));
+        ms.getClient().sendPacket(CField.crogBoatPacket(true));
     }
 
     return (true);

@@ -43,13 +43,13 @@ public class TimerAllCommand extends Command {
 
         if (params[0].equalsIgnoreCase("remove")) {
             for (MapleCharacter victim : player.getWorldServer().getPlayerStorage().getAllCharacters()) {
-                victim.announce(CField.removeClock());
+                victim.sendPacket(CField.removeClock());
             }
         } else {
             try {
                 int seconds = Integer.parseInt(params[0]);
                 for (MapleCharacter victim : player.getWorldServer().getPlayerStorage().getAllCharacters()) {
-                    victim.announce(CField.getClock(seconds));
+                    victim.sendPacket(CField.getClock(seconds));
                 }
             } catch (NumberFormatException e) {
                 player.yellowMessage("Syntax: !timerall <seconds>|remove");

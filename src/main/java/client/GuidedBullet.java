@@ -1,18 +1,18 @@
 package client;
 
-import tools.data.output.LittleEndianWriter;
+import net.packet.OutPacket;
 
 public class GuidedBullet extends TemporaryStatBase {
-    public int dwMobId;
+   public int dwMobId;
 
-    public GuidedBullet() {
-        super(false);
-        this.dwMobId = 0;
-    }
+   public GuidedBullet() {
+      super(false);
+      this.dwMobId = 0;
+   }
 
-    @Override
-    public void EncodeForClient(LittleEndianWriter lew) {
-        super.EncodeForClient(lew);
-        lew.writeInt(dwMobId);
-    }
+   @Override
+   public void EncodeForClient(OutPacket p) {
+      super.EncodeForClient(p);
+      p.writeInt(dwMobId);
+   }
 }

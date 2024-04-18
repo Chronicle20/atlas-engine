@@ -23,57 +23,60 @@
 */
 package client.command.commands.gm3;
 
-import client.MapleCharacter;
-import client.MapleClient;
-import client.command.Command;
-import net.MaplePacketHandler;
-import net.PacketProcessor;
-import tools.FilePrinter;
-import tools.HexTool;
-import tools.data.input.ByteArrayByteStream;
-import tools.data.input.GenericSeekableLittleEndianAccessor;
-import tools.data.input.SeekableLittleEndianAccessor;
-import tools.data.output.MaplePacketLittleEndianWriter;
-
-import java.io.FileReader;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import client.MapleCharacter;
+import client.MapleClient;
+import client.command.Command;
+import io.netty.buffer.Unpooled;
+import net.MaplePacketHandler;
+import net.PacketProcessor;
+import net.packet.ByteBufInPacket;
+import net.packet.InPacket;
+import tools.HexTool;
+
 public class PeCommand extends Command {
-    {
-        setDescription("");
-    }
+   private static final Logger log = LoggerFactory.getLogger(PeCommand.class);
 
-    @Override
-    public void execute(MapleClient c, String[] params) {
-        MapleCharacter player = c.getPlayer();
-        String packet;
-        try {
-            InputStreamReader is = new FileReader("pe.txt");
-            Properties packetProps = new Properties();
-            packetProps.load(is);
-            is.close();
-            packet = packetProps.getProperty("pe");
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            player.yellowMessage("Failed to load pe.txt");
-            return;
+   {
+      setDescription("Handle synthesized packets from file, and handle them as if sent from a client");
+   }
 
-        }
-        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.write(HexTool.getByteArrayFromHexString(packet));
-        SeekableLittleEndianAccessor slea = new GenericSeekableLittleEndianAccessor(new ByteArrayByteStream(mplew.getPacket()));
-        short packetId = slea.readShort();
-        Optional<MaplePacketHandler> packetHandler = PacketProcessor.getProcessor(0, c.getChannel()).getHandler(packetId);
-        if (packetHandler.isPresent() && packetHandler.get().validateState(c)) {
-            try {
-                player.yellowMessage("Receiving: " + packet);
-                packetHandler.get().handlePacket(slea, c);
-            } catch (final Throwable t) {
-                FilePrinter.printError(FilePrinter.PACKET_HANDLER + packetHandler.getClass().getName() + ".txt", t, "Error for " + (c.getPlayer() == null ? "" : "player ; " + c.getPlayer() + " on map ; " + c.getPlayer().getMapId() + " - ") + "account ; " + c.getAccountName() + "\r\n" + slea);
-            }
-        }
-    }
+   @Override
+   public void execute(MapleClient c, String[] params) {
+      MapleCharacter player = c.getPlayer();
+      String packet = "";
+      try (BufferedReader br = Files.newBufferedReader(Path.of("pe.txt"))) {
+         Properties packetProps = new Properties();
+         packetProps.load(br);
+         packet = packetProps.getProperty("pe");
+      } catch (IOException ex) {
+         ex.printStackTrace();
+         player.yellowMessage("Failed to load pe.txt");
+         return;
+      }
+
+      byte[] packetContent = HexTool.toBytes(packet);
+      InPacket inPacket = new ByteBufInPacket(Unpooled.wrappedBuffer(packetContent));
+      short packetId = inPacket.readShort();
+      Optional<MaplePacketHandler> packetHandler = PacketProcessor.getProcessor(0, c.getChannel()).getHandler(packetId);
+      if (packetHandler.isPresent() && packetHandler.get().validateState(c)) {
+         try {
+            player.yellowMessage("Receiving: " + packet);
+            packetHandler.get().handlePacket(inPacket, c);
+         } catch (final Throwable t) {
+            final String chrInfo = player != null ? player.getName() + " on map " + player.getMapId() : "?";
+            log.warn("Error in packet handler {}. Chr {}, account {}. Packet: {}", packetHandler.getClass().getSimpleName(),
+                  chrInfo, c.getAccountName(), packet, t);
+         }
+      }
+   }
 }

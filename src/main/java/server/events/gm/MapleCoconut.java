@@ -66,22 +66,22 @@ public class MapleCoconut extends MapleEvent {
                 } else if (getMapleScore() > getStoryScore()) {
                     for (MapleCharacter chr : map.getCharacters()) {
                         if (chr.getTeam() == 0) {
-                            chr.announce(CField.showEffect("event/coconut/victory"));
-                            chr.announce(CField.playSound("Coconut/Victory"));
+                            chr.sendPacket(CField.showEffect("event/coconut/victory"));
+                            chr.sendPacket(CField.playSound("Coconut/Victory"));
                         } else {
-                            chr.announce(CField.showEffect("event/coconut/lose"));
-                            chr.announce(CField.playSound("Coconut/Failed"));
+                            chr.sendPacket(CField.showEffect("event/coconut/lose"));
+                            chr.sendPacket(CField.playSound("Coconut/Failed"));
                         }
                     }
                     warpOut();
                 } else {
                     for (MapleCharacter chr : map.getCharacters()) {
                         if (chr.getTeam() == 1) {
-                            chr.announce(CField.showEffect("event/coconut/victory"));
-                            chr.announce(CField.playSound("Coconut/Victory"));
+                            chr.sendPacket(CField.showEffect("event/coconut/victory"));
+                            chr.sendPacket(CField.playSound("Coconut/Victory"));
                         } else {
-                            chr.announce(CField.showEffect("event/coconut/lose"));
-                            chr.announce(CField.playSound("Coconut/Failed"));
+                            chr.sendPacket(CField.showEffect("event/coconut/lose"));
+                            chr.sendPacket(CField.playSound("Coconut/Failed"));
                         }
                     }
                     warpOut();
@@ -95,29 +95,29 @@ public class MapleCoconut extends MapleEvent {
         TimerManager.getInstance().schedule(() -> {
             if (getMapleScore() == getStoryScore()) {
                 for (MapleCharacter chr : map.getCharacters()) {
-                    chr.announce(CField.showEffect("event/coconut/lose"));
-                    chr.announce(CField.playSound("Coconut/Failed"));
+                    chr.sendPacket(CField.showEffect("event/coconut/lose"));
+                    chr.sendPacket(CField.playSound("Coconut/Failed"));
                 }
                 warpOut();
             } else if (getMapleScore() > getStoryScore()) {
                 for (MapleCharacter chr : map.getCharacters()) {
                     if (chr.getTeam() == 0) {
-                        chr.announce(CField.showEffect("event/coconut/victory"));
-                        chr.announce(CField.playSound("Coconut/Victory"));
+                        chr.sendPacket(CField.showEffect("event/coconut/victory"));
+                        chr.sendPacket(CField.playSound("Coconut/Victory"));
                     } else {
-                        chr.announce(CField.showEffect("event/coconut/lose"));
-                        chr.announce(CField.playSound("Coconut/Failed"));
+                        chr.sendPacket(CField.showEffect("event/coconut/lose"));
+                        chr.sendPacket(CField.playSound("Coconut/Failed"));
                     }
                 }
                 warpOut();
             } else {
                 for (MapleCharacter chr : map.getCharacters()) {
                     if (chr.getTeam() == 1) {
-                        chr.announce(CField.showEffect("event/coconut/victory"));
-                        chr.announce(CField.playSound("Coconut/Victory"));
+                        chr.sendPacket(CField.showEffect("event/coconut/victory"));
+                        chr.sendPacket(CField.playSound("Coconut/Victory"));
                     } else {
-                        chr.announce(CField.showEffect("event/coconut/lose"));
-                        chr.announce(CField.playSound("Coconut/Failed"));
+                        chr.sendPacket(CField.showEffect("event/coconut/lose"));
+                        chr.sendPacket(CField.playSound("Coconut/Failed"));
                     }
                 }
                 warpOut();

@@ -5,36 +5,33 @@ import client.MapleCharacter.DelayedQuestUpdate;
 import client.MapleClient;
 import client.MapleQuestStatus;
 import net.AbstractMaplePacketHandler;
+import net.packet.InPacket;
 import scripting.quest.QuestScriptManager;
 import server.quest.MapleQuest;
-import tools.data.input.SeekableLittleEndianAccessor;
 
-/**
- * @author Xari
- */
 public class RaiseUIStateHandler extends AbstractMaplePacketHandler {
 
-    @Override
-    public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-        int infoNumber = slea.readShort();
+   @Override
+   public final void handlePacket(InPacket p, MapleClient c) {
+      int infoNumber = p.readShort();
 
-        if (c.tryacquireClient()) {
-            try {
-                MapleCharacter chr = c.getPlayer();
-                MapleQuest quest = MapleQuest.getInstanceFromInfoNumber(infoNumber);
-                MapleQuestStatus mqs = chr.getQuest(quest);
+      if (c.tryacquireClient()) {
+         try {
+            MapleCharacter chr = c.getPlayer();
+            MapleQuest quest = MapleQuest.getInstanceFromInfoNumber(infoNumber);
+            MapleQuestStatus mqs = chr.getQuest(quest);
 
-                QuestScriptManager.getInstance().raiseOpen(c, (short) infoNumber, mqs.getNpc());
+            QuestScriptManager.getInstance().raiseOpen(c, (short) infoNumber, mqs.getNpc());
 
-                if (mqs.getStatus() == MapleQuestStatus.Status.NOT_STARTED) {
-                    quest.forceStart(chr, 22000);
-                    c.getAbstractPlayerInteraction().setQuestProgress(quest.getId(), infoNumber, 0);
-                } else if (mqs.getStatus() == MapleQuestStatus.Status.STARTED) {
-                    chr.announceUpdateQuest(DelayedQuestUpdate.UPDATE, mqs, mqs.getInfoNumber() > 0);
-                }
-            } finally {
-                c.releaseClient();
+            if (mqs.getStatus() == MapleQuestStatus.Status.NOT_STARTED) {
+               quest.forceStart(chr, 22000);
+               c.getAbstractPlayerInteraction().setQuestProgress(quest.getId(), infoNumber, 0);
+            } else if (mqs.getStatus() == MapleQuestStatus.Status.STARTED) {
+               chr.announceUpdateQuest(DelayedQuestUpdate.UPDATE, mqs, mqs.getInfoNumber() > 0);
             }
-        }
-    }
+         } finally {
+            c.releaseClient();
+         }
+      }
+   }
 }

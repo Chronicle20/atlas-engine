@@ -76,7 +76,7 @@ public class AriantColiseum {
         }
 
         for (MapleCharacter mc : players) {
-            mc.announce(CFieldAriantArena.updateAriantPQRanking(score));
+            mc.sendPacket(CFieldAriantArena.updateAriantPQRanking(score));
         }
 
         setAriantScoreBoard(TimerManager.getInstance().schedule(this::showArenaResults, pqTimerBoard));
@@ -163,7 +163,7 @@ public class AriantColiseum {
     private void broadcastAriantScoreUpdate() {
         if (scoreDirty) {
             for (MapleCharacter chr : score.keySet()) {
-                chr.announce(CFieldAriantArena.updateAriantPQRanking(score));
+                chr.sendPacket(CFieldAriantArena.updateAriantPQRanking(score));
             }
             scoreDirty = false;
         }

@@ -1,24 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License as
- published by the Free Software Foundation version 3 as published by
- the Free Software Foundation. You may not use, modify or distribute
- this program under any other version of the GNU Affero General Public
- License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package net;
 
 import java.util.Arrays;
@@ -26,7 +5,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import connection.constants.RecvOpcode;
+import net.netty.LoginServer;
 import net.server.channel.handlers.*;
 import net.server.handlers.KeepAliveHandler;
 import net.server.handlers.LoginRequiringNoOpHandler;
@@ -55,8 +38,10 @@ import net.server.handlers.login.ViewAllCharSelectedHandler;
 import net.server.handlers.login.ViewAllCharSelectedWithPicHandler;
 
 public final class PacketProcessor {
+   private static final Logger log = LoggerFactory.getLogger(PacketProcessor.class);
 
    private final static Map<String, PacketProcessor> instances = new LinkedHashMap<>();
+   private static ChannelDependencies channelDeps;
    private MaplePacketHandler[] handlers;
 
    private PacketProcessor() {
@@ -65,6 +50,22 @@ public final class PacketProcessor {
             .max()
             .orElse(0);
       handlers = new MaplePacketHandler[maxRecvOp + 1];
+   }
+
+   public static void registerGameHandlerDependencies(ChannelDependencies channelDependencies) {
+      PacketProcessor.channelDeps = channelDependencies;
+   }
+
+   public static PacketProcessor getLoginServerProcessor() {
+      return getProcessor(LoginServer.WORLD_ID, LoginServer.CHANNEL_ID);
+   }
+
+   public static PacketProcessor getChannelServerProcessor(int world, int channel) {
+      if (channelDeps == null) {
+         throw new IllegalStateException("Unable to get channel server processor - dependencies are not registered");
+      }
+
+      return getProcessor(world, channel);
    }
 
    public synchronized static PacketProcessor getProcessor(int world, int channel) {
@@ -89,8 +90,7 @@ public final class PacketProcessor {
       try {
          handlers[code.getValue()] = handler;
       } catch (ArrayIndexOutOfBoundsException e) {
-         e.printStackTrace();
-         System.out.println("Error registering handler - " + code.name());
+         log.error("Error registering handler - {}", code.name());
       }
    }
 

@@ -21,9 +21,15 @@
  */
 package server.maps;
 
+import java.awt.*;
+import java.util.List;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.locks.Lock;
+
 import client.MapleClient;
 import config.YamlConfig;
 import connection.packets.CReactorPool;
+import net.packet.Packet;
 import net.server.audit.locks.MonitoredLockType;
 import net.server.audit.locks.factory.MonitoredReentrantLockFactory;
 import net.server.services.task.channel.OverallService;
@@ -33,383 +39,383 @@ import server.TimerManager;
 import server.partyquest.GuardianSpawnPoint;
 import tools.Pair;
 
-import java.awt.*;
-import java.util.List;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.locks.Lock;
-
 /**
  * @author Lerk
  * @author Ronan
  */
 public class MapleReactor extends AbstractMapleMapObject {
 
-    private int rid;
-    private MapleReactorStats stats;
-    private byte state;
-    private byte evstate;
-    private int delay;
-    private MapleMap map;
-    private String name;
-    private boolean alive;
-    private boolean shouldCollect;
-    private boolean attackHit;
-    private ScheduledFuture<?> timeoutTask = null;
-    private Runnable delayedRespawnRun = null;
-    private GuardianSpawnPoint guardian = null;
-    private byte facingDirection = 0;
-    private Lock reactorLock = MonitoredReentrantLockFactory.createLock(MonitoredLockType.REACTOR, true);
-    private Lock hitLock = MonitoredReentrantLockFactory.createLock(MonitoredLockType.REACTOR_HIT, true);
+   private int rid;
+   private MapleReactorStats stats;
+   private byte state;
+   private byte evstate;
+   private int delay;
+   private MapleMap map;
+   private String name;
+   private boolean alive;
+   private boolean shouldCollect;
+   private boolean attackHit;
+   private ScheduledFuture<?> timeoutTask = null;
+   private Runnable delayedRespawnRun = null;
+   private GuardianSpawnPoint guardian = null;
+   private byte facingDirection = 0;
+   private Lock reactorLock = MonitoredReentrantLockFactory.createLock(MonitoredLockType.REACTOR, true);
+   private Lock hitLock = MonitoredReentrantLockFactory.createLock(MonitoredLockType.REACTOR_HIT, true);
 
-    public MapleReactor(MapleReactorStats stats, int rid) {
-        this.evstate = (byte) 0;
-        this.stats = stats;
-        this.rid = rid;
-        this.alive = true;
-    }
+   public MapleReactor(MapleReactorStats stats, int rid) {
+      this.evstate = (byte) 0;
+      this.stats = stats;
+      this.rid = rid;
+      this.alive = true;
+   }
 
-    public boolean getShouldCollect() {
-        return shouldCollect;
-    }
+   public boolean getShouldCollect() {
+      return shouldCollect;
+   }
 
-    public void setShouldCollect(boolean collect) {
-        this.shouldCollect = collect;
-    }
+   public void setShouldCollect(boolean collect) {
+      this.shouldCollect = collect;
+   }
 
-    public void lockReactor() {
-        reactorLock.lock();
-    }
+   public void lockReactor() {
+      reactorLock.lock();
+   }
 
-    public void unlockReactor() {
-        reactorLock.unlock();
-    }
+   public void unlockReactor() {
+      reactorLock.unlock();
+   }
 
-    public void hitLockReactor() {
-        hitLock.lock();
-        reactorLock.lock();
-    }
+   public void hitLockReactor() {
+      hitLock.lock();
+      reactorLock.lock();
+   }
 
-    public void hitUnlockReactor() {
-        reactorLock.unlock();
-        hitLock.unlock();
-    }
+   public void hitUnlockReactor() {
+      reactorLock.unlock();
+      hitLock.unlock();
+   }
 
-    public byte getState() {
-        return state;
-    }
+   public byte getState() {
+      return state;
+   }
 
-    public void setState(byte state) {
-        this.state = state;
-    }
+   public void setState(byte state) {
+      this.state = state;
+   }
 
-    public byte getEventState() {
-        return evstate;
-    }
+   public byte getEventState() {
+      return evstate;
+   }
 
-    public void setEventState(byte substate) {
-        this.evstate = substate;
-    }
+   public void setEventState(byte substate) {
+      this.evstate = substate;
+   }
 
-    public MapleReactorStats getStats() {
-        return stats;
-    }
+   public MapleReactorStats getStats() {
+      return stats;
+   }
 
-    public int getId() {
-        return rid;
-    }
+   public int getId() {
+      return rid;
+   }
 
-    public int getDelay() {
-        return delay;
-    }
+   public int getDelay() {
+      return delay;
+   }
 
-    public void setDelay(int delay) {
-        this.delay = delay;
-    }
+   public void setDelay(int delay) {
+      this.delay = delay;
+   }
 
-    @Override
-    public MapleMapObjectType getType() {
-        return MapleMapObjectType.REACTOR;
-    }
+   @Override
+   public MapleMapObjectType getType() {
+      return MapleMapObjectType.REACTOR;
+   }
 
-    public int getReactorType() {
-        return stats.getType(state);
-    }
+   public int getReactorType() {
+      return stats.getType(state);
+   }
 
-    public boolean isRecentHitFromAttack() {
-        return attackHit;
-    }
+   public boolean isRecentHitFromAttack() {
+      return attackHit;
+   }
 
-    public MapleMap getMap() {
-        return map;
-    }
+   public MapleMap getMap() {
+      return map;
+   }
 
-    public void setMap(MapleMap map) {
-        this.map = map;
-    }
+   public void setMap(MapleMap map) {
+      this.map = map;
+   }
 
-    public Pair<Integer, Integer> getReactItem(byte index) {
-        return stats.getReactItem(state, index);
-    }
+   public Pair<Integer, Integer> getReactItem(byte index) {
+      return stats.getReactItem(state, index);
+   }
 
-    public boolean isAlive() {
-        return alive;
-    }
+   public boolean isAlive() {
+      return alive;
+   }
 
-    public void setAlive(boolean alive) {
-        this.alive = alive;
-    }
+   public void setAlive(boolean alive) {
+      this.alive = alive;
+   }
 
-    public boolean isActive() {
-        return alive && stats.getType(state) != -1;
-    }
+   public boolean isActive() {
+      return alive && stats.getType(state) != -1;
+   }
 
-    @Override
-    public void sendDestroyData(MapleClient client) {
-        client.announce(makeDestroyData());
-    }
+   public Packet makeDestroyData() {
+      return CReactorPool.destroyReactor(this);
+   }
 
-    public final byte[] makeDestroyData() {
-        return CReactorPool.destroyReactor(this);
-    }
+   @Override
+   public void sendSpawnData(MapleClient client) {
+      if (this.isAlive()) {
+         client.sendPacket(makeSpawnData());
+      }
+   }
 
-    @Override
-    public void sendSpawnData(MapleClient client) {
-        if (this.isAlive()) {
-            client.announce(makeSpawnData());
-        }
-    }
+   @Override
+   public void sendDestroyData(MapleClient client) {
+      client.sendPacket(makeDestroyData());
+   }
 
-    public final byte[] makeSpawnData() {
-        return CReactorPool.spawnReactor(this);
-    }
+   public Packet makeSpawnData() {
+      return CReactorPool.spawnReactor(this);
+   }
 
-    public void resetReactorActions(int newState) {
-        setState((byte) newState);
-        cancelReactorTimeout();
-        setShouldCollect(true);
-        refreshReactorTimeout();
+   public void resetReactorActions(int newState) {
+      setState((byte) newState);
+      cancelReactorTimeout();
+      setShouldCollect(true);
+      refreshReactorTimeout();
 
-        if (map != null) {
-            map.searchItemReactors(this);
-        }
-    }
+      if (map != null) {
+         map.searchItemReactors(this);
+      }
+   }
 
-    public void forceHitReactor(final byte newState) {
-        this.lockReactor();
-        try {
-            this.resetReactorActions(newState);
-            map.broadcastMessage(CReactorPool.triggerReactor(this, (short) 0));
-        } finally {
-            this.unlockReactor();
-        }
-    }
+   public void forceHitReactor(final byte newState) {
+      this.lockReactor();
+      try {
+         this.resetReactorActions(newState);
+         map.broadcastMessage(CReactorPool.triggerReactor(this, (short) 0));
+      } finally {
+         this.unlockReactor();
+      }
+   }
 
-    private void tryForceHitReactor(final byte newState) {  // weak hit state signal, if already changed reactor state before timeout then drop this
-        if (!reactorLock.tryLock()) {
-            return;
-        }
+   private void tryForceHitReactor(
+         final byte newState) {  // weak hit state signal, if already changed reactor state before timeout then drop this
+      if (!reactorLock.tryLock()) {
+         return;
+      }
 
-        try {
-            this.resetReactorActions(newState);
-            map.broadcastMessage(CReactorPool.triggerReactor(this, (short) 0));
-        } finally {
-            reactorLock.unlock();
-        }
-    }
+      try {
+         this.resetReactorActions(newState);
+         map.broadcastMessage(CReactorPool.triggerReactor(this, (short) 0));
+      } finally {
+         reactorLock.unlock();
+      }
+   }
 
-    public void cancelReactorTimeout() {
-        if (timeoutTask != null) {
-            timeoutTask.cancel(false);
+   public void cancelReactorTimeout() {
+      if (timeoutTask != null) {
+         timeoutTask.cancel(false);
+         timeoutTask = null;
+      }
+   }
+
+   private void refreshReactorTimeout() {
+      int timeOut = stats.getTimeout(state);
+      if (timeOut > -1) {
+         final byte nextState = stats.getTimeoutState(state);
+
+         timeoutTask = TimerManager.getInstance().schedule(() -> {
             timeoutTask = null;
-        }
-    }
+            tryForceHitReactor(nextState);
+         }, timeOut);
+      }
+   }
 
-    private void refreshReactorTimeout() {
-        int timeOut = stats.getTimeout(state);
-        if (timeOut > -1) {
-            final byte nextState = stats.getTimeoutState(state);
+   public void delayedHitReactor(final MapleClient c, long delay) {
+      TimerManager.getInstance().schedule(() -> hitReactor(c), delay);
+   }
 
-            timeoutTask = TimerManager.getInstance().schedule(() -> {
-                timeoutTask = null;
-                tryForceHitReactor(nextState);
-            }, timeOut);
-        }
-    }
+   public void hitReactor(MapleClient c) {
+      hitReactor(false, 0, (short) 0, 0, c);
+   }
 
-    public void delayedHitReactor(final MapleClient c, long delay) {
-        TimerManager.getInstance().schedule(() -> hitReactor(c), delay);
-    }
+   public void hitReactor(boolean wHit, int charPos, short stance, int skillid, MapleClient c) {
+      try {
+         if (!this.isActive()) {
+            return;
+         }
 
-    public void hitReactor(MapleClient c) {
-        hitReactor(false, 0, (short) 0, 0, c);
-    }
-
-    public void hitReactor(boolean wHit, int charPos, short stance, int skillid, MapleClient c) {
-        try {
-            if (!this.isActive()) {
-                return;
-            }
-
-            if (hitLock.tryLock()) {
-                this.lockReactor();
-                try {
-                    cancelReactorTimeout();
-                    attackHit = wHit;
-
-                    if (YamlConfig.config.server.USE_DEBUG == true) {
-                        c.getPlayer().dropMessage(5, "Hitted REACTOR " + this.getId() + " with POS " + charPos + " , STANCE " + stance + " , SkillID " + skillid + " , STATE " + stats.getType(state) + " STATESIZE " + stats.getStateSize(state));
-                    }
-                    ReactorScriptManager.getInstance().onHit(c, this);
-
-                    int reactorType = stats.getType(state);
-                    if (reactorType < 999 && reactorType != -1) {//type 2 = only hit from right (kerning swamp plants), 00 is air left 02 is ground left
-                        if (!(reactorType == 2 && (stance == 0 || stance == 2))) { //get next state
-                            for (byte b = 0; b < stats.getStateSize(state); b++) {//YAY?
-                                List<Integer> activeSkills = stats.getActiveSkills(state, b);
-                                if (!activeSkills.contains(skillid)) {
-                                    continue;
-                                }
-                                state = stats.getNextState(state, b);
-                                if (stats.getNextState(state, b) == -1) {//end of reactor
-                                    if (reactorType < 100) {//reactor broken
-                                        if (delay > 0) {
-                                            map.destroyReactor(getObjectId());
-                                        } else {//trigger as normal
-                                            map.broadcastMessage(CReactorPool.triggerReactor(this, stance));
-                                        }
-                                    } else {//item-triggered on final step
-                                        map.broadcastMessage(CReactorPool.triggerReactor(this, stance));
-                                    }
-
-                                    ReactorScriptManager.getInstance().act(c, this);
-                                } else { //reactor not broken yet
-                                    map.broadcastMessage(CReactorPool.triggerReactor(this, stance));
-                                    if (state == stats.getNextState(state, b)) {//current state = next state, looping reactor
-                                        ReactorScriptManager.getInstance().act(c, this);
-                                    }
-
-                                    setShouldCollect(true);     // refresh collectability on item drop-based reactors
-                                    refreshReactorTimeout();
-                                    if (stats.getType(state) == 100) {
-                                        map.searchItemReactors(this);
-                                    }
-                                }
-                                break;
-                            }
-                        }
-                    } else {
-                        state++;
-                        map.broadcastMessage(CReactorPool.triggerReactor(this, stance));
-                        if (this.getId() != 9980000 && this.getId() != 9980001) {
-                            ReactorScriptManager.getInstance().act(c, this);
-                        }
-
-                        setShouldCollect(true);
-                        refreshReactorTimeout();
-                        if (stats.getType(state) == 100) {
-                            map.searchItemReactors(this);
-                        }
-                    }
-                } finally {
-                    this.unlockReactor();
-                    hitLock.unlock();   // non-encapsulated unlock found thanks to MiLin
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public boolean destroy() {
-        if (reactorLock.tryLock()) {
+         if (hitLock.tryLock()) {
+            this.lockReactor();
             try {
-                boolean alive = this.isAlive();
-                if (alive) {
-                    this.setAlive(false);
-                    this.cancelReactorTimeout();
+               cancelReactorTimeout();
+               attackHit = wHit;
 
-                    if (this.getDelay() > 0) {
-                        this.delayedRespawn();
-                    }
-                } else if (this.inDelayedRespawn()) {
-                    return false;
-                } else {
-                    return true;    // reactor neither alive nor in delayed respawn, remove map object allowed
-                }
+               if (YamlConfig.config.server.USE_DEBUG == true) {
+                  c.getPlayer().dropMessage(5,
+                        "Hitted REACTOR " + this.getId() + " with POS " + charPos + " , STANCE " + stance + " , SkillID " + skillid
+                              + " , STATE " + stats.getType(state) + " STATESIZE " + stats.getStateSize(state));
+               }
+               ReactorScriptManager.getInstance().onHit(c, this);
+
+               int reactorType = stats.getType(state);
+               if (reactorType < 999
+                     && reactorType != -1) {//type 2 = only hit from right (kerning swamp plants), 00 is air left 02 is ground left
+                  if (!(reactorType == 2 && (stance == 0 || stance == 2))) { //get next state
+                     for (byte b = 0; b < stats.getStateSize(state); b++) {//YAY?
+                        List<Integer> activeSkills = stats.getActiveSkills(state, b);
+                        if (!activeSkills.contains(skillid)) {
+                           continue;
+                        }
+                        state = stats.getNextState(state, b);
+                        if (stats.getNextState(state, b) == -1) {//end of reactor
+                           if (reactorType < 100) {//reactor broken
+                              if (delay > 0) {
+                                 map.destroyReactor(getObjectId());
+                              } else {//trigger as normal
+                                 map.broadcastMessage(CReactorPool.triggerReactor(this, stance));
+                              }
+                           } else {//item-triggered on final step
+                              map.broadcastMessage(CReactorPool.triggerReactor(this, stance));
+                           }
+
+                           ReactorScriptManager.getInstance().act(c, this);
+                        } else { //reactor not broken yet
+                           map.broadcastMessage(CReactorPool.triggerReactor(this, stance));
+                           if (state == stats.getNextState(state, b)) {//current state = next state, looping reactor
+                              ReactorScriptManager.getInstance().act(c, this);
+                           }
+
+                           setShouldCollect(true);     // refresh collectability on item drop-based reactors
+                           refreshReactorTimeout();
+                           if (stats.getType(state) == 100) {
+                              map.searchItemReactors(this);
+                           }
+                        }
+                        break;
+                     }
+                  }
+               } else {
+                  state++;
+                  map.broadcastMessage(CReactorPool.triggerReactor(this, stance));
+                  if (this.getId() != 9980000 && this.getId() != 9980001) {
+                     ReactorScriptManager.getInstance().act(c, this);
+                  }
+
+                  setShouldCollect(true);
+                  refreshReactorTimeout();
+                  if (stats.getType(state) == 100) {
+                     map.searchItemReactors(this);
+                  }
+               }
             } finally {
-                reactorLock.unlock();
+               this.unlockReactor();
+               hitLock.unlock();   // non-encapsulated unlock found thanks to MiLin
             }
-        }
+         }
+      } catch (Exception e) {
+         e.printStackTrace();
+      }
+   }
 
-        map.broadcastMessage(CReactorPool.destroyReactor(this));
-        return false;
-    }
+   public boolean destroy() {
+      if (reactorLock.tryLock()) {
+         try {
+            boolean alive = this.isAlive();
+            if (alive) {
+               this.setAlive(false);
+               this.cancelReactorTimeout();
 
-    private void respawn() {
-        this.lockReactor();
-        try {
-            this.resetReactorActions(0);
-            this.setAlive(true);
-        } finally {
-            this.unlockReactor();
-        }
+               if (this.getDelay() > 0) {
+                  this.delayedRespawn();
+               }
+            } else if (this.inDelayedRespawn()) {
+               return false;
+            } else {
+               return true;    // reactor neither alive nor in delayed respawn, remove map object allowed
+            }
+         } finally {
+            reactorLock.unlock();
+         }
+      }
 
-        map.broadcastMessage(this.makeSpawnData());
-    }
+      map.broadcastMessage(CReactorPool.destroyReactor(this));
+      return false;
+   }
 
-    public void delayedRespawn() {
-        Runnable r = () -> {
-            delayedRespawnRun = null;
-            respawn();
-        };
+   private void respawn() {
+      this.lockReactor();
+      try {
+         this.resetReactorActions(0);
+         this.setAlive(true);
+      } finally {
+         this.unlockReactor();
+      }
 
-        delayedRespawnRun = r;
+      map.broadcastMessage(this.makeSpawnData());
+   }
 
-        OverallService service = (OverallService) map.getChannelServer().getServiceAccess(ChannelServices.OVERALL);
-        service.registerOverallAction(map.getId(), r, this.getDelay());
-    }
+   public void delayedRespawn() {
+      Runnable r = () -> {
+         delayedRespawnRun = null;
+         respawn();
+      };
 
-    public boolean forceDelayedRespawn() {
-        Runnable r = delayedRespawnRun;
+      delayedRespawnRun = r;
 
-        if (r != null) {
-            OverallService service = (OverallService) map.getChannelServer().getServiceAccess(ChannelServices.OVERALL);
-            service.forceRunOverallAction(map.getId(), r);
-            return true;
-        } else {
-            return false;
-        }
-    }
+      OverallService service = (OverallService) map.getChannelServer().getServiceAccess(ChannelServices.OVERALL);
+      service.registerOverallAction(map.getId(), r, this.getDelay());
+   }
 
-    public boolean inDelayedRespawn() {
-        return delayedRespawnRun != null;
-    }
+   public boolean forceDelayedRespawn() {
+      Runnable r = delayedRespawnRun;
 
-    public Rectangle getArea() {
-        return new Rectangle(getPosition().x + stats.getTL().x, getPosition().y + stats.getTL().y, stats.getBR().x - stats.getTL().x, stats.getBR().y - stats.getTL().y);
-    }
+      if (r != null) {
+         OverallService service = (OverallService) map.getChannelServer().getServiceAccess(ChannelServices.OVERALL);
+         service.forceRunOverallAction(map.getId(), r);
+         return true;
+      } else {
+         return false;
+      }
+   }
 
-    public String getName() {
-        return name;
-    }
+   public boolean inDelayedRespawn() {
+      return delayedRespawnRun != null;
+   }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+   public Rectangle getArea() {
+      return new Rectangle(getPosition().x + stats.getTL().x, getPosition().y + stats.getTL().y, stats.getBR().x - stats.getTL().x,
+            stats.getBR().y - stats.getTL().y);
+   }
 
-    public GuardianSpawnPoint getGuardian() {
-        return guardian;
-    }
+   public String getName() {
+      return name;
+   }
 
-    public void setGuardian(GuardianSpawnPoint guardian) {
-        this.guardian = guardian;
-    }
+   public void setName(String name) {
+      this.name = name;
+   }
 
-    public final byte getFacingDirection() {
-        return facingDirection;
-    }
+   public GuardianSpawnPoint getGuardian() {
+      return guardian;
+   }
 
-    public final void setFacingDirection(final byte facingDirection) {
-        this.facingDirection = facingDirection;
-    }
+   public void setGuardian(GuardianSpawnPoint guardian) {
+      this.guardian = guardian;
+   }
+
+   public final byte getFacingDirection() {
+      return facingDirection;
+   }
+
+   public final void setFacingDirection(final byte facingDirection) {
+      this.facingDirection = facingDirection;
+   }
 }

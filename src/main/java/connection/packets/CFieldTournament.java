@@ -1,51 +1,42 @@
 package connection.packets;
 
 import connection.constants.SendOpcode;
-import tools.data.output.MaplePacketLittleEndianWriter;
+import net.packet.OutPacket;
+import net.packet.Packet;
 
 public class CFieldTournament {
-    private static byte[] Tournament__Tournament(byte nState, byte nSubState) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.TOURNAMENT.getValue());
-        mplew.write(nState);
-        mplew.write(nSubState);
-        return mplew.getPacket();
-    }
+   public static Packet Tournament__Tournament(byte nState, byte nSubState) {
+      final OutPacket p = OutPacket.create(SendOpcode.TOURNAMENT);
+      p.writeByte(nState);
+      p.writeByte(nSubState);
+      return p;
+   }
 
-    private static byte[] Tournament__MatchTable(byte nState, byte nSubState) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.TOURNAMENT_MATCH_TABLE.getValue()); //Prompts CMatchTableDlg Modal
-        return mplew.getPacket();
-    }
+   public static Packet Tournament__MatchTable(byte nState, byte nSubState) {
+      return OutPacket.create(SendOpcode.TOURNAMENT_MATCH_TABLE);
+   }
 
-    private static byte[] Tournament__SetPrize(byte bSetPrize, byte bHasPrize, int nItemID1, int nItemID2) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.TOURNAMENT_SET_PRIZE.getValue());
+   public static Packet Tournament__SetPrize(byte bSetPrize, byte bHasPrize, int nItemID1, int nItemID2) {
+      final OutPacket p = OutPacket.create(SendOpcode.TOURNAMENT_SET_PRIZE);
+      //0 = "You have failed the set the prize. Please check the item number again."
+      //1 = "You have successfully set the prize."
+      p.writeByte(bSetPrize);
+      p.writeByte(bHasPrize);
 
-        //0 = "You have failed the set the prize. Please check the item number again."
-        //1 = "You have successfully set the prize."
-        mplew.write(bSetPrize);
+      if (bHasPrize != 0) {
+         p.writeInt(nItemID1);
+         p.writeInt(nItemID2);
+      }
+      return p;
+   }
 
-        mplew.write(bHasPrize);
-
-        if (bHasPrize != 0) {
-            mplew.writeInt(nItemID1);
-            mplew.writeInt(nItemID2);
-        }
-
-        return mplew.getPacket();
-    }
-
-    private static byte[] Tournament__UEW(byte nState) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.TOURNAMENT_UEW.getValue());
-
-        //Is this a bitflag o.o ?
-        //2 = "You have reached the finals by default."
-        //4 = "You have reached the semifinals by default."
-        //8 or 16 = "You have reached the round of %n by default." | Encodes nState as %n ?!
-        mplew.write(nState);
-
-        return mplew.getPacket();
-    }
+   public static Packet Tournament__UEW(byte nState) {
+      final OutPacket p = OutPacket.create(SendOpcode.TOURNAMENT_UEW);
+      //Is this a bitflag o.o ?
+      //2 = "You have reached the finals by default."
+      //4 = "You have reached the semifinals by default."
+      //8 or 16 = "You have reached the round of %n by default." | Encodes nState as %n ?!
+      p.writeByte(nState);
+      return p;
+   }
 }

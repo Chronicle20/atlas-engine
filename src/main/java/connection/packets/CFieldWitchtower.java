@@ -1,13 +1,13 @@
 package connection.packets;
 
 import connection.constants.SendOpcode;
-import tools.data.output.MaplePacketLittleEndianWriter;
+import net.packet.OutPacket;
+import net.packet.Packet;
 
 public class CFieldWitchtower {
-    public static byte[] updateWitchTowerScore(int score) {
-        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.WITCH_TOWER_SCORE_UPDATE.getValue());
-        mplew.write(score);
-        return mplew.getPacket();
-    }
+   public static Packet updateWitchTowerScore(int score) {
+      final OutPacket p = OutPacket.create(SendOpcode.WITCH_TOWER_SCORE_UPDATE);
+      p.writeByte(score);
+      return p;
+   }
 }

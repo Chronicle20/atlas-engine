@@ -1,41 +1,37 @@
 package connection.packets;
 
 import connection.constants.SendOpcode;
-import tools.data.output.MaplePacketLittleEndianWriter;
+import net.packet.OutPacket;
+import net.packet.Packet;
 
 public class CRPSGameDlg {
-    // RPS_GAME packets thanks to Arnah (Vertisy)
-    public static byte[] openRPSNPC() {
-        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.RPS_GAME.getValue());
-        mplew.write(8);// open npc
-        mplew.writeInt(9000019);
-        return mplew.getPacket();
-    }
+   public static Packet openRPSNPC() {
+      final OutPacket p = OutPacket.create(SendOpcode.RPS_GAME);
+      p.writeByte(8);// open npc
+      p.writeInt(9000019);
+      return p;
+   }
 
-    public static byte[] rpsMesoError(int mesos) {
-        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.RPS_GAME.getValue());
-        mplew.write(0x06);
-        if (mesos != -1) {
-            mplew.writeInt(mesos);
-        }
-        return mplew.getPacket();
-    }
+   public static Packet rpsMesoError(int mesos) {
+      final OutPacket p = OutPacket.create(SendOpcode.RPS_GAME);
+      p.writeByte(0x06);
+      if (mesos != -1) {
+         p.writeInt(mesos);
+      }
+      return p;
+   }
 
-    public static byte[] rpsSelection(byte selection, byte answer) {
-        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.RPS_GAME.getValue());
-        mplew.write(0x0B);// 11l
-        mplew.write(selection);
-        mplew.write(answer);
-        return mplew.getPacket();
-    }
+   public static Packet rpsSelection(byte selection, byte answer) {
+      final OutPacket p = OutPacket.create(SendOpcode.RPS_GAME);
+      p.writeByte(0x0B);// 11l
+      p.writeByte(selection);
+      p.writeByte(answer);
+      return p;
+   }
 
-    public static byte[] rpsMode(byte mode) {
-        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.RPS_GAME.getValue());
-        mplew.write(mode);
-        return mplew.getPacket();
-    }
+   public static Packet rpsMode(byte mode) {
+      final OutPacket p = OutPacket.create(SendOpcode.RPS_GAME);
+      p.writeByte(mode);
+      return p;
+   }
 }

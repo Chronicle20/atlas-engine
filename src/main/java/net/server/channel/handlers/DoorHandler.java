@@ -1,24 +1,3 @@
-/*
-	This file is part of the OdinMS Maple Story Server
-    Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
-		       Matthias Butz <matze@odinms.de>
-		       Jan Christian Meyer <vimes@odinms.de>
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Affero General Public License as
-    published by the Free Software Foundation version 3 as published by
-    the Free Software Foundation. You may not use, modify or distribute
-    this program under any other version of the GNU Affero General Public
-    License.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Affero General Public License for more details.
-
-    You should have received a copy of the GNU Affero General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 package net.server.channel.handlers;
 
 import client.MapleCharacter;
@@ -26,35 +5,32 @@ import client.MapleClient;
 import connection.packets.CMapLoadable;
 import connection.packets.CWvsContext;
 import net.AbstractMaplePacketHandler;
+import net.packet.InPacket;
 import server.maps.MapleDoorObject;
 import server.maps.MapleMapObject;
-import tools.data.input.SeekableLittleEndianAccessor;
 
-/**
- * @author Matze
- */
 public final class DoorHandler extends AbstractMaplePacketHandler {
-    @Override
-    public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-        int ownerid = slea.readInt();
-        slea.readByte(); // specifies if backwarp or not, 1 town to target, 0 target to town
+   @Override
+   public void handlePacket(InPacket p, MapleClient c) {
+      int ownerid = p.readInt();
+      p.readByte(); // specifies if backwarp or not, 1 town to target, 0 target to town
 
-        MapleCharacter chr = c.getPlayer();
-        if (chr.isChangingMaps() || chr.isBanned()) {
-            c.announce(CWvsContext.enableActions());
-            return;
-        }
+      MapleCharacter chr = c.getPlayer();
+      if (chr.isChangingMaps() || chr.isBanned()) {
+         c.sendPacket(CWvsContext.enableActions());
+         return;
+      }
 
-        for (MapleMapObject obj : chr.getMap().getMapObjects()) {
-            if (obj instanceof MapleDoorObject door) {
-               if (door.getOwnerId() == ownerid) {
-                    door.warp(chr);
-                    return;
-                }
+      for (MapleMapObject obj : chr.getMap().getMapObjects()) {
+         if (obj instanceof MapleDoorObject door) {
+            if (door.getOwnerId() == ownerid) {
+               door.warp(chr);
+               return;
             }
-        }
+         }
+      }
 
-        c.announce(CMapLoadable.blockedMessage(6));
-        c.announce(CWvsContext.enableActions());
-    }
+      c.sendPacket(CMapLoadable.blockedMessage(6));
+      c.sendPacket(CWvsContext.enableActions());
+   }
 }

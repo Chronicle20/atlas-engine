@@ -27,19 +27,19 @@ import client.newyear.NewYearCardRecord;
 import constants.game.ExpTable;
 import constants.game.GameConstants;
 import constants.inventory.ItemConstants;
+import net.packet.InPacket;
+import net.packet.OutPacket;
 import server.ItemInformationProvider;
 import server.maps.MapleMiniGame;
 import server.maps.MaplePlayerShop;
 import tools.Pair;
 import tools.StringUtil;
-import tools.data.input.SeekableLittleEndianAccessor;
-import tools.data.output.LittleEndianWriter;
-import tools.data.output.MaplePacketLittleEndianWriter;
 
 public class CCommon {
    public final static long ZERO_TIME = 94354848000000000L;//00 40 E0 FD 3B 37 4F 01
-   private final static long FT_UT_OFFSET = 116444736010800000L + (10000L * TimeZone.getDefault()
-         .getOffset(System.currentTimeMillis())); // normalize with timezone offset suggested by Ari
+   private final static long FT_UT_OFFSET =
+         116444736010800000L + (10000L * TimeZone.getDefault().getOffset(System.currentTimeMillis()));
+   // normalize with timezone offset suggested by Ari
    private final static long DEFAULT_TIME = 150842304000000000L;//00 80 05 BB 46 E6 17 02
    private final static long PERMANENT = 150841440000000000L; // 00 C0 9B 90 7D E5 17 02
 
@@ -57,15 +57,15 @@ public class CCommon {
       return utcTimestamp * 10000 + FT_UT_OFFSET;
    }
 
-   static void addExpirationTime(final MaplePacketLittleEndianWriter mplew, long time) {
-      mplew.writeLong(getTime(time)); // offset expiration time issue found thanks to Thora
+   static void addExpirationTime(OutPacket p, long time) {
+      p.writeLong(getTime(time)); // offset expiration time issue found thanks to Thora
    }
 
-   static void addItemInfo(final MaplePacketLittleEndianWriter mplew, Item item) {
-      addItemInfo(mplew, item, false);
+   static void addItemInfo(OutPacket p, Item item) {
+      addItemInfo(p, item, false);
    }
 
-   public static void addItemInfo(final MaplePacketLittleEndianWriter mplew, Item item, boolean zeroPosition) {
+   public static void addItemInfo(OutPacket p, Item item, boolean zeroPosition) {
       ItemInformationProvider ii = ItemInformationProvider.getInstance();
       boolean isCash = ii.isCash(item.getItemId());
       boolean isRing = false;
@@ -81,151 +81,144 @@ public class CCommon {
             if (pos < 0) {
                pos *= -1;
             }
-            mplew.writeShort(pos > 100 ? pos - 100 : pos);
+            p.writeShort(pos > 100 ? pos - 100 : pos);
          } else {
-            mplew.write(pos);
+            p.writeByte(pos);
          }
       }
-      mplew.write(itemType);
-      mplew.writeInt(item.getItemId());
-      mplew.writeBool(isCash);
+      p.writeByte(itemType);
+      p.writeInt(item.getItemId());
+      p.writeBool(isCash);
       if (isCash) {
-         mplew.writeLong(item.isPet() ? item.getPetId()
-               .orElse(-1) : isRing ? equip.getRingId() : item.getCashId());
+         p.writeLong(item.isPet() ? item.getPetId().orElse(-1) : isRing ? equip.getRingId() : item.getCashId());
       }
-      addExpirationTime(mplew, item.getExpiration());
+      addExpirationTime(p, item.getExpiration());
       if (item.isPet()) {
-         MaplePet pet = item.getPet()
-               .orElseThrow();
-         mplew.writeAsciiString(StringUtil.getRightPaddedStr(pet.getName(), '\0', 13));
-         mplew.write(pet.getLevel());
-         mplew.writeShort(pet.getCloseness());
-         mplew.write(pet.getFullness());
-         addExpirationTime(mplew, item.getExpiration());
+         MaplePet pet = item.getPet().orElseThrow();
+         p.writeFixedString(StringUtil.getRightPaddedStr(pet.getName(), '\0', 13));
+         p.writeByte(pet.getLevel());
+         p.writeShort(pet.getCloseness());
+         p.writeByte(pet.getFullness());
+         addExpirationTime(p, item.getExpiration());
          //TODO temporarily enable pet skills. Need to programmatically ensure the user has these items.
          //0x01(item pickup), 0x02(expand pickup), 0x04(auto pickup), 0x08(unpickable), 0x10(left over pickup), 0x20(hp charge), 0x40(mp charge), 0x80(buff), 0x100(draw), 0x200(dialog)
-         mplew.writeShort(0); // nPetAttribute
-         mplew.writeShort(0x01 | 0x02 | 0x04 | 0x8 | 0x10);
+         p.writeShort(0); // nPetAttribute
+         p.writeShort(0x01 | 0x02 | 0x04 | 0x8 | 0x10);
 
-         mplew.writeInt(100); // nRemainLife
-         mplew.writeShort(0); // nAttribute
+         p.writeInt(100); // nRemainLife
+         p.writeShort(0); // nAttribute
          return;
       }
       if (equip == null) {
-         mplew.writeShort(item.getQuantity());
-         mplew.writeMapleAsciiString(item.getOwner());
-         mplew.writeShort(item.getFlag()); // flag
+         p.writeShort(item.getQuantity());
+         p.writeString(item.getOwner());
+         p.writeShort(item.getFlag()); // flag
 
          if (ItemConstants.isRechargeable(item.getItemId())) {
-            mplew.writeLong(0);// liSN
+            p.writeLong(0);// liSN
          }
          return;
       }
-      mplew.write(equip.getUpgradeSlots()); // upgrade slots
-      mplew.write(equip.getLevel()); // level
-      mplew.write(0);
-      mplew.writeShort(equip.getStr()); // str
-      mplew.writeShort(equip.getDex()); // dex
-      mplew.writeShort(equip.getInt()); // int
-      mplew.writeShort(equip.getLuk()); // luk
-      mplew.writeShort(equip.getHp()); // hp
-      mplew.writeShort(equip.getMp()); // mp
-      mplew.writeShort(equip.getWatk()); // watk
-      mplew.writeShort(equip.getMatk()); // matk
-      mplew.writeShort(equip.getWdef()); // wdef
-      mplew.writeShort(equip.getMdef()); // mdef
-      mplew.writeShort(equip.getAcc()); // accuracy
-      mplew.writeShort(equip.getAvoid()); // avoid
-      mplew.writeShort(equip.getHands()); // hands
-      mplew.writeShort(equip.getSpeed()); // speed
-      mplew.writeShort(equip.getJump()); // jump
-      mplew.writeMapleAsciiString(equip.getOwner()); // owner name
-      mplew.writeShort(equip.getFlag()); //Item Flags
+      p.writeByte(equip.getUpgradeSlots()); // upgrade slots
+      p.writeByte(equip.getLevel()); // level
+      p.writeByte(0);
+      p.writeShort(equip.getStr()); // str
+      p.writeShort(equip.getDex()); // dex
+      p.writeShort(equip.getInt()); // int
+      p.writeShort(equip.getLuk()); // luk
+      p.writeShort(equip.getHp()); // hp
+      p.writeShort(equip.getMp()); // mp
+      p.writeShort(equip.getWatk()); // watk
+      p.writeShort(equip.getMatk()); // matk
+      p.writeShort(equip.getWdef()); // wdef
+      p.writeShort(equip.getMdef()); // mdef
+      p.writeShort(equip.getAcc()); // accuracy
+      p.writeShort(equip.getAvoid()); // avoid
+      p.writeShort(equip.getHands()); // hands
+      p.writeShort(equip.getSpeed()); // speed
+      p.writeShort(equip.getJump()); // jump
+      p.writeString(equip.getOwner()); // owner name
+      p.writeShort(equip.getFlag()); //Item Flags
 
       int itemLevel = equip.getItemLevel();
 
       long expNibble = ((long) ExpTable.getExpNeededForLevel(ii.getEquipLevelReq(item.getItemId())) * equip.getItemExp());
       expNibble /= ExpTable.getEquipExpNeededForLevel(itemLevel);
 
-      mplew.write(0);
-      mplew.write(itemLevel); //Item Level
+      p.writeByte(0);
+      p.writeByte(itemLevel); //Item Level
       if (isCash) {
-         mplew.writeInt(0);
+         p.writeInt(0);
       } else {
-         mplew.writeInt((int) expNibble);
+         p.writeInt((int) expNibble);
       }
-      mplew.writeInt(-1);// nDurability
+      p.writeInt(-1);// nDurability
 
-      mplew.write(0);
-      mplew.writeShort(0);
-      mplew.writeShort(0);
-      mplew.writeShort(0);
-      mplew.writeShort(0);
-      mplew.writeShort(0);
-      mplew.writeInt(0);
+      p.writeByte(0);
+      p.writeShort(0);
+      p.writeShort(0);
+      p.writeShort(0);
+      p.writeShort(0);
+      p.writeShort(0);
+      p.writeInt(0);
 
       if (!isCash) {
-         mplew.writeLong(0);
+         p.writeLong(0);
       }
-      mplew.writeLong(0);
-      mplew.writeInt(-1);
+      p.writeLong(0);
+      p.writeInt(-1);
    }
 
-   public static void addCharLook(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr, boolean mega) {
-      mplew.write(chr.getGender());
-      mplew.write(chr.getSkinColor()
-            .getId());
-      mplew.writeInt(chr.getFace());
-      mplew.write(mega ? 0 : 1);
-      mplew.writeInt(chr.getHair());
-      addCharEquips(mplew, chr);
+   public static void addCharLook(OutPacket p, MapleCharacter chr, boolean mega) {
+      p.writeByte(chr.getGender());
+      p.writeByte(chr.getSkinColor().getId());
+      p.writeInt(chr.getFace());
+      p.writeByte(mega ? 0 : 1);
+      p.writeInt(chr.getHair());
+      addCharEquips(p, chr);
    }
 
-   public static void addCharStats(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
-      mplew.writeInt(chr.getId()); // character id
-      mplew.writeAsciiString(StringUtil.getRightPaddedStr(chr.getName(), '\0', 13));
-      mplew.write(chr.getGender()); // gender (0 = male, 1 = female)
-      mplew.write(chr.getSkinColor()
-            .getId()); // skin color
-      mplew.writeInt(chr.getFace()); // face
-      mplew.writeInt(chr.getHair()); // hair
+   public static void addCharStats(OutPacket p, MapleCharacter chr) {
+      p.writeInt(chr.getId()); // character id
+      p.writeFixedString(StringUtil.getRightPaddedStr(chr.getName(), '\0', 13));
+      p.writeByte(chr.getGender()); // gender (0 = male, 1 = female)
+      p.writeByte(chr.getSkinColor().getId()); // skin color
+      p.writeInt(chr.getFace()); // face
+      p.writeInt(chr.getHair()); // hair
 
       for (int i = 0; i < 3; i++) {
-         mplew.writeLong(chr.getPet(i)
-               .map(MaplePet::getUniqueId)
-               .orElse(0));
+         p.writeLong(chr.getPet(i).map(MaplePet::getUniqueId).orElse(0));
       }
 
-      mplew.write(chr.getLevel()); // level
-      mplew.writeShort(chr.getJob()
-            .getId()); // job
-      mplew.writeShort(chr.getStr()); // str
-      mplew.writeShort(chr.getDex()); // dex
-      mplew.writeShort(chr.getInt()); // int
-      mplew.writeShort(chr.getLuk()); // luk
-      mplew.writeShort(chr.getHp()); // hp (?)
-      mplew.writeShort(chr.getClientMaxHp()); // maxhp
-      mplew.writeShort(chr.getMp()); // mp (?)
-      mplew.writeShort(chr.getClientMaxMp()); // maxmp
-      mplew.writeShort(chr.getRemainingAp()); // remaining ap
+      p.writeByte(chr.getLevel()); // level
+      p.writeShort(chr.getJob().getId()); // job
+      p.writeShort(chr.getStr()); // str
+      p.writeShort(chr.getDex()); // dex
+      p.writeShort(chr.getInt()); // int
+      p.writeShort(chr.getLuk()); // luk
+      p.writeShort(chr.getHp()); // hp (?)
+      p.writeShort(chr.getClientMaxHp()); // maxhp
+      p.writeShort(chr.getMp()); // mp (?)
+      p.writeShort(chr.getClientMaxMp()); // maxmp
+      p.writeShort(chr.getRemainingAp()); // remaining ap
       if (GameConstants.hasSPTable(chr.getJob())) {
-         addRemainingSkillInfo(mplew, chr);
+         addRemainingSkillInfo(p, chr);
       } else {
-         mplew.writeShort(chr.getRemainingSp()); // remaining sp
+         p.writeShort(chr.getRemainingSp()); // remaining sp
       }
-      mplew.writeInt(chr.getExp()); // current exp
-      mplew.writeShort(chr.getFame()); // fame
-      mplew.writeInt(chr.getGachaExp()); //Gacha Exp
-      mplew.writeInt(chr.getMapId()); // current map id
-      mplew.write(chr.getInitialSpawnpoint()); // spawnpoint
-      mplew.writeShort(0); // getSubCategory
-      mplew.writeLong(0);
-      mplew.writeInt(0);
-      mplew.writeInt(0);
-      mplew.writeInt(0);
+      p.writeInt(chr.getExp()); // current exp
+      p.writeShort(chr.getFame()); // fame
+      p.writeInt(chr.getGachaExp()); //Gacha Exp
+      p.writeInt(chr.getMapId()); // current map id
+      p.writeByte(chr.getInitialSpawnpoint()); // spawnpoint
+      p.writeShort(0); // getSubCategory
+      p.writeLong(0);
+      p.writeInt(0);
+      p.writeInt(0);
+      p.writeInt(0);
    }
 
-   private static void addRemainingSkillInfo(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
+   private static void addRemainingSkillInfo(OutPacket p, MapleCharacter chr) {
       int[] remainingSp = chr.getRemainingSps();
       int effectiveLength = 0;
       for (int j : remainingSp) {
@@ -234,19 +227,18 @@ public class CCommon {
          }
       }
 
-      mplew.write(effectiveLength);
+      p.writeByte(effectiveLength);
       for (int i = 0; i < remainingSp.length; i++) {
          if (remainingSp[i] > 0) {
-            mplew.write(i + 1);
-            mplew.write(remainingSp[i]);
+            p.writeByte(i + 1);
+            p.writeByte(remainingSp[i]);
          }
       }
    }
 
-   private static void addCharEquips(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
+   private static void addCharEquips(OutPacket p, MapleCharacter chr) {
       MapleInventory equip = chr.getInventory(MapleInventoryType.EQUIPPED);
-      Collection<Item> ii = ItemInformationProvider.getInstance()
-            .canWearEquipment(chr, equip.list());
+      Collection<Item> ii = ItemInformationProvider.getInstance().canWearEquipment(chr, equip.list());
       Map<Short, Integer> myEquip = new LinkedHashMap<>();
       Map<Short, Integer> maskedEquip = new LinkedHashMap<>();
       for (Item item : ii) {
@@ -264,39 +256,37 @@ public class CCommon {
          }
       }
       for (Map.Entry<Short, Integer> entry : myEquip.entrySet()) {
-         mplew.write(entry.getKey());
-         mplew.writeInt(entry.getValue());
+         p.writeByte(entry.getKey());
+         p.writeInt(entry.getValue());
       }
-      mplew.write(0xFF);
+      p.writeByte(0xFF);
       for (Map.Entry<Short, Integer> entry : maskedEquip.entrySet()) {
-         mplew.write(entry.getKey());
-         mplew.writeInt(entry.getValue());
+         p.writeByte(entry.getKey());
+         p.writeInt(entry.getValue());
       }
-      mplew.write(0xFF);
+      p.writeByte(0xFF);
       Item cWeapon = equip.getItem((short) -111);
-      mplew.writeInt(cWeapon != null ? cWeapon.getItemId() : 0);
+      p.writeInt(cWeapon != null ? cWeapon.getItemId() : 0);
       for (int i = 0; i < 3; i++) {
-         mplew.writeInt(chr.getPet(i)
-               .map(Item::getItemId)
-               .orElse(0));
+         p.writeInt(chr.getPet(i).map(Item::getItemId).orElse(0));
       }
    }
 
-   public static void encodeNewYearCard(NewYearCardRecord newyear, MaplePacketLittleEndianWriter mplew) {
-      mplew.writeInt(newyear.getId());
-      mplew.writeInt(newyear.getSenderId());
-      mplew.writeMapleAsciiString(newyear.getSenderName());
-      mplew.writeBool(newyear.isSenderCardDiscarded());
-      mplew.writeLong(newyear.getDateSent());
-      mplew.writeInt(newyear.getReceiverId());
-      mplew.writeMapleAsciiString(newyear.getReceiverName());
-      mplew.writeBool(newyear.isReceiverCardDiscarded());
-      mplew.writeBool(newyear.isReceiverCardReceived());
-      mplew.writeLong(newyear.getDateReceived());
-      mplew.writeMapleAsciiString(newyear.getMessage());
+   public static void encodeNewYearCard(NewYearCardRecord newyear, OutPacket p) {
+      p.writeInt(newyear.getId());
+      p.writeInt(newyear.getSenderId());
+      p.writeString(newyear.getSenderName());
+      p.writeBool(newyear.isSenderCardDiscarded());
+      p.writeLong(newyear.getDateSent());
+      p.writeInt(newyear.getReceiverId());
+      p.writeString(newyear.getReceiverName());
+      p.writeBool(newyear.isReceiverCardDiscarded());
+      p.writeBool(newyear.isReceiverCardReceived());
+      p.writeLong(newyear.getDateReceived());
+      p.writeString(newyear.getMessage());
    }
 
-   public static void addRingLook(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr, boolean crush) {
+   public static void addRingLook(OutPacket p, MapleCharacter chr, boolean crush) {
       List<MapleRing> rings;
       if (crush) {
          rings = chr.getCrushRings();
@@ -308,136 +298,127 @@ public class CCommon {
          if (ring.equipped()) {
             if (yes == false) {
                yes = true;
-               mplew.write(1);
+               p.writeByte(1);
             }
-            mplew.writeInt(ring.getRingId());
-            mplew.writeInt(0);
-            mplew.writeInt(ring.getPartnerRingId());
-            mplew.writeInt(0);
-            mplew.writeInt(ring.getItemId());
+            p.writeInt(ring.getRingId());
+            p.writeInt(0);
+            p.writeInt(ring.getPartnerRingId());
+            p.writeInt(0);
+            p.writeInt(ring.getItemId());
          }
       }
       if (yes == false) {
-         mplew.write(0);
+         p.writeByte(0);
       }
    }
 
-   public static void addMarriageRingLook(MapleClient target, final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
+   public static void addMarriageRingLook(MapleClient target, OutPacket p, MapleCharacter chr) {
       Optional<MapleRing> ring = chr.getMarriageRing();
 
-      if (ring.isEmpty() || !ring.get()
-            .equipped()) {
-         mplew.write(0);
+      if (ring.isEmpty() || !ring.get().equipped()) {
+         p.writeByte(0);
          return;
       }
 
-      mplew.write(1);
+      p.writeByte(1);
       MapleCharacter targetChr = target.getPlayer();
       if (targetChr != null && targetChr.getPartnerId() == chr.getId()) {
-         mplew.writeInt(0);
-         mplew.writeInt(0);
+         p.writeInt(0);
+         p.writeInt(0);
       } else {
-         mplew.writeInt(chr.getId());
-         mplew.writeInt(ring.get()
-               .getPartnerChrId());
+         p.writeInt(chr.getId());
+         p.writeInt(ring.get().getPartnerChrId());
       }
-      mplew.writeInt(ring.get()
-            .getItemId());
+      p.writeInt(ring.get().getItemId());
    }
 
    /**
     * Adds a announcement box to an existing MaplePacketLittleEndianWriter.
     *
-    * @param mplew The MaplePacketLittleEndianWriter to add an announcement box
-    *              to.
-    * @param shop  The shop to announce.
+    * @param p    The MaplePacketLittleEndianWriter to add an announcement box
+    *             to.
+    * @param shop The shop to sendPacket.
     */
-   public static void addAnnounceBox(final MaplePacketLittleEndianWriter mplew, MaplePlayerShop shop, int availability) {
-      mplew.write(4);
-      mplew.writeInt(shop.getObjectId());
-      mplew.writeMapleAsciiString(shop.getDescription());
-      mplew.write(0);
-      mplew.write(0);
-      mplew.write(1);
-      mplew.write(availability);
-      mplew.write(0);
+   public static void addAnnounceBox(OutPacket p, MaplePlayerShop shop, int availability) {
+      p.writeByte(4);
+      p.writeInt(shop.getObjectId());
+      p.writeString(shop.getDescription());
+      p.writeByte(0);
+      p.writeByte(0);
+      p.writeByte(1);
+      p.writeByte(availability);
+      p.writeByte(0);
    }
 
-   public static void addAnnounceBox(final MaplePacketLittleEndianWriter mplew, MapleMiniGame game, int ammount, int joinable) {
-      mplew.write(game.getGameType()
-            .getValue());
-      mplew.writeInt(game.getObjectId()); // gameid/shopid
-      mplew.writeMapleAsciiString(game.getDescription()); // desc
-      mplew.writeBool(!game.getPassword()
-            .isEmpty());    // password here, thanks GabrielSin
-      mplew.write(game.getPieceType());
-      mplew.write(ammount);
-      mplew.write(2);         //player capacity
-      mplew.write(joinable);
+   public static void addAnnounceBox(OutPacket p, MapleMiniGame game, int ammount, int joinable) {
+      p.writeByte(game.getGameType().getValue());
+      p.writeInt(game.getObjectId()); // gameid/shopid
+      p.writeString(game.getDescription()); // desc
+      p.writeBool(!game.getPassword().isEmpty());    // password here, thanks GabrielSin
+      p.writeByte(game.getPieceType());
+      p.writeByte(ammount);
+      p.writeByte(2);         //player capacity
+      p.writeByte(joinable);
    }
 
-   public static void rebroadcastMovementList(LittleEndianWriter lew, SeekableLittleEndianAccessor slea, long movementDataLength) {
+   public static void rebroadcastMovementList(OutPacket op, InPacket ip, long movementDataLength) {
       //movement command length is sent by client, probably not a big issue? (could be calculated on server)
       //if multiple write/reads are slow, could use (and cache?) a byte[] buffer
       for (long i = 0; i < movementDataLength; i++) {
-         lew.write(slea.readByte());
+         op.writeByte(ip.readByte());
       }
    }
 
-   public static void writeLongMaskD(final MaplePacketLittleEndianWriter mplew, List<Pair<MapleDisease, Integer>> statups) {
+   public static void writeLongMaskD(OutPacket p, List<Pair<MapleDisease, Integer>> statups) {
       long firstmask = 0;
       long secondmask = 0;
       for (Pair<MapleDisease, Integer> statup : statups) {
-         if (statup.getLeft()
-               .isFirst()) {
-            firstmask |= statup.getLeft()
-                  .getValue();
+         if (statup.getLeft().isFirst()) {
+            firstmask |= statup.getLeft().getValue();
          } else {
-            secondmask |= statup.getLeft()
-                  .getValue();
+            secondmask |= statup.getLeft().getValue();
          }
       }
-      mplew.writeLong(firstmask);
-      mplew.writeLong(secondmask);
+      p.writeLong(firstmask);
+      p.writeLong(secondmask);
    }
 
-   public static void writeLongMask(final LittleEndianWriter mplew, List<Pair<TemporaryStatType, TemporaryStatValue>> statups) {
+   public static void writeLongMask(OutPacket p, List<Pair<TemporaryStatType, TemporaryStatValue>> statups) {
       int[] mask = new int[4];
       for (Pair<TemporaryStatType, TemporaryStatValue> statup : statups) {
          mask[statup.left.getSet()] |= statup.left.getMask();
       }
       for (int i = 3; i >= 0; i--) {
-         mplew.writeInt(mask[i]);
+         p.writeInt(mask[i]);
       }
    }
 
-   public static void writeLongMaskFromList(final MaplePacketLittleEndianWriter mplew, List<TemporaryStatType> statups) {
+   public static void writeLongMaskFromList(OutPacket p, List<TemporaryStatType> statups) {
       int[] mask = new int[4];
       for (TemporaryStatType statup : statups) {
          mask[statup.getSet()] |= statup.getMask();
       }
       for (int i = 3; i >= 0; i--) {
-         mplew.writeInt(mask[i]);
+         p.writeInt(mask[i]);
       }
    }
 
-   public static void addPetInfo(final MaplePacketLittleEndianWriter mplew, MaplePet pet, boolean showpet) {
-      mplew.write(1);
+   public static void addPetInfo(OutPacket p, MaplePet pet, boolean showpet) {
+      p.writeByte(1);
       if (showpet) {
-         mplew.write(0);
+         p.writeByte(0);
       }
 
-      mplew.writeInt(pet.getItemId());
-      mplew.writeMapleAsciiString(pet.getName());
-      mplew.writeLong(pet.getUniqueId());
-      mplew.writePos(pet.getPos());
-      mplew.write(pet.getStance());
-      mplew.writeInt(pet.getFh());
+      p.writeInt(pet.getItemId());
+      p.writeString(pet.getName());
+      p.writeLong(pet.getUniqueId());
+      p.writePos(pet.getPos());
+      p.writeByte(pet.getStance());
+      p.writeInt(pet.getFh());
    }
 
    public static String getRightPaddedStr(String in, char padchar, int length) {
-      return in + String.valueOf(padchar)
-            .repeat(Math.max(0, length - in.length()));
+      return in + String.valueOf(padchar).repeat(Math.max(0, length - in.length()));
    }
 
    public static List<TemporaryStatBase> getTemporaryStats(MapleCharacter character) {
@@ -453,12 +434,8 @@ public class CCommon {
       if (bv == null) {
          mount = new TemporaryStatBase(false);
       } else {
-         int itemId = character.getMount()
-               .map(MapleMount::getItemId)
-               .orElse(0);
-         int skillId = character.getMount()
-               .map(MapleMount::getSkillId)
-               .orElse(0);
+         int itemId = character.getMount().map(MapleMount::getItemId).orElse(0);
+         int skillId = character.getMount().map(MapleMount::getSkillId).orElse(0);
          mount = new TemporaryStatBase(itemId, skillId, false);
       }
       list.add(mount);

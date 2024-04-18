@@ -355,7 +355,7 @@ public class NewYearCardRecord {
                     .map(World::getPlayerStorage)
                     .flatMap(s -> s.getCharacterById(receiverId))
                     .filter(MapleCharacter::isLoggedinWorld)
-                    .ifPresent(t -> t.announce(CWvsContext.onNewYearCardRes(t, NewYearCardRecord.this, 0xC, 0)));
+                    .ifPresent(t -> t.sendPacket(CWvsContext.onNewYearCardRes(t, NewYearCardRecord.this, 0xC, 0)));
         }, 1000 * 60 * 60); //1 Hour
     }
 

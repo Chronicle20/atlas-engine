@@ -1,136 +1,129 @@
 package connection.packets;
 
-import connection.constants.SendOpcode;
-import server.life.MapleNPC;
-import server.life.MaplePlayerNPC;
-import tools.data.output.MaplePacketLittleEndianWriter;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import connection.constants.SendOpcode;
+import net.packet.OutPacket;
+import net.packet.Packet;
+import server.life.MapleNPC;
+import server.life.MaplePlayerNPC;
+
 public class CNpcPool {
-    public static byte[] getPlayerNPC(MaplePlayerNPC npc) {     // thanks to Arnah
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.IMITATED_NPC_DATA.getValue());
-        mplew.write(0x01);
-        mplew.writeInt(npc.getScriptId());
-        mplew.writeMapleAsciiString(npc.getName());
-        mplew.write(npc.getGender());
-        mplew.write(npc.getSkin());
-        mplew.writeInt(npc.getFace());
-        mplew.write(0);
-        mplew.writeInt(npc.getHair());
-        Map<Short, Integer> equip = npc.getEquips();
-        Map<Short, Integer> myEquip = new LinkedHashMap<>();
-        Map<Short, Integer> maskedEquip = new LinkedHashMap<>();
-        for (short position : equip.keySet()) {
-            short pos = (byte) (position * -1);
-            if (pos < 100 && myEquip.get(pos) == null) {
-                myEquip.put(pos, equip.get(position));
-            } else if ((pos > 100 && pos != 111) || pos == -128) { // don't ask. o.o
-                pos -= 100;
-                if (myEquip.get(pos) != null) {
-                    maskedEquip.put(pos, myEquip.get(pos));
-                }
-                myEquip.put(pos, equip.get(position));
-            } else if (myEquip.get(pos) != null) {
-                maskedEquip.put(pos, equip.get(position));
+   public static Packet getPlayerNPC(MaplePlayerNPC npc) {     // thanks to Arnah
+      final OutPacket p = OutPacket.create(SendOpcode.IMITATED_NPC_DATA);
+      p.writeByte(0x01);
+      p.writeInt(npc.getScriptId());
+      p.writeString(npc.getName());
+      p.writeByte(npc.getGender());
+      p.writeByte(npc.getSkin());
+      p.writeInt(npc.getFace());
+      p.writeByte(0);
+      p.writeInt(npc.getHair());
+      Map<Short, Integer> equip = npc.getEquips();
+      Map<Short, Integer> myEquip = new LinkedHashMap<>();
+      Map<Short, Integer> maskedEquip = new LinkedHashMap<>();
+      for (short position : equip.keySet()) {
+         short pos = (byte) (position * -1);
+         if (pos < 100 && myEquip.get(pos) == null) {
+            myEquip.put(pos, equip.get(position));
+         } else if ((pos > 100 && pos != 111) || pos == -128) { // don't ask. o.o
+            pos -= 100;
+            if (myEquip.get(pos) != null) {
+               maskedEquip.put(pos, myEquip.get(pos));
             }
-        }
-        for (Map.Entry<Short, Integer> entry : myEquip.entrySet()) {
-            mplew.write(entry.getKey());
-            mplew.writeInt(entry.getValue());
-        }
-        mplew.write(0xFF);
-        for (Map.Entry<Short, Integer> entry : maskedEquip.entrySet()) {
-            mplew.write(entry.getKey());
-            mplew.writeInt(entry.getValue());
-        }
-        mplew.write(0xFF);
-        Integer cWeapon = equip.get((byte) -111);
-        mplew.writeInt(Objects.requireNonNullElse(cWeapon, 0));
-        for (int i = 0; i < 3; i++) {
-            mplew.writeInt(0);
-        }
-        return mplew.getPacket();
-    }
+            myEquip.put(pos, equip.get(position));
+         } else if (myEquip.get(pos) != null) {
+            maskedEquip.put(pos, equip.get(position));
+         }
+      }
+      for (Map.Entry<Short, Integer> entry : myEquip.entrySet()) {
+         p.writeByte(entry.getKey());
+         p.writeInt(entry.getValue());
+      }
+      p.writeByte(0xFF);
+      for (Map.Entry<Short, Integer> entry : maskedEquip.entrySet()) {
+         p.writeByte(entry.getKey());
+         p.writeInt(entry.getValue());
+      }
+      p.writeByte(0xFF);
+      Integer cWeapon = equip.get((byte) -111);
+      p.writeInt(Objects.requireNonNullElse(cWeapon, 0));
+      for (int i = 0; i < 3; i++) {
+         p.writeInt(0);
+      }
+      return p;
+   }
 
-    public static byte[] removePlayerNPC(int oid) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.IMITATED_NPC_DATA.getValue());
-        mplew.write(0x00);
-        mplew.writeInt(oid);
+   public static Packet removePlayerNPC(int oid) {
+      final OutPacket p = OutPacket.create(SendOpcode.IMITATED_NPC_DATA);
+      p.writeByte(0x00);
+      p.writeInt(oid);
 
-        return mplew.getPacket();
-    }
+      return p;
+   }
 
-    public static byte[] spawnNPC(MapleNPC life) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(22);
-        mplew.writeShort(SendOpcode.SPAWN_NPC.getValue());
-        mplew.writeInt(life.getObjectId());
-        mplew.writeInt(life.getId());
-        mplew.writeShort(life.getPosition().x);
-        mplew.writeShort(life.getCy());
-        mplew.write(life.getF() == 1 ? 0 : 1);
-        mplew.writeShort(life.getFh());
-        mplew.writeShort(life.getRx0());
-        mplew.writeShort(life.getRx1());
-        mplew.write(1);
-        return mplew.getPacket();
-    }
+   public static Packet spawnNPC(MapleNPC life) {
+      final OutPacket p = OutPacket.create(SendOpcode.SPAWN_NPC);
+      p.writeInt(life.getObjectId());
+      p.writeInt(life.getId());
+      p.writeShort(life.getPosition().x);
+      p.writeShort(life.getCy());
+      p.writeByte(life.getF() == 1 ? 0 : 1);
+      p.writeShort(life.getFh());
+      p.writeShort(life.getRx0());
+      p.writeShort(life.getRx1());
+      p.writeByte(1);
+      return p;
+   }
 
-    public static byte[] removeNPC(int oid) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.REMOVE_NPC.getValue());
-        mplew.writeInt(oid);
+   public static Packet removeNPC(int oid) {
+      final OutPacket p = OutPacket.create(SendOpcode.REMOVE_NPC);
+      p.writeInt(oid);
 
-        return mplew.getPacket();
-    }
+      return p;
+   }
 
-    public static byte[] spawnNPCRequestController(MapleNPC life, boolean MiniMap) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(23);
-        mplew.writeShort(SendOpcode.SPAWN_NPC_REQUEST_CONTROLLER.getValue());
-        mplew.write(1);
-        mplew.writeInt(life.getObjectId());
-        mplew.writeInt(life.getId());
-        mplew.writeShort(life.getPosition().x);
-        mplew.writeShort(life.getCy());
-        if (life.getF() == 1) {
-            mplew.write(0);
-        } else {
-            mplew.write(1);
-        }
-        mplew.writeShort(life.getFh());
-        mplew.writeShort(life.getRx0());
-        mplew.writeShort(life.getRx1());
-        mplew.writeBool(MiniMap);
-        return mplew.getPacket();
-    }
+   public static Packet spawnNPCRequestController(MapleNPC life, boolean MiniMap) {
+      final OutPacket p = OutPacket.create(SendOpcode.SPAWN_NPC_REQUEST_CONTROLLER);
+      p.writeByte(1);
+      p.writeInt(life.getObjectId());
+      p.writeInt(life.getId());
+      p.writeShort(life.getPosition().x);
+      p.writeShort(life.getCy());
+      if (life.getF() == 1) {
+         p.writeByte(0);
+      } else {
+         p.writeByte(1);
+      }
+      p.writeShort(life.getFh());
+      p.writeShort(life.getRx0());
+      p.writeShort(life.getRx1());
+      p.writeBool(MiniMap);
+      return p;
+   }
 
-    public static byte[] spawnPlayerNPC(MaplePlayerNPC npc) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.SPAWN_NPC_REQUEST_CONTROLLER.getValue());
-        mplew.write(1);
-        mplew.writeInt(npc.getObjectId());
-        mplew.writeInt(npc.getScriptId());
-        mplew.writeShort(npc.getPosition().x);
-        mplew.writeShort(npc.getCY());
-        mplew.write(npc.getDirection());
-        mplew.writeShort(npc.getFH());
-        mplew.writeShort(npc.getRX0());
-        mplew.writeShort(npc.getRX1());
-        mplew.write(1);
-        return mplew.getPacket();
-    }
+   public static Packet spawnPlayerNPC(MaplePlayerNPC npc) {
+      final OutPacket p = OutPacket.create(SendOpcode.SPAWN_NPC_REQUEST_CONTROLLER);
+      p.writeByte(1);
+      p.writeInt(npc.getObjectId());
+      p.writeInt(npc.getScriptId());
+      p.writeShort(npc.getPosition().x);
+      p.writeShort(npc.getCY());
+      p.writeByte(npc.getDirection());
+      p.writeShort(npc.getFH());
+      p.writeShort(npc.getRX0());
+      p.writeShort(npc.getRX1());
+      p.writeByte(1);
+      return p;
+   }
 
-    public static byte[] removeNPCController(int objectid) {
-        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+   public static Packet removeNPCController(int objectid) {
+      final OutPacket p = OutPacket.create(SendOpcode.SPAWN_NPC_REQUEST_CONTROLLER);
+      p.writeByte(0);
+      p.writeInt(objectid);
 
-        mplew.writeShort(SendOpcode.SPAWN_NPC_REQUEST_CONTROLLER.getValue());
-        mplew.write(0);
-        mplew.writeInt(objectid);
-
-        return mplew.getPacket();
-    }
+      return p;
+   }
 }

@@ -1,24 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License as
- published by the Free Software Foundation version 3 as published by
- the Free Software Foundation. You may not use, modify or distribute
- this program under any other version of the GNU Affero General Public
- License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package net.server.channel.handlers;
 
 import java.util.ArrayList;
@@ -41,21 +20,16 @@ import connection.packets.CWvsContext;
 import constants.SkillConstants;
 import constants.inventory.ItemConstants;
 import net.AbstractMaplePacketHandler;
+import net.packet.InPacket;
 import server.ItemInformationProvider;
-import tools.data.input.SeekableLittleEndianAccessor;
 
-/**
- * @author Matze
- * @author Frz
- */
 public final class ScrollHandler extends AbstractMaplePacketHandler {
 
    private static void announceCannotScroll(MapleClient c, boolean legendarySpirit) {
       if (legendarySpirit) {
-         c.announce(CUser.getScrollEffect(c.getPlayer()
-               .getId(), Equip.ScrollResult.FAIL, false, false));
+         c.sendPacket(CUser.getScrollEffect(c.getPlayer().getId(), Equip.ScrollResult.FAIL, false, false));
       } else {
-         c.announce(CWvsContext.getInventoryFull());
+         c.sendPacket(CWvsContext.getInventoryFull());
       }
    }
 
@@ -69,21 +43,20 @@ public final class ScrollHandler extends AbstractMaplePacketHandler {
    }
 
    @Override
-   public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+   public void handlePacket(InPacket p, MapleClient c) {
       if (c.tryacquireClient()) {
          try {
-            int updateTime = slea.readInt();
-            short slot = slea.readShort();
-            short dst = slea.readShort();
-            short bWhiteScroll = slea.readShort();
-            boolean bEnchantSkill = slea.readBool();
+            int updateTime = p.readInt();
+            short slot = p.readShort();
+            short dst = p.readShort();
+            short bWhiteScroll = p.readShort();
+            boolean bEnchantSkill = p.readBool();
             boolean whiteScroll = bWhiteScroll == 2;
             boolean legendarySpirit = false;
 
             ItemInformationProvider ii = ItemInformationProvider.getInstance();
             MapleCharacter chr = c.getPlayer();
-            Equip toScroll = (Equip) chr.getInventory(MapleInventoryType.EQUIPPED)
-                  .getItem(dst);
+            Equip toScroll = (Equip) chr.getInventory(MapleInventoryType.EQUIPPED).getItem(dst);
             if (bEnchantSkill && dst >= 0) {
                for (Skill s : c.getPlayer().getSkills().keySet()) {
                   if (SkillConstants.isLegendarySpirit(s.getId())) {
@@ -153,14 +126,13 @@ public final class ScrollHandler extends AbstractMaplePacketHandler {
                }
 
                if (whiteScroll && !ItemConstants.isCleanSlate(scroll.getItemId())) {
-                  if (wscroll.get()
-                        .getQuantity() < 1) {
+                  if (wscroll.get().getQuantity() < 1) {
                      announceCannotScroll(c, legendarySpirit);
                      return;
                   }
 
-                  MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.USE, wscroll.get()
-                        .getPosition(), (short) 1, false, false);
+                  MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.USE, wscroll.get().getPosition(), (short) 1, false,
+                        false);
                }
 
                MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.USE, scroll.getPosition(), (short) 1, false);
@@ -203,9 +175,8 @@ public final class ScrollHandler extends AbstractMaplePacketHandler {
                mods.add(new ModifyInventory(3, scrolled));
                mods.add(new ModifyInventory(0, scrolled));
             }
-            c.announce(CWvsContext.modifyInventory(true, mods));
-            chr.getMap()
-                  .broadcastMessage(CUser.getScrollEffect(chr.getId(), scrollSuccess, legendarySpirit, whiteScroll));
+            c.sendPacket(CWvsContext.modifyInventory(true, mods));
+            chr.getMap().broadcastMessage(CUser.getScrollEffect(chr.getId(), scrollSuccess, legendarySpirit, whiteScroll));
             if (dst < 0 && (scrollSuccess == Equip.ScrollResult.SUCCESS || scrollSuccess == Equip.ScrollResult.CURSE)) {
                chr.equipChanged();
             }

@@ -1,24 +1,3 @@
-/*
-	This file is part of the OdinMS Maple Story Server
-    Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
-		       Matthias Butz <matze@odinms.de>
-		       Jan Christian Meyer <vimes@odinms.de>
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Affero General Public License as
-    published by the Free Software Foundation version 3 as published by
-    the Free Software Foundation. You may not use, modify or distribute
-    this program under any other version of the GNU Affero General Public
-    License.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Affero General Public License for more details.
-
-    You should have received a copy of the GNU Affero General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 package net.server.channel.handlers;
 
 import java.awt.*;
@@ -41,21 +20,21 @@ import constants.skills.Priest;
 import constants.skills.SuperGM;
 import door.DoorProcessor;
 import net.AbstractMaplePacketHandler;
+import net.packet.InPacket;
 import net.server.Server;
 import server.MapleStatEffect;
 import server.life.MapleMonster;
-import tools.data.input.SeekableLittleEndianAccessor;
 
 public final class SpecialMoveHandler extends AbstractMaplePacketHandler {
 
    @Override
-   public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+   public void handlePacket(InPacket p, MapleClient c) {
       MapleCharacter chr = c.getPlayer();
-      slea.readInt();
+      p.readInt();
       chr.getAutobanManager().setTimestamp(4, Server.getInstance().getCurrentTimestamp(), 28);
-      int skillid = slea.readInt();
+      int skillid = p.readInt();
 
-      int __skillLevel = slea.readByte();
+      int __skillLevel = p.readByte();
       Skill skill = SkillFactory.getSkill(skillid).orElseThrow();
       int skillLevel = chr.getSkillLevel(skill);
       if (skillid % 10000000 == 1010 || skillid % 10000000 == 1011) {
@@ -64,8 +43,8 @@ public final class SpecialMoveHandler extends AbstractMaplePacketHandler {
          }
          skillLevel = 1;
          chr.setDojoEnergy(0);
-         c.announce(CWvsContext.getEnergy("energy", chr.getDojoEnergy()));
-         c.announce(CWvsContext.serverNotice(5, "As you used the secret skill, your energy bar has been reset."));
+         c.sendPacket(CWvsContext.getEnergy("energy", chr.getDojoEnergy()));
+         c.sendPacket(CWvsContext.serverNotice(5, "As you used the secret skill, your energy bar has been reset."));
       }
       if (skillLevel == 0 || skillLevel != __skillLevel) {
          return;
@@ -81,16 +60,16 @@ public final class SpecialMoveHandler extends AbstractMaplePacketHandler {
                cooldownTime /= 60;
             }
 
-            c.announce(CUserLocal.skillCooldown(skillid, cooldownTime));
+            c.sendPacket(CUserLocal.skillCooldown(skillid, cooldownTime));
             chr.addCooldown(skillid, currentServerTime(), cooldownTime * 1000L);
          }
       }
       if (skillid == Hero.MONSTER_MAGNET || skillid == Paladin.MONSTER_MAGNET
             || skillid == DarkKnight.MONSTER_MAGNET) { // Monster Magnet
-         int num = slea.readInt();
+         int num = p.readInt();
          for (int i = 0; i < num; i++) {
-            int mobOid = slea.readInt();
-            byte success = slea.readByte();
+            int mobOid = p.readInt();
+            byte success = p.readByte();
             chr.getMap().broadcastMessage(chr, CMob.catchMonster(mobOid, success), false);
             MapleMonster monster = chr.getMap().getMonsterByOid(mobOid).orElse(null);
             if (monster != null) {
@@ -101,10 +80,10 @@ public final class SpecialMoveHandler extends AbstractMaplePacketHandler {
                }
             }
          }
-         byte direction = slea.readByte();   // thanks MedicOP for pointing some 3rd-party related issues with Magnet
+         byte direction = p.readByte();   // thanks MedicOP for pointing some 3rd-party related issues with Magnet
          chr.getMap()
                .broadcastMessage(chr, CUser.showBuffeffect(chr.getId(), skillid, chr.getSkillLevel(skillid), 1, direction), false);
-         c.announce(CWvsContext.enableActions());
+         c.sendPacket(CWvsContext.enableActions());
          return;
       } else if (skillid == Brawler.MP_RECOVERY) {// MP Recovery
          Skill s = SkillFactory.getSkill(skillid).orElseThrow();
@@ -114,15 +93,15 @@ public final class SpecialMoveHandler extends AbstractMaplePacketHandler {
          int gain = -lose * (ef.getY() / 100);
          chr.addMP(gain);
       } else if (skillid == SuperGM.HEAL_PLUS_DISPEL) {
-         slea.skip(11);
+         p.skip(11);
          chr.getMap().broadcastMessage(chr, CUser.showBuffeffect(chr.getId(), skillid, chr.getSkillLevel(skillid)), false);
       } else if (skillid % 10000000 == 1004) {
-         slea.readShort();
+         p.readShort();
       }
 
       Point pos = null;
-      if (slea.available() == 5) {
-         pos = new Point(slea.readShort(), slea.readShort());
+      if (p.available() == 5) {
+         pos = new Point(p.readShort(), p.readShort());
       }
       if (chr.isAlive()) {
          if (skill.id() != Priest.MYSTIC_DOOR) {
@@ -145,10 +124,10 @@ public final class SpecialMoveHandler extends AbstractMaplePacketHandler {
                }
             }
 
-            c.announce(CWvsContext.enableActions());
+            c.sendPacket(CWvsContext.enableActions());
          }
       } else {
-         c.announce(CWvsContext.enableActions());
+         c.sendPacket(CWvsContext.enableActions());
       }
    }
 }

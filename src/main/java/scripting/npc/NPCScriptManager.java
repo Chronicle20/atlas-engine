@@ -147,7 +147,7 @@ public class NPCScriptManager extends AbstractScriptManager {
                     }
                 }
             } else {
-                c.announce(CWvsContext.enableActions());
+                c.sendPacket(CWvsContext.enableActions());
             }
             return true;
         } catch (final Exception ute) {

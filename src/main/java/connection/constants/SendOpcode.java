@@ -395,6 +395,7 @@ public enum SendOpcode {
    VEGA_SCROLL(0xFFFF); // CField::OnVega
    // 0x17C CField::OnVega
    // 0x17D CField::OnVega
+
    private final int code;
 
    SendOpcode(int code) {

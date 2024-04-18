@@ -2,15 +2,15 @@ package net.server.handlers;
 
 import client.MapleClient;
 import net.MaplePacketHandler;
-import tools.data.input.SeekableLittleEndianAccessor;
+import net.packet.InPacket;
 
 public class NoOpHandler implements MaplePacketHandler {
-    @Override
-    public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-    }
+   @Override
+   public void handlePacket(InPacket p, MapleClient c) {
+   }
 
-    @Override
-    public boolean validateState(MapleClient c) {
-        return true;
-    }
+   @Override
+   public boolean validateState(MapleClient c) {
+      return true;
+   }
 }

@@ -308,7 +308,7 @@ function writeAllFeatures() {
 
 function start() {
     const CField = Java.type('connection.packets.CField');
-    cm.getPlayer().announce(CField.musicChange(anthemSong));
+    cm.getPlayer().sendPacket(CField.musicChange(anthemSong));
     status = -1;
     writeAllFeatures();
     action(1, 0, 0);
@@ -317,11 +317,11 @@ function start() {
 function action(mode, type, selection) {
     const CField = Java.type('connection.packets.CField');
     if (mode == -1) {
-        cm.getPlayer().announce(CField.musicChange(ambientSong));
+        cm.getPlayer().sendPacket(CField.musicChange(ambientSong));
         cm.dispose();
     } else {
         if (mode == 0 && type > 0) {
-            cm.getPlayer().announce(CField.musicChange(ambientSong));
+            cm.getPlayer().sendPacket(CField.musicChange(ambientSong));
             cm.dispose();
             return;
         }
@@ -355,7 +355,7 @@ function action(mode, type, selection) {
 
             cm.sendPrev(sendStr);
         } else {
-            cm.getPlayer().announce(CField.musicChange(ambientSong));
+            cm.getPlayer().sendPacket(CField.musicChange(ambientSong));
             cm.dispose();
         }
     }

@@ -7,9 +7,10 @@ import client.Skill;
 import client.status.MonsterStatus;
 import client.status.MonsterStatusEffect;
 import connection.constants.SendOpcode;
+import net.packet.OutPacket;
+import net.packet.Packet;
 import server.life.MapleMonster;
 import server.life.MobSkill;
-import tools.data.output.MaplePacketLittleEndianWriter;
 
 public class CMobPool {
    /**
@@ -22,36 +23,36 @@ public class CMobPool {
     * @param effect            The spawn effect to use.
     * @return The spawn/control packet.
     */
-   static byte[] spawnMonsterInternal(MapleMonster life, boolean requestController, boolean newSpawn, boolean aggro, int effect,
-                                      boolean makeInvis) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+   public static Packet spawnMonsterInternal(MapleMonster life, boolean requestController, boolean newSpawn, boolean aggro,
+                                             int effect, boolean makeInvis) {
+      final OutPacket p;
       if (makeInvis) {
-         mplew.writeShort(SendOpcode.SPAWN_MONSTER_CONTROL.getValue());
-         mplew.write(0);
-         mplew.writeInt(life.getObjectId());
-         return mplew.getPacket();
+         p = OutPacket.create(SendOpcode.SPAWN_MONSTER_CONTROL);
+         p.writeByte(0);
+         p.writeInt(life.getObjectId());
+         return p;
       }
       if (requestController) {
-         mplew.writeShort(SendOpcode.SPAWN_MONSTER_CONTROL.getValue());
-         mplew.write(aggro ? 2 : 1);
+         p = OutPacket.create(SendOpcode.SPAWN_MONSTER_CONTROL);
+         p.writeByte(aggro ? 2 : 1);
       } else {
-         mplew.writeShort(SendOpcode.SPAWN_MONSTER.getValue());
+         p = OutPacket.create(SendOpcode.SPAWN_MONSTER);
       }
-      mplew.writeInt(life.getObjectId());
-      mplew.write(life.getController()
+      p.writeInt(life.getObjectId());
+      p.writeByte(life.getController()
             .isEmpty() ? 5 : 1);
-      mplew.writeInt(life.getId());
+      p.writeInt(life.getId());
 
       if (requestController) {
-         encodeTemporary(mplew, life.getStati());    // thanks shot for noticing encode temporary buffs missing
+         encodeTemporary(p, life.getStati());    // thanks shot for noticing encode temporary buffs missing
       } else {
-         mplew.skip(16);
+         p.skip(16);
       }
 
-      mplew.writePos(life.getPosition());
-      mplew.write(life.getStance());
-      mplew.writeShort(0); //Origin FH //life.getStartFh()
-      mplew.writeShort(life.getFh());
+      p.writePos(life.getPosition());
+      p.writeByte(life.getStance());
+      p.writeShort(0); //Origin FH //life.getStartFh()
+      p.writeShort(life.getFh());
 
       /**
        * -4: Fake -3: Appear after linked mob is dead -2: Fade in 1: Smoke 3:
@@ -66,18 +67,18 @@ public class CMobPool {
                .getMonsterByOid(life.getParentMobOid())
                .orElse(null);
          if (parentMob != null && parentMob.isAlive()) {
-            mplew.write(effect != 0 ? effect : -3);
-            mplew.writeInt(life.getParentMobOid());
+            p.writeByte(effect != 0 ? effect : -3);
+            p.writeInt(life.getParentMobOid());
          } else {
-            encodeParentlessMobSpawnEffect(mplew, newSpawn, effect);
+            encodeParentlessMobSpawnEffect(p, newSpawn, effect);
          }
       } else {
-         encodeParentlessMobSpawnEffect(mplew, newSpawn, effect);
+         encodeParentlessMobSpawnEffect(p, newSpawn, effect);
       }
 
-      mplew.write(life.getTeam());
-      mplew.writeInt(0); // getItemEffect
-      return mplew.getPacket();
+      p.writeByte(life.getTeam());
+      p.writeInt(0); // getItemEffect
+      return p;
    }
 
    /**
@@ -86,20 +87,19 @@ public class CMobPool {
     * @param life The mob to make targettable.
     * @return The packet to make the mob targettable.
     */
-   public static byte[] makeMonsterReal(MapleMonster life) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.SPAWN_MONSTER.getValue());
-      mplew.writeInt(life.getObjectId());
-      mplew.write(5);
-      mplew.writeInt(life.getId());
-      encodeTemporary(mplew, life.getStati());
-      mplew.writePos(life.getPosition());
-      mplew.write(life.getStance());
-      mplew.writeShort(0);//life.getStartFh()
-      mplew.writeShort(life.getFh());
-      mplew.writeShort(-1);
-      mplew.writeInt(0);
-      return mplew.getPacket();
+   public static Packet makeMonsterReal(MapleMonster life) {
+      final OutPacket p = OutPacket.create(SendOpcode.SPAWN_MONSTER);
+      p.writeInt(life.getObjectId());
+      p.writeByte(5);
+      p.writeInt(life.getId());
+      encodeTemporary(p, life.getStati());
+      p.writePos(life.getPosition());
+      p.writeByte(life.getStance());
+      p.writeShort(0);//life.getStartFh()
+      p.writeShort(life.getFh());
+      p.writeShort(-1);
+      p.writeInt(0);
+      return p;
    }
 
    /**
@@ -109,13 +109,12 @@ public class CMobPool {
     * @param animation 0 = dissapear, 1 = fade out, 2+ = special
     * @return The kill monster packet.
     */
-   public static byte[] killMonster(int oid, int animation) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.KILL_MONSTER.getValue());
-      mplew.writeInt(oid);
-      mplew.write(animation);
-      mplew.write(animation);
-      return mplew.getPacket();
+   public static Packet killMonster(int oid, int animation) {
+      final OutPacket p = OutPacket.create(SendOpcode.KILL_MONSTER);
+      p.writeInt(oid);
+      p.writeByte(animation);
+      p.writeByte(animation);
+      return p;
    }
 
    /**
@@ -124,12 +123,11 @@ public class CMobPool {
     * @param life
     * @return
     */
-   public static byte[] removeMonsterInvisibility(MapleMonster life) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.SPAWN_MONSTER_CONTROL.getValue());
-      mplew.write(1);
-      mplew.writeInt(life.getObjectId());
-      return mplew.getPacket();
+   public static Packet removeMonsterInvisibility(MapleMonster life) {
+      final OutPacket p = OutPacket.create(SendOpcode.SPAWN_MONSTER_CONTROL);
+      p.writeByte(1);
+      p.writeInt(life.getObjectId());
+      return p;
    }
 
    /**
@@ -139,27 +137,26 @@ public class CMobPool {
     * @param effect The effect to show when spawning.
     * @return The packet to spawn the mob as non-targettable.
     */
-   public static byte[] spawnFakeMonster(MapleMonster life, int effect) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SendOpcode.SPAWN_MONSTER_CONTROL.getValue());
-      mplew.write(1);
-      mplew.writeInt(life.getObjectId());
-      mplew.write(5);
-      mplew.writeInt(life.getId());
-      encodeTemporary(mplew, life.getStati());
-      mplew.writePos(life.getPosition());
-      mplew.write(life.getStance());
-      mplew.writeShort(0);//life.getStartFh()
-      mplew.writeShort(life.getFh());
+   public static Packet spawnFakeMonster(MapleMonster life, int effect) {
+      final OutPacket p = OutPacket.create(SendOpcode.SPAWN_MONSTER_CONTROL);
+      p.writeByte(1);
+      p.writeInt(life.getObjectId());
+      p.writeByte(5);
+      p.writeInt(life.getId());
+      encodeTemporary(p, life.getStati());
+      p.writePos(life.getPosition());
+      p.writeByte(life.getStance());
+      p.writeShort(0);//life.getStartFh()
+      p.writeShort(life.getFh());
       if (effect > 0) {
-         mplew.write(effect);
-         mplew.write(0);
-         mplew.writeShort(0);
+         p.writeByte(effect);
+         p.writeByte(0);
+         p.writeShort(0);
       }
-      mplew.writeShort(-2);
-      mplew.write(life.getTeam());
-      mplew.writeInt(0);
-      return mplew.getPacket();
+      p.writeShort(-2);
+      p.writeByte(life.getTeam());
+      p.writeInt(0);
+      return p;
    }
 
    /**
@@ -168,12 +165,11 @@ public class CMobPool {
     * @param oid The ObjectID of the monster to stop controlling.
     * @return The stop control monster packet.
     */
-   public static byte[] stopControllingMonster(int oid) {
-      final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(7);
-      mplew.writeShort(SendOpcode.SPAWN_MONSTER_CONTROL.getValue());
-      mplew.write(0);
-      mplew.writeInt(oid);
-      return mplew.getPacket();
+   public static Packet stopControllingMonster(int oid) {
+      final OutPacket p = OutPacket.create(SendOpcode.SPAWN_MONSTER_CONTROL);
+      p.writeByte(0);
+      p.writeInt(oid);
+      return p;
    }
 
    /**
@@ -183,7 +179,7 @@ public class CMobPool {
     * @param newSpawn Is it a new spawn?
     * @return The spawn monster packet.
     */
-   public static byte[] spawnMonster(MapleMonster life, boolean newSpawn) {
+   public static Packet spawnMonster(MapleMonster life, boolean newSpawn) {
       return spawnMonsterInternal(life, false, newSpawn, false, 0, false);
    }
 
@@ -195,7 +191,7 @@ public class CMobPool {
     * @param effect   The spawn effect.
     * @return The spawn monster packet.
     */
-   public static byte[] spawnMonster(MapleMonster life, boolean newSpawn, int effect) {
+   public static Packet spawnMonster(MapleMonster life, boolean newSpawn, int effect) {
       return spawnMonsterInternal(life, false, newSpawn, false, effect, false);
    }
 
@@ -207,7 +203,7 @@ public class CMobPool {
     * @param aggro    Aggressive monster?
     * @return The monster control packet.
     */
-   public static byte[] controlMonster(MapleMonster life, boolean newSpawn, boolean aggro) {
+   public static Packet controlMonster(MapleMonster life, boolean newSpawn, boolean aggro) {
       return spawnMonsterInternal(life, true, newSpawn, aggro, 0, false);
    }
 
@@ -217,40 +213,40 @@ public class CMobPool {
     * @param life
     * @return
     */
-   public static byte[] makeMonsterInvisible(MapleMonster life) {
+   public static Packet makeMonsterInvisible(MapleMonster life) {
       return spawnMonsterInternal(life, true, false, false, 0, true);
    }
 
-   private static void encodeParentlessMobSpawnEffect(MaplePacketLittleEndianWriter mplew, boolean newSpawn, int effect) {
+   private static void encodeParentlessMobSpawnEffect(OutPacket p, boolean newSpawn, int effect) {
       if (effect > 0) {
-         mplew.write(effect);
-         mplew.write(0);
-         mplew.writeShort(0);
+         p.writeByte(effect);
+         p.writeByte(0);
+         p.writeShort(0);
          if (effect == 15) {
-            mplew.write(0);
+            p.writeByte(0);
          }
       }
-      mplew.write(newSpawn ? -2 : -1);
+      p.writeByte(newSpawn ? -2 : -1);
    }
 
-   public static byte[] killMonster(int oid, boolean animation) {
+   public static Packet killMonster(int oid, boolean animation) {
       return killMonster(oid, animation ? 1 : 0);
    }
 
-   private static void encodeTemporary(MaplePacketLittleEndianWriter mplew, Map<MonsterStatus, MonsterStatusEffect> stati) {
+   private static void encodeTemporary(OutPacket p, Map<MonsterStatus, MonsterStatusEffect> stati) {
       int pCounter = -1, mCounter = -1;
 
-      writeLongEncodeTemporaryMask(mplew, stati.keySet());    // packet structure mapped thanks to Eric
+      writeLongEncodeTemporaryMask(p, stati.keySet());    // packet structure mapped thanks to Eric
 
       for (Map.Entry<MonsterStatus, MonsterStatusEffect> s : stati.entrySet()) {
          MonsterStatusEffect mse = s.getValue();
-         mplew.writeShort(mse.getStati()
+         p.writeShort(mse.getStati()
                .get(s.getKey()));
 
          MobSkill mobSkill = mse.getMobSkill();
          if (mobSkill != null) {
-            mplew.writeShort(mobSkill.getSkillId());
-            mplew.writeShort(mobSkill.getSkillLevel());
+            p.writeShort(mobSkill.getSkillId());
+            p.writeShort(mobSkill.getSkillLevel());
 
             switch (s.getKey()) {
                case WEAPON_REFLECT:
@@ -262,27 +258,27 @@ public class CMobPool {
                   break;
             }
          } else {
-            mplew.writeInt(mse.getSkill()
+            p.writeInt(mse.getSkill()
                   .map(Skill::id)
                   .orElse(0));
          }
 
-         mplew.writeShort(-1);    // duration
+         p.writeShort(-1);    // duration
       }
 
       // reflect packet structure found thanks to Arnah (Vertisy)
       if (pCounter != -1) {
-         mplew.writeInt(pCounter);// wPCounter_
+         p.writeInt(pCounter);// wPCounter_
       }
       if (mCounter != -1) {
-         mplew.writeInt(mCounter);// wMCounter_
+         p.writeInt(mCounter);// wMCounter_
       }
       if (pCounter != -1 || mCounter != -1) {
-         mplew.writeInt(100);// nCounterProb_
+         p.writeInt(100);// nCounterProb_
       }
    }
 
-   private static void writeLongEncodeTemporaryMask(final MaplePacketLittleEndianWriter mplew, Collection<MonsterStatus> stati) {
+   private static void writeLongEncodeTemporaryMask(OutPacket p, Collection<MonsterStatus> stati) {
       int[] masks = new int[4];
 
       for (MonsterStatus statup : stati) {
@@ -293,7 +289,7 @@ public class CMobPool {
       }
 
       for (int mask : masks) {
-         mplew.writeInt(mask);
+         p.writeInt(mask);
       }
    }
 }

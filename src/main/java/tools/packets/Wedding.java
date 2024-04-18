@@ -8,12 +8,17 @@ package tools.packets;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import client.MapleCharacter;
 import client.inventory.Item;
+import connection.constants.SendOpcode;
 import connection.packets.CCommon;
+import net.packet.OutPacket;
+import net.packet.Packet;
 import net.server.guild.MapleGuild;
 import tools.StringUtil;
-import tools.data.output.MaplePacketLittleEndianWriter;
 
 /**
  * CField_Wedding, CField_WeddingPhoto, CWeddingMan, OnMarriageResult, and all Wedding/Marriage enum/structs.
@@ -23,14 +28,7 @@ import tools.data.output.MaplePacketLittleEndianWriter;
  * Wishlists edited by Drago (Dragohe4rt)
  */
 public class Wedding {
-   private static final short MARRIAGE_REQUEST = 0x48;
-   private static final short MARRIAGE_RESULT = 0x49;
-   private static final short WEDDING_GIFT_RESULT = 0x4A;
-   private static final short NOTIFY_MARRIED_PARTNER_MAP_TRANSFER = 0x4B;
-   private static final short WEDDING_PHOTO = 0x2B;
-   private static final short WEDDING_PROGRESS = 0x140;
-   private static final short WEDDING_CEREMONY_END = 0x141;
-    
+   private static final Logger log = LoggerFactory.getLogger(Wedding.class);
     /*
         00000000 CWeddingMan     struc ; (sizeof=0x104)
         00000000 vfptr           dd ?                    ; offset
@@ -60,15 +58,14 @@ public class Wedding {
     *
     * @param name
     * @param playerid
-    * @return mplew
+    * @return p
     */
-   public static byte[] OnMarriageRequest(String name, int playerid) {
-      MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(MARRIAGE_REQUEST);
-      mplew.write(0); //mode, 0 = engage, 1 = cancel, 2 = answer.. etc
-      mplew.writeMapleAsciiString(name); // name
-      mplew.writeInt(playerid); // playerid
-      return mplew.getPacket();
+   public static Packet OnMarriageRequest(String name, int playerid) {
+      final OutPacket p = OutPacket.create(SendOpcode.MARRIAGE_REQUEST);
+      p.writeByte(0); //mode, 0 = engage, 1 = cancel, 2 = answer.. etc
+      p.writeString(name); // name
+      p.writeInt(playerid); // playerid
+      return p;
    }
 
    /**
@@ -88,41 +85,40 @@ public class Wedding {
     * @param ReservedBrideName The bride IGN of the wedding
     * @param m_dwField         The current field id (the id of the cake map, ex. 680000300)
     * @param m_dwUsers         The List of all MapleCharacter guests within the current cake map to be encoded
-    * @return mplew (MaplePacket) Byte array to be converted and read for byte[]->ImageIO
+    * @return p (MaplePacket) Byte array to be converted and read for byte[]->ImageIO
     */
-   public static byte[] OnTakePhoto(String ReservedGroomName, String ReservedBrideName, int m_dwField,
+   public static Packet OnTakePhoto(String ReservedGroomName, String ReservedBrideName, int m_dwField,
                                     List<MapleCharacter> m_dwUsers) { // OnIFailedAtWeddingPhotos
-      MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(WEDDING_PHOTO); // v53 header, convert -> v83
-      mplew.writeMapleAsciiString(ReservedGroomName);
-      mplew.writeMapleAsciiString(ReservedBrideName);
-      mplew.writeInt(m_dwField); // field id?
-      mplew.writeInt(m_dwUsers.size());
+      final OutPacket p = OutPacket.create(SendOpcode.WEDDING_PHOTO); // v53 header, convert -> v83
+      p.writeString(ReservedGroomName);
+      p.writeString(ReservedBrideName);
+      p.writeInt(m_dwField); // field id?
+      p.writeInt(m_dwUsers.size());
 
       for (MapleCharacter guest : m_dwUsers) {
          // Begin Avatar Encoding
-         CCommon.addCharLook(mplew, guest, false); // CUser::EncodeAvatar
-         mplew.writeInt(30000); // v20 = *(_DWORD *)(v13 + 2192) -- new groom marriage ID??
-         mplew.writeInt(30000); // v20 = *(_DWORD *)(v13 + 2192) -- new bride marriage ID??
-         mplew.writeMapleAsciiString(guest.getName());
-         mplew.writeMapleAsciiString(guest.getGuild().map(MapleGuild::getName).orElse(""));
-         mplew.writeShort(guest.getGuild().map(MapleGuild::getLogoBG).orElse(0));
-         mplew.write(guest.getGuild().map(MapleGuild::getLogoBGColor).orElse(0));
-         mplew.writeShort(guest.getGuild().map(MapleGuild::getLogo).orElse(0));
-         mplew.write(guest.getGuild().map(MapleGuild::getLogoColor).orElse(0));
-         mplew.writeShort(guest.getPosition().x); // v18 = *(_DWORD *)(v13 + 3204);
-         mplew.writeShort(guest.getPosition().y); // v20 = *(_DWORD *)(v13 + 3208);
+         CCommon.addCharLook(p, guest, false); // CUser::EncodeAvatar
+         p.writeInt(30000); // v20 = *(_DWORD *)(v13 + 2192) -- new groom marriage ID??
+         p.writeInt(30000); // v20 = *(_DWORD *)(v13 + 2192) -- new bride marriage ID??
+         p.writeString(guest.getName());
+         p.writeString(guest.getGuild().map(MapleGuild::getName).orElse(""));
+         p.writeShort(guest.getGuild().map(MapleGuild::getLogoBG).orElse(0));
+         p.writeByte(guest.getGuild().map(MapleGuild::getLogoBGColor).orElse(0));
+         p.writeShort(guest.getGuild().map(MapleGuild::getLogo).orElse(0));
+         p.writeByte(guest.getGuild().map(MapleGuild::getLogoColor).orElse(0));
+         p.writeShort(guest.getPosition().x); // v18 = *(_DWORD *)(v13 + 3204);
+         p.writeShort(guest.getPosition().y); // v20 = *(_DWORD *)(v13 + 3208);
          // Begin Screenshot Encoding
-         mplew.write(1); // // if ( *(_DWORD *)(v13 + 288) ) { COutPacket::Encode1(&thisa, v20);
+         p.writeByte(1); // // if ( *(_DWORD *)(v13 + 288) ) { COutPacket::Encode1(&thisa, v20);
          // CPet::EncodeScreenShotPacket(*(CPet **)(v13 + 288), &thisa);
-         mplew.writeInt(1); // dwTemplateID
-         mplew.writeMapleAsciiString(guest.getName()); // m_sName
-         mplew.writeShort(guest.getPosition().x); // m_ptCurPos.x
-         mplew.writeShort(guest.getPosition().y); // m_ptCurPos.y
-         mplew.write(guest.getStance()); // guest.m_bMoveAction
+         p.writeInt(1); // dwTemplateID
+         p.writeString(guest.getName()); // m_sName
+         p.writeShort(guest.getPosition().x); // m_ptCurPos.x
+         p.writeShort(guest.getPosition().y); // m_ptCurPos.y
+         p.writeByte(guest.getStance()); // guest.m_bMoveAction
       }
 
-      return mplew.getPacket();
+      return p;
    }
 
    /**
@@ -131,45 +127,43 @@ public class Wedding {
     * @param marriageId
     * @param chr
     * @param wedding
-    * @return mplew
+    * @return p
     */
-   public static byte[] OnMarriageResult(int marriageId, MapleCharacter chr, boolean wedding) {
-      MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(MARRIAGE_RESULT);
-      mplew.write(11);
-      mplew.writeInt(marriageId);
-      mplew.writeInt(chr.getGender() == 0 ? chr.getId() : chr.getPartnerId());
-      mplew.writeInt(chr.getGender() == 0 ? chr.getPartnerId() : chr.getId());
-      mplew.writeShort(wedding ? 3 : 1);
+   public static Packet OnMarriageResult(int marriageId, MapleCharacter chr, boolean wedding) {
+      final OutPacket p = OutPacket.create(SendOpcode.MARRIAGE_RESULT);
+      p.writeByte(11);
+      p.writeInt(marriageId);
+      p.writeInt(chr.getGender() == 0 ? chr.getId() : chr.getPartnerId());
+      p.writeInt(chr.getGender() == 0 ? chr.getPartnerId() : chr.getId());
+      p.writeShort(wedding ? 3 : 1);
       if (wedding) {
-         mplew.writeInt(chr.getMarriageItemId());
-         mplew.writeInt(chr.getMarriageItemId());
+         p.writeInt(chr.getMarriageItemId());
+         p.writeInt(chr.getMarriageItemId());
       } else {
-         mplew.writeInt(1112803); // Engagement Ring's Outcome (doesn't matter for engagement)
-         mplew.writeInt(1112803); // Engagement Ring's Outcome (doesn't matter for engagement)
+         p.writeInt(1112803); // Engagement Ring's Outcome (doesn't matter for engagement)
+         p.writeInt(1112803); // Engagement Ring's Outcome (doesn't matter for engagement)
       }
       String spouse = MapleCharacter.getNameById(chr.getPartnerId()).orElseThrow();
-      mplew.writeAsciiString(StringUtil.getRightPaddedStr(chr.getGender() == 0 ? chr.getName() : spouse, '\0', 13));
-      mplew.writeAsciiString(StringUtil.getRightPaddedStr(chr.getGender() == 0 ? spouse : chr.getName(), '\0', 13));
+      p.writeFixedString(StringUtil.getRightPaddedStr(chr.getGender() == 0 ? chr.getName() : spouse, '\0', 13));
+      p.writeFixedString(StringUtil.getRightPaddedStr(chr.getGender() == 0 ? spouse : chr.getName(), '\0', 13));
 
-      return mplew.getPacket();
+      return p;
    }
 
    /**
     * To exit the Engagement Window (Waiting for her response...), we send a GMS-like pop-up.
     *
     * @param msg
-    * @return mplew
+    * @return p
     */
-   public static byte[] OnMarriageResult(final byte msg) {
-      MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(MARRIAGE_RESULT);
-      mplew.write(msg);
+   public static Packet OnMarriageResult(final byte msg) {
+      final OutPacket p = OutPacket.create(SendOpcode.MARRIAGE_RESULT);
+      p.writeByte(msg);
       if (msg == 36) {
-         mplew.write(1);
-         mplew.writeMapleAsciiString("You are now engaged.");
+         p.writeByte(1);
+         p.writeString("You are now engaged.");
       }
-      return mplew.getPacket();
+      return p;
    }
 
    /**
@@ -177,15 +171,14 @@ public class Wedding {
     *
     * @param partner
     * @param mapid
-    * @return mplew
+    * @return p
     */
-   public static byte[] OnNotifyWeddingPartnerTransfer(int partner, int mapid) {
-      MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(NOTIFY_MARRIED_PARTNER_MAP_TRANSFER);
-      mplew.writeInt(mapid);
-      mplew.writeInt(partner);
+   public static Packet OnNotifyWeddingPartnerTransfer(int partner, int mapid) {
+      final OutPacket p = OutPacket.create(SendOpcode.NOTIFY_MARRIED_PARTNER_MAP_TRANSFER);
+      p.writeInt(mapid);
+      p.writeInt(partner);
 
-      return mplew.getPacket();
+      return p;
    }
 
    /**
@@ -197,17 +190,16 @@ public class Wedding {
     * @param groom
     * @param bride
     * @param step
-    * @return mplew
+    * @return p
     */
-   public static byte[] OnWeddingProgress(boolean SetBlessEffect, int groom, int bride, byte step) {
-      MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(SetBlessEffect ? WEDDING_CEREMONY_END : WEDDING_PROGRESS);
+   public static Packet OnWeddingProgress(boolean SetBlessEffect, int groom, int bride, byte step) {
+      final OutPacket p = OutPacket.create(SetBlessEffect ? SendOpcode.WEDDING_CEREMONY_END : SendOpcode.WEDDING_PROGRESS);
       if (!SetBlessEffect) { // in order for ceremony packet to send, byte step = 2 must be sent first
-         mplew.write(step);
+         p.writeByte(step);
       }
-      mplew.writeInt(groom);
-      mplew.writeInt(bride);
-      return mplew.getPacket();
+      p.writeInt(groom);
+      p.writeInt(bride);
+      return p;
    }
 
    /**
@@ -215,23 +207,21 @@ public class Wedding {
     *
     * @param groom
     * @param bride
-    * @return mplew
+    * @return p
     */
-   public static byte[] sendWeddingInvitation(String groom, String bride) {
-      MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(MARRIAGE_RESULT);
-      mplew.write(15);
-      mplew.writeMapleAsciiString(groom);
-      mplew.writeMapleAsciiString(bride);
-      mplew.writeShort(1); // 0 = Cathedral Normal?, 1 = Cathedral Premium?, 2 = Chapel Normal?
-      return mplew.getPacket();
+   public static Packet sendWeddingInvitation(String groom, String bride) {
+      final OutPacket p = OutPacket.create(SendOpcode.MARRIAGE_RESULT);
+      p.writeByte(15);
+      p.writeString(groom);
+      p.writeString(bride);
+      p.writeShort(1); // 0 = Cathedral Normal?, 1 = Cathedral Premium?, 2 = Chapel Normal?
+      return p;
    }
 
-   public static byte[] sendWishList() { // fuck my life
-      MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(MARRIAGE_REQUEST);
-      mplew.write(9);
-      return mplew.getPacket();
+   public static Packet sendWishList() { // fuck my life
+      final OutPacket p = OutPacket.create(SendOpcode.MARRIAGE_REQUEST);
+      p.writeByte(9);
+      return p;
    }
 
    /**
@@ -240,21 +230,20 @@ public class Wedding {
     * @param mode
     * @param itemnames
     * @param items
-    * @return mplew
+    * @return p
     */
-   public static byte[] OnWeddingGiftResult(byte mode, List<String> itemnames, List<Item> items) {
-      MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-      mplew.writeShort(WEDDING_GIFT_RESULT);
-      mplew.write(mode);
+   public static Packet OnWeddingGiftResult(byte mode, List<String> itemnames, List<Item> items) {
+      final OutPacket p = OutPacket.create(SendOpcode.WEDDING_GIFT_RESULT);
+      p.writeByte(mode);
       switch (mode) {
          case 0xC: // 12 : You cannot give more than one present for each wishlist
          case 0xE: // 14 : Failed to send the gift.
             break;
 
          case 0x09: { // Load Wedding Registry
-            mplew.write(itemnames.size());
+            p.writeByte(itemnames.size());
             for (String names : itemnames) {
-               mplew.writeMapleAsciiString(names);
+               p.writeString(names);
             }
             break;
          }
@@ -263,31 +252,28 @@ public class Wedding {
          case 0xB: { // Add Item to Wedding Registry
             // 11 : You have sent a gift | | 13 : Failed to send the gift. |
             if (mode == 0xB) {
-               mplew.write(itemnames.size());
+               p.writeByte(itemnames.size());
                for (String names : itemnames) {
-                  mplew.writeMapleAsciiString(names);
+                  p.writeString(names);
                }
             }
-            mplew.writeLong(32);
-            mplew.write(items.size());
+            p.writeLong(32);
+            p.writeByte(items.size());
             for (Item item : items) {
-               CCommon.addItemInfo(mplew, item, true);
+               CCommon.addItemInfo(p, item, true);
             }
             break;
          }
          default: {
-            System.out.println("Unknown Wishlist Mode: " + mode);
+            log.debug("Unknown Wishlist Mode: {}", mode);
             break;
          }
       }
-      return mplew.getPacket();
+      return p;
    }
 
    public enum MarriageStatus {
-      SINGLE(0x0),
-      ENGAGED(0x1),
-      RESERVED(0x2),
-      MARRIED(0x3);
+      SINGLE(0x0), ENGAGED(0x1), RESERVED(0x2), MARRIED(0x3);
       private final int ms;
 
       MarriageStatus(int ms) {
@@ -300,13 +286,8 @@ public class Wedding {
    }
 
    public enum MarriageRequest {
-      AddMarriageRecord(0x0),
-      SetMarriageRecord(0x1),
-      DeleteMarriageRecord(0x2),
-      LoadReservation(0x3),
-      AddReservation(0x4),
-      DeleteReservation(0x5),
-      GetReservation(0x6);
+      AddMarriageRecord(0x0), SetMarriageRecord(0x1), DeleteMarriageRecord(0x2), LoadReservation(0x3), AddReservation(
+            0x4), DeleteReservation(0x5), GetReservation(0x6);
       private final int req;
 
       MarriageRequest(int req) {
@@ -319,12 +300,7 @@ public class Wedding {
    }
 
    public enum WeddingType {
-      CATHEDRAL(0x1),
-      VEGAS(0x2),
-      CATHEDRAL_PREMIUM(0xA),
-      CATHEDRAL_NORMAL(0xB),
-      VEGAS_PREMIUM(0x14),
-      VEGAS_NORMAL(0x15);
+      CATHEDRAL(0x1), VEGAS(0x2), CATHEDRAL_PREMIUM(0xA), CATHEDRAL_NORMAL(0xB), VEGAS_PREMIUM(0x14), VEGAS_NORMAL(0x15);
       private final int wt;
 
       WeddingType(int wt) {
@@ -337,11 +313,7 @@ public class Wedding {
    }
 
    public enum WeddingMap {
-      WEDDINGTOWN(680000000),
-      CHAPEL_STARTMAP(680000110),
-      CATHEDRAL_STARTMAP(680000210),
-      PHOTOMAP(680000300),
-      EXITMAP(680000500);
+      WEDDINGTOWN(680000000), CHAPEL_STARTMAP(680000110), CATHEDRAL_STARTMAP(680000210), PHOTOMAP(680000300), EXITMAP(680000500);
       private final int wm;
 
       WeddingMap(int wm) {
@@ -355,36 +327,22 @@ public class Wedding {
 
    public enum WeddingItem {
       WR_MOONSTONE(1112803), // Wedding Ring
-      WR_STARGEM(1112806),
-      WR_GOLDENHEART(1112807),
-      WR_SILVERSWAN(1112809),
-      ERB_MOONSTONE(2240000), // Engagement Ring Box
-      ERB_STARGEM(2240001),
-      ERB_GOLDENHEART(2240002),
-      ERB_SILVERSWAN(2240003),
-      ERBE_MOONSTONE(4031357), // Engagement Ring Box (Empty)
+      WR_STARGEM(1112806), WR_GOLDENHEART(1112807), WR_SILVERSWAN(1112809), ERB_MOONSTONE(2240000), // Engagement Ring Box
+      ERB_STARGEM(2240001), ERB_GOLDENHEART(2240002), ERB_SILVERSWAN(2240003), ERBE_MOONSTONE(
+            4031357), // Engagement Ring Box (Empty)
       ER_MOONSTONE(4031358), // Engagement Ring
-      ERBE_STARGEM(4031359),
-      ER_STARGEM(4031360),
-      ERBE_GOLDENHEART(4031361),
-      ER_GOLDENHEART(4031362),
-      ERBE_SILVERSWAN(4031363),
-      ER_SILVERSWAN(4031364),
-      PARENTS_BLESSING(4031373), // Parents Blessing
+      ERBE_STARGEM(4031359), ER_STARGEM(4031360), ERBE_GOLDENHEART(4031361), ER_GOLDENHEART(4031362), ERBE_SILVERSWAN(
+            4031363), ER_SILVERSWAN(4031364), PARENTS_BLESSING(4031373), // Parents Blessing
       OFFICIATORS_PERMISSION(4031374), // Officiator's Permission
       WR_CATHEDRAL_PREMIUM(4031375), // Wedding Ring?
-      WR_VEGAS_PREMIUM(4031376),
-      IB_VEGAS(4031377),      // toSend invitation
+      WR_VEGAS_PREMIUM(4031376), IB_VEGAS(4031377),      // toSend invitation
       IB_CATHEDRAL(4031395),  // toSend invitation
       IG_VEGAS(4031406),      // rcvd invitation
       IG_CATHEDRAL(4031407),  // rcvd invitation
       OB_FORCOUPLE(4031424), // Onyx Box? For Couple
       WR_CATHEDRAL_NORMAL(4031480), // Wedding Ring?
-      WR_VEGAS_NORMAL(4031481),
-      WT_CATHEDRAL_NORMAL(5251000), // Wedding Ticket
-      WT_VEGAS_NORMAL(5251001),
-      WT_VEGAS_PREMIUM(5251002),
-      WT_CATHEDRAL_PREMIUM(5251003);
+      WR_VEGAS_NORMAL(4031481), WT_CATHEDRAL_NORMAL(5251000), // Wedding Ticket
+      WT_VEGAS_NORMAL(5251001), WT_VEGAS_PREMIUM(5251002), WT_CATHEDRAL_PREMIUM(5251003);
       private final int wi;
 
       WeddingItem(int wi) {

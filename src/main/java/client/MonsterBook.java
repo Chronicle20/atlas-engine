@@ -151,10 +151,10 @@ public final class MonsterBook {
                 calculateLevel();
             }
 
-            c.announce(CWvsContext.addCard(false, cardid, qty + 1));
-            c.announce(CUser.showGainCard());
+            c.sendPacket(CWvsContext.addCard(false, cardid, qty + 1));
+            c.sendPacket(CUser.showGainCard());
         } else {
-            c.announce(CWvsContext.addCard(true, cardid, 5));
+            c.sendPacket(CWvsContext.addCard(true, cardid, 5));
         }
     }
 

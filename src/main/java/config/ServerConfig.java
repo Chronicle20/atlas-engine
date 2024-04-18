@@ -55,7 +55,6 @@ public class ServerConfig {
     public boolean USE_CUSTOM_KEYSET;
     public boolean USE_DEBUG;
     public boolean USE_DEBUG_SHOW_INFO_EQPEXP;
-    public boolean USE_DEBUG_SHOW_RCVD_PACKET;
     public boolean USE_DEBUG_SHOW_RCVD_MVLIFE;
     public boolean USE_DEBUG_SHOW_PACKET;
     public boolean USE_SUPPLY_RATE_COUPONS;

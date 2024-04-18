@@ -122,15 +122,4 @@ public class PartyQuest {
     public List<MapleCharacter> getParticipants() {
         return participants;
     }
-
-    public void removeParticipant(MapleCharacter chr) throws Throwable {
-        synchronized (participants) {
-            participants.remove(chr);
-            chr.setPartyQuest(null);
-            if (participants.isEmpty()) {
-                super.finalize();
-            }
-            //System.gc();
-        }
-    }
 }

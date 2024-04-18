@@ -35,10 +35,10 @@ public class TimerCommand extends Command {
 
     private static void setTimer(MapleCharacter player, String time, MapleCharacter victim) {
         if (time.equalsIgnoreCase("remove")) {
-            victim.announce(CField.removeClock());
+            victim.sendPacket(CField.removeClock());
         } else {
             try {
-                victim.announce(CField.getClock(Integer.parseInt(time)));
+                victim.sendPacket(CField.getClock(Integer.parseInt(time)));
             } catch (NumberFormatException e) {
                 player.yellowMessage("Syntax: !timer <playername> <seconds>|remove");
             }

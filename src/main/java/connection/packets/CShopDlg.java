@@ -1,98 +1,94 @@
 package connection.packets;
 
+import java.util.List;
+
 import client.MapleClient;
 import client.inventory.Equip;
 import client.inventory.Item;
 import client.inventory.MapleInventoryType;
 import connection.constants.SendOpcode;
 import constants.inventory.ItemConstants;
+import net.packet.OutPacket;
+import net.packet.Packet;
 import server.ItemInformationProvider;
 import server.MapleShopItem;
 import tools.StringUtil;
-import tools.data.output.LittleEndianWriter;
-import tools.data.output.MaplePacketLittleEndianWriter;
-
-import java.util.List;
 
 public class CShopDlg {
-    public static byte[] getNPCShop(MapleClient c, int npcTemplateId, List<MapleShopItem> items) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort(SendOpcode.OPEN_NPC_SHOP.getValue());
-        mplew.writeInt(npcTemplateId); // dwNpcTemplateID
-        mplew.writeShort(items.size()); // nCount
-        items.forEach(i -> writeShopItem(c, i, mplew));
-        return mplew.getPacket();
-    }
+   public static Packet getNPCShop(MapleClient c, int npcTemplateId, List<MapleShopItem> items) {
+      final OutPacket p = OutPacket.create(SendOpcode.OPEN_NPC_SHOP);
+      p.writeInt(npcTemplateId); // dwNpcTemplateID
+      p.writeShort(items.size()); // nCount
+      items.forEach(i -> writeShopItem(c, i, p));
+      return p;
+   }
 
-    public static void writeShopItem(MapleClient c, MapleShopItem item, LittleEndianWriter mplew) {
-        ItemInformationProvider ii = ItemInformationProvider.getInstance();
-        mplew.writeInt(item.getItemId()); // nItemID
-        mplew.writeInt(item.getPrice()); // nPrice
+   public static void writeShopItem(MapleClient c, MapleShopItem item, OutPacket p) {
+      ItemInformationProvider ii = ItemInformationProvider.getInstance();
+      p.writeInt(item.getItemId()); // nItemID
+      p.writeInt(item.getPrice()); // nPrice
 
-        mplew.writeInt(0); // nTokenPrice
-        mplew.writeInt(0); // nItemPeriod
-        mplew.writeInt(0); // nLevelLimited
+      p.writeInt(0); // nTokenPrice
+      p.writeInt(0); // nItemPeriod
+      p.writeInt(0); // nLevelLimited
 
-        if (ItemConstants.isRechargeable(item.getItemId())) {
-            mplew.writeShort(0);
-            mplew.writeInt(0);
-            mplew.writeShort(doubleToShortBits(ii.getUnitPrice(item.getItemId())));
-            mplew.writeShort(ii.getSlotMax(c, item.getItemId()));
-        } else {
-            mplew.writeShort(1); // nQuantity
-            mplew.writeShort(item.getBuyable()); // nMaxPerSlot
-        }
-    }
+      if (ItemConstants.isRechargeable(item.getItemId())) {
+         p.writeShort(0);
+         p.writeInt(0);
+         p.writeShort(doubleToShortBits(ii.getUnitPrice(item.getItemId())));
+         p.writeShort(ii.getSlotMax(c, item.getItemId()));
+      } else {
+         p.writeShort(1); // nQuantity
+         p.writeShort(item.getBuyable()); // nMaxPerSlot
+      }
+   }
 
-    /* 00 = /
-     * 01 = You don't have enough in stock
-     * 02 = You do not have enough mesos
-     * 03 = Please check if your inventory is full or not
-     * 05 = You don't have enough in stock
-     * 06 = Due to an error, the trade did not happen
-     * 07 = Due to an error, the trade did not happen
-     * 08 = /
-     * 0D = You need more items
-     * 0E = CRASH; LENGTH NEEDS TO BE LONGER :O
-     */
-    public static byte[] shopTransaction(byte code) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(3);
-        mplew.writeShort(SendOpcode.CONFIRM_SHOP_TRANSACTION.getValue());
-        mplew.write(code);
-        return mplew.getPacket();
-    }
+   /* 00 = /
+    * 01 = You don't have enough in stock
+    * 02 = You do not have enough mesos
+    * 03 = Please check if your inventory is full or not
+    * 05 = You don't have enough in stock
+    * 06 = Due to an error, the trade did not happen
+    * 07 = Due to an error, the trade did not happen
+    * 08 = /
+    * 0D = You need more items
+    * 0E = CRASH; LENGTH NEEDS TO BE LONGER :O
+    */
+   public static Packet shopTransaction(byte code) {
+      final OutPacket p = OutPacket.create(SendOpcode.CONFIRM_SHOP_TRANSACTION);
+      p.writeByte(code);
+      return p;
+   }
 
-    // someone thought it was a good idea to handle floating point representation through packets ROFL
-    private static int doubleToShortBits(double d) {
-        return (int) (Double.doubleToLongBits(d) >> 48);
-    }
+   // someone thought it was a good idea to handle floating point representation through packets ROFL
+   private static int doubleToShortBits(double d) {
+      return (int) (Double.doubleToLongBits(d) >> 48);
+   }
 
-    public static void addCashItemInformation(final MaplePacketLittleEndianWriter mplew, Item item, int accountId, String giftMessage) {
-        boolean isGift = giftMessage != null;
-        boolean isRing = false;
-        Equip equip = null;
-        if (item.getInventoryType()
-                .equals(MapleInventoryType.EQUIP)) {
-            equip = (Equip) item;
-            isRing = equip.getRingId() > -1;
-        }
-        mplew.writeLong(item.isPet() ? item.getPetId()
-                .orElseThrow() : isRing ? equip.getRingId() : item.getCashId());
-        if (!isGift) {
-            mplew.writeInt(accountId);
-            mplew.writeInt(0);
-        }
-        mplew.writeInt(item.getItemId());
-        if (!isGift) {
-            mplew.writeInt(item.getSN());
-            mplew.writeShort(item.getQuantity());
-        }
-        mplew.writeAsciiString(StringUtil.getRightPaddedStr(item.getGiftFrom(), '\0', 13));
-        if (isGift) {
-            mplew.writeAsciiString(StringUtil.getRightPaddedStr(giftMessage, '\0', 73));
-            return;
-        }
-        CCommon.addExpirationTime(mplew, item.getExpiration());
-        mplew.writeLong(0);
-    }
+   public static void addCashItemInformation(OutPacket p, Item item, int accountId, String giftMessage) {
+      boolean isGift = giftMessage != null;
+      boolean isRing = false;
+      Equip equip = null;
+      if (item.getInventoryType().equals(MapleInventoryType.EQUIP)) {
+         equip = (Equip) item;
+         isRing = equip.getRingId() > -1;
+      }
+      p.writeLong(item.isPet() ? item.getPetId().orElseThrow() : isRing ? equip.getRingId() : item.getCashId());
+      if (!isGift) {
+         p.writeInt(accountId);
+         p.writeInt(0);
+      }
+      p.writeInt(item.getItemId());
+      if (!isGift) {
+         p.writeInt(item.getSN());
+         p.writeShort(item.getQuantity());
+      }
+      p.writeFixedString(StringUtil.getRightPaddedStr(item.getGiftFrom(), '\0', 13));
+      if (isGift) {
+         p.writeFixedString(StringUtil.getRightPaddedStr(giftMessage, '\0', 73));
+         return;
+      }
+      CCommon.addExpirationTime(p, item.getExpiration());
+      p.writeLong(0);
+   }
 }

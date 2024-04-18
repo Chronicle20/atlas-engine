@@ -43,6 +43,7 @@ import config.YamlConfig;
 import connection.packets.CField;
 import connection.packets.CNpcPool;
 import constants.inventory.ItemConstants;
+import net.packet.Packet;
 import net.server.audit.LockCollector;
 import net.server.audit.locks.MonitoredLockType;
 import net.server.audit.locks.MonitoredReadLock;
@@ -285,7 +286,7 @@ public class EventInstanceManager {
       eventTime = time;
 
       for (MapleCharacter chr : getPlayers()) {
-         chr.announce(CField.getClock((int) (time / 1000)));
+         chr.sendPacket(CField.getClock((int) (time / 1000)));
       }
 
       event_schedule = TimerManager.getInstance().schedule(() -> {
@@ -323,7 +324,7 @@ public class EventInstanceManager {
    }
 
    private void dismissEventTimer() {
-      byte[] packet = CField.removeClock();
+      Packet packet = CField.removeClock();
       getPlayers().forEach(MapleCharacter.announcePacket(packet));
       event_schedule = null;
       eventTime = 0;
@@ -1326,7 +1327,7 @@ public class EventInstanceManager {
       }
 
       if (gateData != null) {
-         chr.announce(CField.environmentChange(gateData.getLeft(), gateData.getRight()));
+         chr.sendPacket(CField.environmentChange(gateData.getLeft(), gateData.getRight()));
       }
    }
 

@@ -123,8 +123,8 @@ public class Pyramid extends PartyQuest {
 
    public void broadcastInfo(String info, int amount) {
       for (MapleCharacter chr : getParticipants()) {
-         chr.announce(CWvsContext.getEnergy("massacre_" + info, amount));
-         chr.announce(CField.pyramidGauge(count));
+         chr.sendPacket(CWvsContext.getEnergy("massacre_" + info, amount));
+         chr.sendPacket(CField.pyramidGauge(count));
       }
    }
 
@@ -151,7 +151,7 @@ public class Pyramid extends PartyQuest {
          skill++;
          ItemInformationProvider ii = ItemInformationProvider.getInstance();
          for (MapleCharacter chr : getParticipants()) {
-            chr.announce(CWvsContext.getEnergy("massacre_skill", skill));
+            chr.sendPacket(CWvsContext.getEnergy("massacre_skill", skill));
             ii.getItemEffect(2022586).applyTo(chr);
          }
       } else if (buffcount == 2 && total >= 1000) {
@@ -159,7 +159,7 @@ public class Pyramid extends PartyQuest {
          skill++;
          ItemInformationProvider ii = ItemInformationProvider.getInstance();
          for (MapleCharacter chr : getParticipants()) {
-            chr.announce(CWvsContext.getEnergy("massacre_skill", skill));
+            chr.sendPacket(CWvsContext.getEnergy("massacre_skill", skill));
             ii.getItemEffect(2022587).applyTo(chr);
          }
       } else if (buffcount == 3 && total >= 1500) {
@@ -170,7 +170,7 @@ public class Pyramid extends PartyQuest {
          skill++;
          ItemInformationProvider ii = ItemInformationProvider.getInstance();
          for (MapleCharacter chr : getParticipants()) {
-            chr.announce(CWvsContext.getEnergy("massacre_skill", skill));
+            chr.sendPacket(CWvsContext.getEnergy("massacre_skill", skill));
             ii.getItemEffect(2022588).applyTo(chr);
          }
       } else if (buffcount == 5 && total >= 2500) {
@@ -217,7 +217,7 @@ public class Pyramid extends PartyQuest {
 
          exp += ((kill * 2) + (cool * 10));
       }
-      chr.announce(CField.pyramidScore(rank, exp));
+      chr.sendPacket(CField.pyramidScore(rank, exp));
       chr.gainExp(exp, true, true);
    }
 

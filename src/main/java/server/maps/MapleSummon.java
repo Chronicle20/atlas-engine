@@ -54,12 +54,12 @@ public class MapleSummon extends AbstractAnimatedMapleMapObject {
 
     @Override
     public void sendSpawnData(MapleClient client) {
-        client.announce(CSummonedPool.spawnSummon(this, false));
+        client.sendPacket(CSummonedPool.spawnSummon(this, false));
     }
 
     @Override
     public void sendDestroyData(MapleClient client) {
-        client.announce(CSummonedPool.removeSummon(this, true));
+        client.sendPacket(CSummonedPool.removeSummon(this, true));
     }
 
     public MapleCharacter getOwner() {

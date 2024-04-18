@@ -147,14 +147,14 @@ public class ItemAction extends MapleQuestAction {
             }
 
             MapleInventoryManipulator.removeById(chr.getClient(), type, itemid, quantity, true, false);
-            chr.announce(CWvsContext.getShowItemGain(itemid, (short) count, true));
+            chr.sendPacket(CWvsContext.getShowItemGain(itemid, (short) count, true));
         }
 
         for (ItemData iEntry : giveItem) {
             int itemid = iEntry.getId(), count = iEntry.getCount(), period = iEntry.getPeriod();    // thanks Vcoc for noticing quest milestone item not getting removed from inventory after a while
 
             MapleInventoryManipulator.addById(chr.getClient(), itemid, (short) count, "", -1, period > 0 ? (System.currentTimeMillis() + (long) period * 60 * 1000) : -1);
-            chr.announce(CWvsContext.getShowItemGain(itemid, (short) count, true));
+            chr.sendPacket(CWvsContext.getShowItemGain(itemid, (short) count, true));
         }
     }
 

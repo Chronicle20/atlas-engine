@@ -42,6 +42,6 @@ public class RanksCommand extends Command {
         MapleCharacter player = c.getPlayer();
 
         List<Pair<String, Integer>> worldRanking = Server.getInstance().getWorldPlayerRanking(player.getWorld());
-        player.announce(CWvsContext.showPlayerRanks(9010000, worldRanking));
+        player.sendPacket(CWvsContext.showPlayerRanks(9010000, worldRanking));
     }
 }

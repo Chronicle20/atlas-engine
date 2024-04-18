@@ -27,7 +27,7 @@ function action(mode, type, selection) {
             }
 
             const CRPSGameDlg = Java.type('connection.packets.CRPSGameDlg');
-            cm.getClient().announce(CRPSGameDlg.openRPSNPC());
+            cm.getClient().sendPacket(CRPSGameDlg.openRPSNPC());
             cm.dispose();
         }
     }

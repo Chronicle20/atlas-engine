@@ -1,30 +1,12 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License as
- published by the Free Software Foundation version 3 as published by
- the Free Software Foundation. You may not use, modify or distribute
- this program under any other version of the GNU Affero General Public
- License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package client.inventory;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import client.MapleClient;
 import config.YamlConfig;
@@ -36,6 +18,7 @@ import tools.Pair;
 import tools.Randomizer;
 
 public class Equip extends Item {
+   private static final Logger log = LoggerFactory.getLogger(Equip.class);
 
    private byte upgradeSlots;
    private byte level, itemLevel;
@@ -148,7 +131,7 @@ public class Equip extends Item {
       ret.itemLevel = itemLevel;
       ret.itemExp = itemExp;
       ret.level = level;
-      ret.log = new LinkedList<>(log);
+      ret.itemLog = new LinkedList<>(itemLog);
       ret.setOwner(getOwner());
       ret.setQuantity(getQuantity());
       ret.setExpiration(getExpiration());
@@ -550,10 +533,8 @@ public class Equip extends Item {
       List<Pair<StatUpgrade, Integer>> stats = new LinkedList<>();
 
       if (isElemental) {
-         ItemInformationProvider.getInstance().getItemLevelupStats(getItemId(), itemLevel).stream()
-               .filter(p -> p.getRight() > 0)
-               .map(p -> new Pair<>(StatUpgrade.valueOf(p.getLeft()), p.getRight()))
-               .forEach(stats::add);
+         ItemInformationProvider.getInstance().getItemLevelupStats(getItemId(), itemLevel).stream().filter(p -> p.getRight() > 0)
+               .map(p -> new Pair<>(StatUpgrade.valueOf(p.getLeft()), p.getRight())).forEach(stats::add);
       }
 
       if (!stats.isEmpty()) {
@@ -612,7 +593,7 @@ public class Equip extends Item {
       showLevelupMessage(showStr, c); // thanks to Polaris dev team !
       c.getPlayer().dropMessage(6, lvupStr);
 
-      c.announce(CUser.showEquipmentLevelUp());
+      c.sendPacket(CUser.showEquipmentLevelUp());
       c.getPlayer().getMap().broadcastMessage(c.getPlayer(), CUser.showForeignEffect(c.getPlayer().getId(), 15));
       c.getPlayer().forceUpdateItem(this);
    }
@@ -650,9 +631,8 @@ public class Equip extends Item {
       int expNeeded = ExpTable.getEquipExpNeededForLevel(itemLevel);
 
       if (YamlConfig.config.server.USE_DEBUG_SHOW_INFO_EQPEXP) {
-         System.out.println(
-               "'" + ii.getName(this.getItemId()) + "' -> EXP Gain: " + gain + " Mastery: " + masteryModifier + " Base gain: "
-                     + baseExpGain + " exp: " + itemExp + " / " + expNeeded + ", Kills TNL: " + expNeeded / (baseExpGain
+         log.debug("'{}' -> EXP Gain: {} Mastery: {} Base gain: {} exp: {} / {}, Kills TNL: {}", ii.getName(this.getItemId()), gain,
+               masteryModifier, baseExpGain, itemExp, expNeeded, expNeeded / (baseExpGain
                      / c.getPlayer().getExpRate()));
       }
 
@@ -737,10 +717,8 @@ public class Equip extends Item {
 
    public enum StatUpgrade {
 
-      incDEX(0), incSTR(1), incINT(2), incLUK(3),
-      incMHP(4), incMMP(5), incPAD(6), incMAD(7),
-      incPDD(8), incMDD(9), incEVA(10), incACC(11),
-      incSpeed(12), incJump(13), incVicious(14), incSlot(15);
+      incDEX(0), incSTR(1), incINT(2), incLUK(3), incMHP(4), incMMP(5), incPAD(6), incMAD(7), incPDD(8), incMDD(9), incEVA(
+            10), incACC(11), incSpeed(12), incJump(13), incVicious(14), incSlot(15);
       private final int value;
 
       StatUpgrade(int value) {

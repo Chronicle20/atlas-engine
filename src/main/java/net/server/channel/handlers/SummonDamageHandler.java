@@ -1,24 +1,3 @@
-/*
-This file is part of the OdinMS Maple Story Server
-Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
-Matthias Butz <matze@odinms.de>
-Jan Christian Meyer <vimes@odinms.de>
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as
-published by the Free Software Foundation version 3 as published by
-the Free Software Foundation. You may not use, modify or distribute
-this program under any other version of the GNU Affero General Public
-License.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package net.server.channel.handlers;
 
 import java.util.ArrayList;
@@ -35,13 +14,13 @@ import client.inventory.MapleWeaponType;
 import client.status.MonsterStatusEffect;
 import connection.packets.CSummonedPool;
 import constants.skills.Outlaw;
+import net.packet.InPacket;
 import server.ItemInformationProvider;
 import server.MapleStatEffect;
 import server.life.MapleMonster;
 import server.life.MonsterInformationProvider;
 import server.maps.MapleSummon;
 import tools.FilePrinter;
-import tools.data.input.SeekableLittleEndianAccessor;
 
 public final class SummonDamageHandler extends AbstractDealDamageHandler {
 
@@ -71,8 +50,8 @@ public final class SummonDamageHandler extends AbstractDealDamageHandler {
    }
 
    @Override
-   public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-      int oid = slea.readInt();
+   public void handlePacket(InPacket p, MapleClient c) {
+      int oid = p.readInt();
       MapleCharacter player = c.getPlayer();
       if (!player.isAlive()) {
          return;
@@ -88,15 +67,15 @@ public final class SummonDamageHandler extends AbstractDealDamageHandler {
       }
       Skill summonSkill = SkillFactory.getSkill(summon.getSkill()).orElseThrow();
       MapleStatEffect summonEffect = summonSkill.getEffect(summon.getSkillLevel());
-      slea.skip(4);
+      p.skip(4);
       List<SummonAttackEntry> allDamage = new ArrayList<>();
-      byte direction = slea.readByte();
-      int numAttacked = slea.readByte();
-      slea.skip(8); // I failed lol (mob x,y and summon x,y), Thanks Gerald
+      byte direction = p.readByte();
+      int numAttacked = p.readByte();
+      p.skip(8); // I failed lol (mob x,y and summon x,y), Thanks Gerald
       for (int x = 0; x < numAttacked; x++) {
-         int monsterOid = slea.readInt(); // attacked oid
-         slea.skip(18);
-         int damage = slea.readInt();
+         int monsterOid = p.readInt(); // attacked oid
+         p.skip(18);
+         int damage = p.readInt();
          allDamage.add(new SummonAttackEntry(monsterOid, damage));
       }
       player.getMap()

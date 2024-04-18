@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Item implements Comparable<Item> {
     private static AtomicInteger runningCashId = new AtomicInteger(777000000);  // pets & rings shares cashid values
-    protected List<String> log;
+    protected List<String> itemLog;
     private int id, cashId, sn;
     private short position;
     private short quantity;
@@ -47,7 +47,7 @@ public class Item implements Comparable<Item> {
         this.id = id;
         this.position = position;
         this.quantity = quantity;
-        this.log = new LinkedList<>();
+        this.itemLog = new LinkedList<>();
         this.flag = 0;
     }
 
@@ -59,7 +59,7 @@ public class Item implements Comparable<Item> {
             this.pet = MaplePet.loadFromDb(id, position, petid).orElse(null);
         }
         this.flag = 0;
-        this.log = new LinkedList<>();
+        this.itemLog = new LinkedList<>();
     }
 
     public Item copy() {
@@ -67,7 +67,7 @@ public class Item implements Comparable<Item> {
         ret.flag = flag;
         ret.owner = owner;
         ret.expiration = expiration;
-        ret.log = new LinkedList<>(log);
+        ret.itemLog = new LinkedList<>(itemLog);
         return ret;
     }
 
@@ -145,7 +145,7 @@ public class Item implements Comparable<Item> {
     }
 
     public List<String> getLog() {
-        return Collections.unmodifiableList(log);
+        return Collections.unmodifiableList(itemLog);
     }
 
     public short getFlag() {

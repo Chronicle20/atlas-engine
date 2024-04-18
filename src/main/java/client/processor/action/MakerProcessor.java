@@ -31,12 +31,12 @@ import connection.packets.CUserLocal;
 import connection.packets.CWvsContext;
 import constants.game.GameConstants;
 import constants.inventory.ItemConstants;
+import net.packet.InPacket;
 import server.MakerItemFactory;
 import server.MakerItemFactory.MakerItemCreateEntry;
 import server.ItemInformationProvider;
 import tools.FilePrinter;
 import tools.Pair;
-import tools.data.input.SeekableLittleEndianAccessor;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -50,11 +50,11 @@ public class MakerProcessor {
 
     private static ItemInformationProvider ii = ItemInformationProvider.getInstance();
 
-    public static void makerAction(SeekableLittleEndianAccessor slea, MapleClient c) {
+    public static void makerAction(InPacket p, MapleClient c) {
         if (c.tryacquireClient()) {
             try {
-                int type = slea.readInt();
-                int toCreate = slea.readInt();
+                int type = p.readInt();
+                int toCreate = p.readInt();
                 int toDisassemble = -1, pos = -1;
                 boolean makerSucceeded = true;
 
@@ -66,45 +66,45 @@ public class MakerProcessor {
                     int fromLeftover = toCreate;
                     toCreate = ii.getMakerCrystalFromLeftover(toCreate);
                     if (toCreate == -1) {
-                        c.announce(CWvsContext.serverNotice(1, ii.getName(fromLeftover) + " is unavailable for Monster Crystal conversion."));
-                        c.announce(CUserLocal.makerEnableActions());
+                        c.sendPacket(CWvsContext.serverNotice(1, ii.getName(fromLeftover) + " is unavailable for Monster Crystal conversion."));
+                        c.sendPacket(CUserLocal.makerEnableActions());
                         return;
                     }
 
                     recipe = MakerItemFactory.generateLeftoverCrystalEntry(fromLeftover, toCreate);
                 } else if (type == 4) {  // disassembling
-                    slea.readInt(); // 1... probably inventory type
-                    pos = slea.readInt();
+                    p.readInt(); // 1... probably inventory type
+                    pos = p.readInt();
 
                     Item it = c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((short) pos);
                     if (it != null && it.getItemId() == toCreate) {
                         toDisassemble = toCreate;
 
-                        Pair<Integer, List<Pair<Integer, Integer>>> p = generateDisassemblyInfo(toDisassemble);
-                        if (p != null) {
-                            recipe = MakerItemFactory.generateDisassemblyCrystalEntry(toDisassemble, p.getLeft(), p.getRight());
+                        Pair<Integer, List<Pair<Integer, Integer>>> pr = generateDisassemblyInfo(toDisassemble);
+                        if (pr != null) {
+                            recipe = MakerItemFactory.generateDisassemblyCrystalEntry(toDisassemble, pr.getLeft(), pr.getRight());
                         } else {
-                            c.announce(CWvsContext.serverNotice(1, ii.getName(toCreate) + " is unavailable for Monster Crystal disassembly."));
-                            c.announce(CUserLocal.makerEnableActions());
+                            c.sendPacket(CWvsContext.serverNotice(1, ii.getName(toCreate) + " is unavailable for Monster Crystal disassembly."));
+                            c.sendPacket(CUserLocal.makerEnableActions());
                             return;
                         }
                     } else {
-                        c.announce(CWvsContext.serverNotice(1, "An unknown error occurred when trying to apply that item for disassembly."));
-                        c.announce(CUserLocal.makerEnableActions());
+                        c.sendPacket(CWvsContext.serverNotice(1, "An unknown error occurred when trying to apply that item for disassembly."));
+                        c.sendPacket(CUserLocal.makerEnableActions());
                         return;
                     }
                 } else {
                     if (ItemConstants.isEquipment(toCreate)) {   // only equips uses stimulant and reagents
-                        if (slea.readByte() != 0) {  // stimulant
+                        if (p.readByte() != 0) {  // stimulant
                             stimulantid = ii.getMakerStimulant(toCreate);
                             if (!c.getAbstractPlayerInteraction().haveItem(stimulantid)) {
                                 stimulantid = -1;
                             }
                         }
 
-                        int reagents = Math.min(slea.readInt(), getMakerReagentSlots(toCreate));
+                        int reagents = Math.min(p.readInt(), getMakerReagentSlots(toCreate));
                         for (int i = 0; i < reagents; i++) {  // crystals
-                            int reagentid = slea.readInt();
+                            int reagentid = p.readInt();
                             if (ItemConstants.isMakerReagent(reagentid)) {
                                 Short rs = reagentids.get(reagentid);
                                 if (rs == null) {
@@ -137,8 +137,8 @@ public class MakerProcessor {
 
                         if (!reagentids.isEmpty()) {
                             if (!removeOddMakerReagents(toCreate, reagentids)) {
-                                c.announce(CWvsContext.serverNotice(1, "You can only use WATK and MATK Strengthening Gems on weapon items."));
-                                c.announce(CUserLocal.makerEnableActions());
+                                c.sendPacket(CWvsContext.serverNotice(1, "You can only use WATK and MATK Strengthening Gems on weapon items."));
+                                c.sendPacket(CUserLocal.makerEnableActions());
                                 return;
                             }
                         }
@@ -152,40 +152,41 @@ public class MakerProcessor {
                 switch (createStatus) {
                     case -1:// non-available for Maker itemid has been tried to forge
                         FilePrinter.printError(FilePrinter.EXPLOITS, "Player " + c.getPlayer().getName() + " tried to craft itemid " + toCreate + " using the Maker skill.");
-                        c.announce(CWvsContext.serverNotice(1, "The requested item could not be crafted on this operation."));
-                        c.announce(CUserLocal.makerEnableActions());
+                        c.sendPacket(CWvsContext.serverNotice(1, "The requested item could not be crafted on this operation."));
+                        c.sendPacket(CUserLocal.makerEnableActions());
                         break;
 
                     case 1: // no items
-                        c.announce(CWvsContext.serverNotice(1, "You don't have all required items in your inventory to make " + ii.getName(toCreate) + "."));
-                        c.announce(CUserLocal.makerEnableActions());
+                        c.sendPacket(CWvsContext.serverNotice(1, "You don't have all required items in your inventory to make " + ii.getName(toCreate) + "."));
+                        c.sendPacket(CUserLocal.makerEnableActions());
                         break;
 
                     case 2: // no meso
-                        c.announce(CWvsContext.serverNotice(1, "You don't have enough mesos (" + GameConstants.numberWithCommas(recipe.getCost()) + ") to complete this operation."));
-                        c.announce(CUserLocal.makerEnableActions());
+                        c.sendPacket(CWvsContext.serverNotice(1, "You don't have enough mesos (" + GameConstants.numberWithCommas(recipe.getCost()) + ") to complete this operation."));
+                        c.sendPacket(CUserLocal.makerEnableActions());
                         break;
 
                     case 3: // no req level
-                        c.announce(CWvsContext.serverNotice(1, "You don't have enough level to complete this operation."));
-                        c.announce(CUserLocal.makerEnableActions());
+                        c.sendPacket(CWvsContext.serverNotice(1, "You don't have enough level to complete this operation."));
+                        c.sendPacket(CUserLocal.makerEnableActions());
                         break;
 
                     case 4: // no req skill level
-                        c.announce(CWvsContext.serverNotice(1, "You don't have enough Maker level to complete this operation."));
-                        c.announce(CUserLocal.makerEnableActions());
+                        c.sendPacket(CWvsContext.serverNotice(1, "You don't have enough Maker level to complete this operation."));
+                        c.sendPacket(CUserLocal.makerEnableActions());
                         break;
 
                     case 5: // inventory full
-                        c.announce(CWvsContext.serverNotice(1, "Your inventory is full."));
-                        c.announce(CUserLocal.makerEnableActions());
+                        c.sendPacket(CWvsContext.serverNotice(1, "Your inventory is full."));
+                        c.sendPacket(CUserLocal.makerEnableActions());
                         break;
 
                     default:
                         if (toDisassemble != -1) {
                             MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.EQUIP, (short) pos, (short) 1, false);
                         } else {
-                            recipe.getReqItems().forEach(p -> c.getAbstractPlayerInteraction().gainItem(p.getLeft(), (short) -p.getRight(), false));
+                            recipe.getReqItems().forEach(pr -> c.getAbstractPlayerInteraction().gainItem(pr.getLeft(),
+                                  (short) -pr.getRight(), false));
                         }
 
                         int cost = recipe.getCost();
@@ -194,9 +195,9 @@ public class MakerProcessor {
                                 c.getPlayer().gainMeso(-cost, false);
                             }
 
-                            for (Pair<Integer, Integer> p : recipe.getGainItems()) {
+                            for (Pair<Integer, Integer> pr : recipe.getGainItems()) {
                                 c.getPlayer().setCS(true);
-                                c.getAbstractPlayerInteraction().gainItem(p.getLeft(), p.getRight().shortValue(), false);
+                                c.getAbstractPlayerInteraction().gainItem(pr.getLeft(), pr.getRight().shortValue(), false);
                                 c.getPlayer().setCS(false);
                             }
                         } else {
@@ -217,14 +218,14 @@ public class MakerProcessor {
 
                         // thanks inhyuk for noticing missing MAKER_RESULT packets
                         if (type == 3) {
-                            c.announce(CUserLocal.makerResultCrystal(recipe.getGainItems().getFirst().getLeft(), recipe.getReqItems().getFirst().getLeft()));
+                            c.sendPacket(CUserLocal.makerResultCrystal(recipe.getGainItems().getFirst().getLeft(), recipe.getReqItems().getFirst().getLeft()));
                         } else if (type == 4) {
-                            c.announce(CUserLocal.makerResultDesynth(recipe.getReqItems().getFirst().getLeft(), recipe.getCost(), recipe.getGainItems()));
+                            c.sendPacket(CUserLocal.makerResultDesynth(recipe.getReqItems().getFirst().getLeft(), recipe.getCost(), recipe.getGainItems()));
                         } else {
-                            c.announce(CUserLocal.makerResult(makerSucceeded, recipe.getGainItems().getFirst().getLeft(), recipe.getGainItems().getFirst().getRight(), recipe.getCost(), recipe.getReqItems(), stimulantid, new LinkedList<>(reagentids.keySet())));
+                            c.sendPacket(CUserLocal.makerResult(makerSucceeded, recipe.getGainItems().getFirst().getLeft(), recipe.getGainItems().getFirst().getRight(), recipe.getCost(), recipe.getReqItems(), stimulantid, new LinkedList<>(reagentids.keySet())));
                         }
 
-                        c.announce(CUser.showMakerEffect(makerSucceeded));
+                        c.sendPacket(CUser.showMakerEffect(makerSucceeded));
                         c.getPlayer().getMap().broadcastMessage(c.getPlayer(), CUser.showForeignMakerEffect(c.getPlayer().getId(), makerSucceeded), false);
 
                         if (toCreate == 4260003 && type == 3 && c.getPlayer().getQuestStatus(6033) == 1) {

@@ -155,23 +155,23 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
 
    public void dispose() {
       NPCScriptManager.getInstance().dispose(this);
-      getClient().announce(CWvsContext.enableActions());
+      getClient().sendPacket(CWvsContext.enableActions());
    }
 
    public void sendNext(String text) {
-      getClient().announce(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "00 01", (byte) 0));
+      getClient().sendPacket(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "00 01", (byte) 0));
    }
 
    public void sendPrev(String text) {
-      getClient().announce(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "01 00", (byte) 0));
+      getClient().sendPacket(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "01 00", (byte) 0));
    }
 
    public void sendNextPrev(String text) {
-      getClient().announce(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "01 01", (byte) 0));
+      getClient().sendPacket(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "01 01", (byte) 0));
    }
 
    public void sendOk(String text) {
-      getClient().announce(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "00 00", (byte) 0));
+      getClient().sendPacket(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "00 00", (byte) 0));
    }
 
    public void sendDefault() {
@@ -179,48 +179,48 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
    }
 
    public void sendYesNo(String text) {
-      getClient().announce(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_ASK_YES_NO, text, "", (byte) 0));
+      getClient().sendPacket(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_ASK_YES_NO, text, "", (byte) 0));
    }
 
    public void sendAcceptDecline(String text) {
-      getClient().announce(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_ASK_YES_NO_ALT, text, "", (byte) 0));
+      getClient().sendPacket(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_ASK_YES_NO_ALT, text, "", (byte) 0));
    }
 
    public void sendSimple(String text) {
-      getClient().announce(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_ASK_MENU, text, "", (byte) 0));
+      getClient().sendPacket(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_ASK_MENU, text, "", (byte) 0));
    }
 
    public void sendNext(String text, byte speaker) {
-      getClient().announce(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "00 01", speaker));
+      getClient().sendPacket(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "00 01", speaker));
    }
 
    public void sendPrev(String text, byte speaker) {
-      getClient().announce(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "01 00", speaker));
+      getClient().sendPacket(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "01 00", speaker));
    }
 
    public void sendNextPrev(String text, byte speaker) {
-      getClient().announce(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "01 01", speaker));
+      getClient().sendPacket(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "01 01", speaker));
    }
 
    public void sendOk(String text, byte speaker) {
-      getClient().announce(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "00 00", speaker));
+      getClient().sendPacket(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_SAY, text, "00 00", speaker));
    }
 
    public void sendYesNo(String text, byte speaker) {
-      getClient().announce(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_ASK_YES_NO, text, "", speaker));
+      getClient().sendPacket(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_ASK_YES_NO, text, "", speaker));
    }
 
    public void sendAcceptDecline(String text, byte speaker) {
-      getClient().announce(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_ASK_YES_NO_ALT, text, "", speaker));
+      getClient().sendPacket(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_ASK_YES_NO_ALT, text, "", speaker));
    }
 
    public void sendSimple(String text, byte speaker) {
-      getClient().announce(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_ASK_MENU, text, "", speaker));
+      getClient().sendPacket(CScriptMan.getNPCTalk(npc, NPCTalkMessageType.ON_ASK_MENU, text, "", speaker));
    }
 
    public void sendStyle(String text, int[] styles) {
       if (styles.length > 0) {
-         getClient().announce(CScriptMan.getNPCTalkStyle(npc, text, styles));
+         getClient().sendPacket(CScriptMan.getNPCTalkStyle(npc, text, styles));
       } else {    // thanks Conrad for noticing empty styles crashing players
          sendOk("Sorry, there are no options of cosmetics available for you here at the moment.");
          dispose();
@@ -228,11 +228,11 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
    }
 
    public void sendGetNumber(String text, int def, int min, int max) {
-      getClient().announce(CScriptMan.getNPCTalkNum(npc, text, def, min, max));
+      getClient().sendPacket(CScriptMan.getNPCTalkNum(npc, text, def, min, max));
    }
 
    public void sendGetText(String text) {
-      getClient().announce(CScriptMan.getNPCTalkText(npc, text, ""));
+      getClient().sendPacket(CScriptMan.getNPCTalkText(npc, text, ""));
    }
 
    /*
@@ -245,7 +245,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
     * 6 = Kerning Subway
     */
    public void sendDimensionalMirror(String text) {
-      getClient().announce(CScriptMan.getDimensionalMirror(text));
+      getClient().sendPacket(CScriptMan.getDimensionalMirror(text));
    }
 
    public void setGetText(String text) {
@@ -455,7 +455,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
       Server.getInstance().allianceMessage(alliance.getId(), CWvsContext.getGuildAlliances(alliance, c.getWorld()), -1, -1);
       Server.getInstance()
             .allianceMessage(alliance.getId(), CWvsContext.allianceNotice(alliance.getId(), alliance.getNotice()), -1, -1);
-      c.announce(
+      c.sendPacket(
             CWvsContext.updateAllianceInfo(alliance, c.getWorld()));  // thanks Vcoc for finding an alliance update to leader issue
    }
 
@@ -496,7 +496,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
    }
 
    public void showFredrick() {
-      c.announce(CStoreBankDlg.getFredrick(getPlayer()));
+      c.sendPacket(CStoreBankDlg.getFredrick(getPlayer()));
    }
 
    public int partyMembersInMap() {
@@ -705,7 +705,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
             final MapleCharacter mc = mpc.getPlayer().get();
             mc.setChallenged(false);
             mc.changeMap(map, map.getPortal(0));
-            mc.announce(CWvsContext.serverNotice(6, LanguageConstants.getMessage(mc, LanguageConstants.CPQEntryLobby)));
+            mc.sendPacket(CWvsContext.serverNotice(6, LanguageConstants.getMessage(mc, LanguageConstants.CPQEntryLobby)));
             TimerManager.getInstance().schedule(() -> mapClock(3 * 60), 1500);
             mc.setCpqTimer(TimerManager.getInstance().schedule(() -> mc.changeMap(mapExit, mapExit.getPortal(0)), 3 * 60 * 1000));
          }
@@ -955,7 +955,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
                .forEach(c -> {
                   c.setChallenged(false);
                   c.changeMap(map, map.getPortal(0));
-                  c.announce(CWvsContext.serverNotice(6, LanguageConstants.getMessage(c, LanguageConstants.CPQEntryLobby)));
+                  c.sendPacket(CWvsContext.serverNotice(6, LanguageConstants.getMessage(c, LanguageConstants.CPQEntryLobby)));
                   TimerManager.getInstance().schedule(() -> mapClock(3 * 60), 1500);
                   c.setCpqTimer(
                         TimerManager.getInstance().schedule(() -> c.changeMap(mapExit, mapExit.getPortal(0)), 3 * 60 * 1000));
@@ -1104,11 +1104,11 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
          MapleCharacter chr = marriage.getPlayerById(cid);
          if (chr != null) {
             if (chr.getId() == player.getId()) {
-               player.announce(Wedding.OnWeddingGiftResult((byte) 0xA, marriage.getWishlistItems(groom),
+               player.sendPacket(Wedding.OnWeddingGiftResult((byte) 0xA, marriage.getWishlistItems(groom),
                      marriage.getGiftItems(player.getClient(), groom)));
             } else {
                marriage.setIntProperty("wishlistSelection", groom ? 0 : 1);
-               player.announce(Wedding.OnWeddingGiftResult((byte) 0x09, marriage.getWishlistItems(groom),
+               player.sendPacket(Wedding.OnWeddingGiftResult((byte) 0x09, marriage.getWishlistItems(groom),
                      marriage.getGiftItems(player.getClient(), groom)));
             }
          }
@@ -1116,7 +1116,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
    }
 
    public void sendMarriageGifts(List<Item> gifts) {
-      this.getPlayer().announce(Wedding.OnWeddingGiftResult((byte) 0xA, Collections.singletonList(""), gifts));
+      this.getPlayer().sendPacket(Wedding.OnWeddingGiftResult((byte) 0xA, Collections.singletonList(""), gifts));
    }
 
    public boolean createMarriageWishlist() {
@@ -1132,7 +1132,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
             }
 
             if (marriage.getProperty(wlKey).contentEquals("")) {
-               getClient().announce(Wedding.sendWishList());
+               getClient().sendPacket(Wedding.sendWishList());
                return true;
             }
          }

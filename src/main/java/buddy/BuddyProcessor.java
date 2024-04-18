@@ -15,6 +15,7 @@ import client.BuddyRequestInfo;
 import client.MapleCharacter;
 import connection.constants.BuddylistErrorMode;
 import connection.packets.CWvsContext;
+import net.packet.Packet;
 import net.server.PlayerStorage;
 import net.server.Server;
 import net.server.world.World;
@@ -42,7 +43,7 @@ public class BuddyProcessor {
          Optional<BuddyListEntry> entry = buddyList.get(cidFrom);
          BuddyCache.getInstance().addBuddy(key, new BuddyListEntry(name, BuddyConstants.DEFAULT_GROUP, cidFrom, (byte) -1,
                entry.map(BuddyListEntry::visible).orElse(false)));
-         addChar.announce(CWvsContext.updateBuddyChannel(cidFrom, (byte) -1));
+         addChar.sendPacket(CWvsContext.updateBuddyChannel(cidFrom, (byte) -1));
       }
    }
 
@@ -52,12 +53,12 @@ public class BuddyProcessor {
 
       if (buddyList.contains(cidFrom)) {
          BuddyCache.getInstance().addBuddy(key, new BuddyListEntry(name, BuddyConstants.DEFAULT_GROUP, cidFrom, channel, true));
-         addChar.announce(CWvsContext.updateBuddyChannel(cidFrom, (byte) (channel - 1)));
+         addChar.sendPacket(CWvsContext.updateBuddyChannel(cidFrom, (byte) (channel - 1)));
       }
    }
 
    public void refreshBuddies(MapleCharacter character) {
-      character.announce(CWvsContext.updateBuddylist(getBuddyList(character.getWorld(), character.getId()).getBuddies()));
+      character.sendPacket(CWvsContext.updateBuddylist(getBuddyList(character.getWorld(), character.getId()).getBuddies()));
    }
 
    public BuddyList getBuddyList(int worldId, int characterId) {
@@ -73,17 +74,17 @@ public class BuddyProcessor {
       Optional<BuddyListEntry> buddy = buddyList.get(toAddName);
       if (buddy.isPresent()) {
          if (!buddy.get().visible() && group.equals(buddy.get().group())) {
-            character.announce(CWvsContext.buddylistMessage(BuddylistErrorMode.ALREADY_REGISTERED_AS_FRIEND));
+            character.sendPacket(CWvsContext.buddylistMessage(BuddylistErrorMode.ALREADY_REGISTERED_AS_FRIEND));
             return;
          }
 
          buddyList = BuddyCache.getInstance().changeGroup(key, buddy.get().characterId(), group).orElseThrow();
-         character.announce(CWvsContext.updateBuddylist(buddyList.getBuddies()));
+         character.sendPacket(CWvsContext.updateBuddylist(buddyList.getBuddies()));
          return;
       }
 
       if (buddyList.isFull()) {
-         character.announce(CWvsContext.buddylistMessage(BuddylistErrorMode.YOUR_BUDDY_LIST_IS_FULL));
+         character.sendPacket(CWvsContext.buddylistMessage(BuddylistErrorMode.YOUR_BUDDY_LIST_IS_FULL));
          return;
       }
 
@@ -103,7 +104,7 @@ public class BuddyProcessor {
          }
 
          if (charWithId == null) {
-            character.announce(CWvsContext.buddylistMessage(BuddylistErrorMode.CHARACTER_NOT_FOUND));
+            character.sendPacket(CWvsContext.buddylistMessage(BuddylistErrorMode.CHARACTER_NOT_FOUND));
             return;
          }
 
@@ -138,7 +139,7 @@ public class BuddyProcessor {
          }
 
          if (buddyAddResult == BuddyList.BuddyAddResult.BUDDYLIST_FULL) {
-            character.announce(CWvsContext.buddylistMessage(BuddylistErrorMode.OTHER_BUDDY_LIST_IS_FULL));
+            character.sendPacket(CWvsContext.buddylistMessage(BuddylistErrorMode.OTHER_BUDDY_LIST_IS_FULL));
             return;
          }
 
@@ -160,7 +161,7 @@ public class BuddyProcessor {
          }
          buddyList = BuddyCache.getInstance().addBuddy(key, new BuddyListEntry(charWithId.name(), group, otherCid, displayChannel,
                true)).orElseThrow();
-         character.announce(CWvsContext.updateBuddylist(buddyList.getBuddies()));
+         character.sendPacket(CWvsContext.updateBuddylist(buddyList.getBuddies()));
       } catch (SQLException e) {
          e.printStackTrace();
       }
@@ -193,7 +194,7 @@ public class BuddyProcessor {
             if (otherName != null) {
                buddyList = BuddyCache.getInstance().addBuddy(key, new BuddyListEntry(otherName, BuddyConstants.DEFAULT_GROUP,
                      otherCharacterId, remoteChannel, true)).orElseThrow();
-               character.announce(CWvsContext.updateBuddylist(buddyList.getBuddies()));
+               character.sendPacket(CWvsContext.updateBuddylist(buddyList.getBuddies()));
                notifyRemoteChannel(world, character, remoteChannel, otherCharacterId, ADDED);
             }
          } catch (SQLException e) {
@@ -213,7 +214,7 @@ public class BuddyProcessor {
    public void nextPendingRequest(MapleCharacter character) {
       BuddyCharacterKey key = new BuddyCharacterKey(character.getWorld(), character.getId());
       BuddyCache.getInstance().pollPendingRequest(key)
-            .ifPresent(a -> character.announce(CWvsContext.requestBuddylistAdd(character.getId(), a)));
+            .ifPresent(a -> character.sendPacket(CWvsContext.requestBuddylistAdd(character.getId(), a)));
    }
 
    private BuddyList.BuddyAddResult requestBuddyAdd(MapleCharacter character, String addName, BuddyRequestInfo requestInfo) {
@@ -229,7 +230,7 @@ public class BuddyProcessor {
       if (!buddylist.contains(requestInfo.characterId())) {
          BuddyCharacterKey key = new BuddyCharacterKey(addChar.get().getWorld(), addChar.get().getId());
          BuddyCache.getInstance().requestBuddyAdd(key, requestInfo,
-               () -> addChar.get().announce(CWvsContext.requestBuddylistAdd(addChar.get().getId(), requestInfo)));
+               () -> addChar.get().sendPacket(CWvsContext.requestBuddylistAdd(addChar.get().getId(), requestInfo)));
          return BuddyList.BuddyAddResult.OK;
       }
 
@@ -266,11 +267,11 @@ public class BuddyProcessor {
                BuddyList.BuddyOperation.DELETED);
       }
       Optional<BuddyList> buddyList = BuddyCache.getInstance().remove(key, otherCharacterId);
-      buddyList.ifPresent(list -> character.announce(CWvsContext.updateBuddylist(list.getBuddies())));
+      buddyList.ifPresent(list -> character.sendPacket(CWvsContext.updateBuddylist(list.getBuddies())));
       nextPendingRequest(character);
    }
 
-   public void buddyChat(int worldId, int characterId, int[] recipientCharacterIds, byte[] packet) {
+   public void buddyChat(int worldId, int characterId, int[] recipientCharacterIds, Packet packet) {
       PlayerStorage playerStorage = Server.getInstance().getWorld(worldId).orElseThrow().getPlayerStorage();
 
       Arrays.stream(recipientCharacterIds).parallel()
@@ -283,10 +284,10 @@ public class BuddyProcessor {
    public void setBuddyCapacity(MapleCharacter character, int capacity) {
       BuddyCharacterKey key = new BuddyCharacterKey(character.getWorld(), character.getId());
       BuddyCache.getInstance().updateCapacity(key, capacity);
-      character.announce(CWvsContext.updateBuddyCapacity(capacity));
+      character.sendPacket(CWvsContext.updateBuddyCapacity(capacity));
    }
 
-   public void broadcast(int worldId, int characterId, byte[] packet) {
+   public void broadcast(int worldId, int characterId, Packet packet) {
       BuddyCharacterKey key = new BuddyCharacterKey(worldId, characterId);
       BuddyList buddyList = BuddyCache.getInstance().getBuddyList(key);
 
@@ -309,7 +310,7 @@ public class BuddyProcessor {
             .flatMap(Optional::stream)
             .forEach(c -> {
                updateBuddyChannel(worldId, c.getId(), characterId, channel);
-               c.announce(CWvsContext.updateBuddyChannel(characterId, channel - 1));
+               c.sendPacket(CWvsContext.updateBuddyChannel(characterId, channel - 1));
             });
    }
 
@@ -323,7 +324,7 @@ public class BuddyProcessor {
             .flatMap(Optional::stream)
             .forEach(c -> {
                updateBuddyChannel(worldId, c.getId(), characterId, -1);
-               c.announce(CWvsContext.updateBuddyChannel(characterId, -1));
+               c.sendPacket(CWvsContext.updateBuddyChannel(characterId, -1));
             });
    }
 

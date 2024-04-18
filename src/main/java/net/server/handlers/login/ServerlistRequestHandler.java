@@ -22,7 +22,7 @@ public final class ServerlistRequestHandler extends AbstractMaplePacketHandler {
             .map(CLogin::getWorldInformation)
             .forEach(c::sendPacket);
       c.sendPacket(CLogin.getEndOfWorldInformation());
-      //        c.sendPacket(CLogin.selectWorld(0));//too lazy to make a check lol
-      //        c.sendPacket(CLogin.sendRecommended(server.worldRecommendedList()));
+      c.sendPacket(CLogin.selectWorld(0));//too lazy to make a check lol
+      c.sendPacket(CLogin.sendRecommended(server.worldRecommendedList()));
    }
 }

@@ -45,6 +45,8 @@ public final class LoginPasswordHandler implements MaplePacketHandler {
             .map(CLogin::getWorldInformation)
             .forEach(c::sendPacket);
       c.sendPacket(CLogin.getEndOfWorldInformation());
+      c.sendPacket(CLogin.selectWorld(0));
+      c.sendPacket(CLogin.sendRecommended(Server.getInstance().worldRecommendedList()));
    }
 
    private static void disposeSql(Connection con, PreparedStatement ps) {

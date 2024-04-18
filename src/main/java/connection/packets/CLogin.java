@@ -10,10 +10,10 @@ import connection.constants.CharacterNameResponseCode;
 import connection.constants.LoginStatusCode;
 import connection.constants.SendOpcode;
 import connection.models.WorldInformation;
+import connection.models.WorldRecommendation;
 import net.packet.OutPacket;
 import net.packet.Packet;
 import net.server.Server;
-import tools.Pair;
 import tools.Randomizer;
 
 public class CLogin {
@@ -316,17 +316,15 @@ public class CLogin {
 
    public static Packet selectWorld(int world) {
       final OutPacket p = OutPacket.create(SendOpcode.LAST_CONNECTED_WORLD);
-      p.writeInt(world);//According to GMS, it should be the world that contains the most characters (most active)
+      //According to GMS, it should be the world that contains the most characters (most active)
+      p.writeInt(world);
       return p;
    }
 
-   public static Packet sendRecommended(List<Pair<Integer, String>> worlds) {
+   public static Packet sendRecommended(List<WorldRecommendation> recommendations) {
       final OutPacket p = OutPacket.create(SendOpcode.RECOMMENDED_WORLD_MESSAGE);
-      p.writeByte(worlds.size());//size
-      for (Pair<Integer, String> world : worlds) {
-         p.writeInt(world.getLeft());
-         p.writeString(world.getRight());
-      }
+      p.writeByte(recommendations.size());
+      recommendations.forEach(r -> r.encode(p));
       return p;
    }
 

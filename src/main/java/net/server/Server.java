@@ -60,6 +60,7 @@ import client.newyear.NewYearCardRecord;
 import client.processor.npc.FredrickProcessor;
 import config.YamlConfig;
 import connection.constants.WorldState;
+import connection.models.WorldRecommendation;
 import constants.game.GameConstants;
 import constants.inventory.ItemConstants;
 import constants.net.OpcodeConstants;
@@ -140,7 +141,7 @@ public class Server {
    private final AtomicLong currentTime = new AtomicLong(0);
    private final List<Map<Integer, String>> channels = new LinkedList<>();
    private final List<World> worlds = new ArrayList<>();
-   private final List<Pair<Integer, String>> worldRecommendedList = new LinkedList<>();
+   private final List<WorldRecommendation> worldRecommendedList = new LinkedList<>();
    private LoginServer loginServer;
    private long serverCurrentTime = 0;
 
@@ -458,7 +459,7 @@ public class Server {
       return online;
    }
 
-   public List<Pair<Integer, String>> worldRecommendedList() {
+   public List<WorldRecommendation> worldRecommendedList() {
       return worldRecommendedList;
    }
 
@@ -675,7 +676,7 @@ public class Server {
             new World(i, name, flag, event_message, exprate, droprate, bossdroprate, mesorate, questrate, travelrate, fishingrate);
       boolean canDeploy = world.getId() == worlds.size();
 
-      worldRecommendedList.add(new Pair<>(i, why_am_i_recommended));
+      worldRecommendedList.add(new WorldRecommendation(i, why_am_i_recommended));
       worlds.add(world);
 
       Map<Integer, String> channelInfo = new HashMap<>();

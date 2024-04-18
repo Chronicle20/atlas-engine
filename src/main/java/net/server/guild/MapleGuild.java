@@ -207,7 +207,7 @@ public class MapleGuild {
          ResultSet rs;
          Connection con = DatabaseConnection.getConnection();
          try (PreparedStatement ps = con.prepareStatement(
-               "SELECT `name`, `GP`, `logoBG`, `logoBGColor`, `logo`, `logoColor` FROM guilds ORDER BY `GP` DESC LIMIT 50")) {
+               "SELECT `name`, `GP`, `logoBG`, `logoBGColor`, `logo`, `logoColor` FROM guilds ORDER BY `GP` DESC LIMIT 50", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
             rs = ps.executeQuery();
             c.sendPacket(CWvsContext.showGuildRanks(npcid, rs));
          }

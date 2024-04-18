@@ -436,7 +436,7 @@ public class MapleGuild {
       broadcast(packet, exception, BCOp.NONE);
    }
 
-   public void broadcast(Packet packet, int exceptionId, BCOp bcop) {
+   private void broadcast(Packet packet, int exceptionId, BCOp bcop) {
       membersLock.lock(); // membersLock awareness thanks to ProjectNano dev team
       try {
          synchronized (notifications) {

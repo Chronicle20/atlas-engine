@@ -102,8 +102,7 @@ public class EventScriptManager extends AbstractScriptManager {
       }
    }
 
-   private class EventEntry {
-
+   private static class EventEntry {
       public Invocable iv;
       public EventManager em;
 

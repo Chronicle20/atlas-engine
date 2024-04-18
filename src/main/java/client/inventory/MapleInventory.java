@@ -307,7 +307,7 @@ public class MapleInventory implements Iterable<Item> {
     public int countNotOwnedById(int itemId) {
         return list().stream()
                 .filter(i -> i.getItemId() == itemId)
-                .filter(i -> i.getOwner().equals(""))
+                .filter(i -> i.getOwner().isEmpty())
                 .mapToInt(Item::getQuantity)
                 .sum();
     }

@@ -42,7 +42,7 @@ public class CharacterSaveService extends BaseService {
         chrSaveScheduler.registerSaveCharacter(characterId, runAction);
     }
 
-    private class CharacterSaveScheduler extends BaseScheduler {
+    private static class CharacterSaveScheduler extends BaseScheduler {
 
         public CharacterSaveScheduler() {
             super(MonitoredLockType.WORLD_SAVECHARS);

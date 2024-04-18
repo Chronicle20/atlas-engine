@@ -104,7 +104,6 @@ public class StorageProcessor {
                                 storage.sendTakenOut(c, item.getInventoryType());
                             } else {
                                 c.sendPacket(CWvsContext.enableActions());
-                                return;
                             }
                         } else {
                             c.sendPacket(CTrunkDlg.getStorageError((byte) 0x0A));
@@ -204,7 +203,6 @@ public class StorageProcessor {
                         storage.sendMeso(c);
                     } else {
                         c.sendPacket(CWvsContext.enableActions());
-                        return;
                     }
                 } else if (mode == 8) {// close... unless the player decides to enter cash shop!
                     storage.close();

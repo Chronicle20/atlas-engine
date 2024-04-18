@@ -51,7 +51,7 @@ public class MobMistService extends BaseService {
         mobMistSchedulers[getChannelSchedulerIndex(mapid)].registerMistCancelAction(runAction, delay);
     }
 
-    private class MobMistScheduler extends BaseScheduler {
+    private static class MobMistScheduler extends BaseScheduler {
 
         public MobMistScheduler() {
             super(MonitoredLockType.CHANNEL_MOBMIST);

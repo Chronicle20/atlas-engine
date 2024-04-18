@@ -40,7 +40,6 @@ public class CClientSocket {
     * @param mapleVersion The maple client version.
     * @param sendIv       the IV in use by the server for sending
     * @param recvIv       the IV in use by the server for receiving
-    * @return
     */
    public static Packet getHello(short mapleVersion, InitializationVector sendIv, InitializationVector recvIv) {
       OutPacket p = new ByteBufOutPacket();

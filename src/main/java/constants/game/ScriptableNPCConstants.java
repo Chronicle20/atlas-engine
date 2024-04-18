@@ -1,7 +1,7 @@
 package constants.game;
 
-/**
- * @brief ScriptableNPCConstants
+/*
+  @brief ScriptableNPCConstants
  * @author GabrielSin <gabrielsin@playellin.net>
  * @date 16/09/2018
  * <p>

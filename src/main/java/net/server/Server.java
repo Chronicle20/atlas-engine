@@ -21,7 +21,6 @@
  */
 package net.server;
 
-import java.security.Security;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -43,7 +42,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
-import java.util.logging.LogManager;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;

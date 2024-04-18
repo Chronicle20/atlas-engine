@@ -77,7 +77,6 @@ public final class NPCMoreTalkHandler extends AbstractMaplePacketHandler {
 
       if (c.getCM() != null) {
          NPCScriptManager.getInstance().action(c, action, lastMsg, selection);
-         return;
       }
    }
 }

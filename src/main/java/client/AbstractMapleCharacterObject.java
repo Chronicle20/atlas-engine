@@ -57,9 +57,7 @@ public abstract class AbstractMapleCharacterObject extends AbstractAnimatedMaple
         statRlock = MonitoredReadLockFactory.createLock(locks);
         statWlock = MonitoredWriteLockFactory.createLock(locks);
 
-        for (int i = 0; i < remainingSp.length; i++) {
-            remainingSp[i] = 0;
-        }
+       Arrays.fill(remainingSp, 0);
     }
 
     private static long clampStat(int v, int min, int max) {

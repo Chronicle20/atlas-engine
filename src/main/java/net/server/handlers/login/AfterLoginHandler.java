@@ -16,7 +16,7 @@ public final class AfterLoginHandler extends AbstractMaplePacketHandler {
          c3 = p.readByte();
       }
       if (c2 == 1 && c3 == 1) {
-         if (c.getPin() == null || c.getPin().equals("")) {
+         if (c.getPin() == null || c.getPin().isEmpty()) {
             c.sendPacket(CLogin.registerPin());
          } else {
             c.sendPacket(CLogin.requestPin());

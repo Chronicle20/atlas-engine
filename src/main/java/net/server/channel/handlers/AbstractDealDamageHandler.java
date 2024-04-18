@@ -31,6 +31,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import client.MapleCharacter;
 import client.MapleJob;
 import client.Skill;
@@ -112,6 +115,7 @@ import tools.Pair;
 import tools.Randomizer;
 
 public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandler {
+   private static final Logger log = LoggerFactory.getLogger(AbstractDealDamageHandler.class);
 
    private static void damageMonsterWithSkill(final MapleCharacter attacker, final MapleMap map, final MapleMonster monster,
                                               final int damage, int skillid, int fixedTime) {
@@ -634,7 +638,7 @@ public abstract class AbstractDealDamageHandler extends AbstractMaplePacketHandl
             }
          }
       } catch (Exception e) {
-         e.printStackTrace();
+         log.error("applyAttack produced an error.", e);
       }
    }
 

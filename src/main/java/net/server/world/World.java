@@ -77,7 +77,6 @@ import net.server.task.TimedMapObjectTask;
 import net.server.task.TimeoutTask;
 import net.server.task.WeddingReservationTask;
 import scripting.event.EventInstanceManager;
-import server.MapleSkillbookInformationProvider;
 import server.MapleStorage;
 import server.TimerManager;
 import server.maps.AbstractMapleMapObject;

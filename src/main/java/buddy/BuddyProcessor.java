@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import client.BuddyRequestInfo;
 import client.MapleCharacter;
 import connection.constants.BuddylistErrorMode;
@@ -22,6 +25,8 @@ import net.server.world.World;
 import tools.DatabaseConnection;
 
 public class BuddyProcessor {
+   private final static Logger log = LoggerFactory.getLogger(BuddyProcessor.class);
+
    private static BuddyProcessor instance = null;
 
    private BuddyProcessor() {
@@ -163,7 +168,7 @@ public class BuddyProcessor {
                true)).orElseThrow();
          character.sendPacket(CWvsContext.updateBuddylist(buddyList.getBuddies()));
       } catch (SQLException e) {
-         e.printStackTrace();
+         log.error("Error while adding buddy.", e);
       }
    }
 
@@ -198,7 +203,7 @@ public class BuddyProcessor {
                notifyRemoteChannel(world, character, remoteChannel, otherCharacterId, ADDED);
             }
          } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Error while accepting buddy request.", e);
          }
       }
       nextPendingRequest(character);
@@ -388,13 +393,15 @@ public class BuddyProcessor {
             }
          }
       } catch (SQLException e) {
-         e.printStackTrace();
+         log.error("Error deleting buddy records for character {} buddies.", character);
+         log.error(e.getMessage(), e);
       }
       try (PreparedStatement ps = con.prepareStatement("DELETE FROM buddies WHERE characterid = ?")) {
          ps.setInt(1, character.getId());
          ps.executeUpdate();
       } catch (SQLException e) {
-         e.printStackTrace();
+         log.error("Error deleting buddy records for character {} being deleted.", character);
+         log.error(e.getMessage(), e);
       }
    }
 }

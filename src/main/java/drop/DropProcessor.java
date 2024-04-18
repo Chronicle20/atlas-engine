@@ -67,7 +67,7 @@ public class DropProcessor {
                   .map(this::transform)
                   .toList();
          } else {
-            log.error("Error: HTTP request failed with status code {}", responseCode);
+            log.error("getDropsForMonster HTTP request failed with status code {}", responseCode);
          }
 
          connection.disconnect();
@@ -109,7 +109,7 @@ public class DropProcessor {
                   .map(dr -> transformContinentDrop(continentid, dr))
                   .toList();
          } else {
-            log.error("Error: HTTP request failed with status code {}", responseCode);
+            log.error("getRelevantGlobalDrops HTTP request failed with status code {}", responseCode);
          }
 
          connection.disconnect();
@@ -141,7 +141,7 @@ public class DropProcessor {
                   .map(Integer::parseInt)
                   .toList();
          } else {
-            log.error("Error: HTTP request failed with status code {}", responseCode);
+            log.error("getMonsterIdsWhoDrop HTTP request failed with status code {}", responseCode);
          }
 
          connection.disconnect();

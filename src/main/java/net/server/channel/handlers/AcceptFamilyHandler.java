@@ -4,6 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleFamily;
@@ -17,9 +20,9 @@ import net.server.coordinator.world.MapleInviteCoordinator.InviteResult;
 import net.server.coordinator.world.MapleInviteCoordinator.InviteType;
 import net.server.coordinator.world.MapleInviteCoordinator.MapleInviteResult;
 import tools.DatabaseConnection;
-import tools.FilePrinter;
 
 public final class AcceptFamilyHandler extends AbstractMaplePacketHandler {
+   private final static Logger log = LoggerFactory.getLogger(AcceptFamilyHandler.class);
 
    private static void insertNewFamilyRecord(int characterID, int familyID, int seniorID, boolean updateChar) {
       try (Connection con = DatabaseConnection.getConnection()) {
@@ -30,9 +33,7 @@ public final class AcceptFamilyHandler extends AbstractMaplePacketHandler {
             ps.setInt(3, seniorID);
             ps.executeUpdate();
          } catch (SQLException e) {
-            FilePrinter.printError(FilePrinter.FAMILY_ERROR, e,
-                  "Could not save new family record for char id " + characterID + ".");
-            e.printStackTrace();
+            log.error("Could not save new family record for char id {}.", characterID);
          }
          if (updateChar) {
             try (PreparedStatement ps = con.prepareStatement("UPDATE characters SET familyid = ? WHERE id = ?")) {
@@ -40,14 +41,11 @@ public final class AcceptFamilyHandler extends AbstractMaplePacketHandler {
                ps.setInt(2, characterID);
                ps.executeUpdate();
             } catch (SQLException e) {
-               FilePrinter.printError(FilePrinter.FAMILY_ERROR, e,
-                     "Could not update 'characters' 'familyid' record for char id " + characterID + ".");
-               e.printStackTrace();
+               log.error("Could not update 'characters' 'familyid' record for char id {}.", characterID);
             }
          }
       } catch (SQLException e) {
-         FilePrinter.printError(FilePrinter.FAMILY_ERROR, e, "Could not get connection to DB.");
-         e.printStackTrace();
+         log.error("Could not get connection to DB.");
       }
    }
 

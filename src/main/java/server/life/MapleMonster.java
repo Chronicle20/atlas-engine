@@ -50,7 +50,6 @@ import constants.skills.WhiteKnight;
 import drop.DropEntry;
 import drop.DropProcessor;
 import net.packet.Packet;
-import net.server.Server;
 import net.server.audit.LockCollector;
 import net.server.audit.locks.MonitoredLockType;
 import net.server.audit.locks.MonitoredReentrantLock;

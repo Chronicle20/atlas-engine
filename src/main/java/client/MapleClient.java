@@ -53,7 +53,6 @@ import net.PacketProcessor;
 import net.netty.InvalidPacketHeaderException;
 import net.packet.InPacket;
 import net.packet.Packet;
-import net.packet.logging.LoggingUtil;
 import net.packet.logging.MonitoredChrLogger;
 import net.server.Server;
 import net.server.audit.locks.MonitoredLockType;
@@ -497,7 +496,7 @@ public class MapleClient extends ChannelInboundHandlerAdapter {
                if (rs.next()) {
                   for (String mac : rs.getString("macs")
                         .split(", ")) {
-                     if (!mac.equals("")) {
+                     if (!mac.isEmpty()) {
                         macs.add(mac);
                      }
                   }

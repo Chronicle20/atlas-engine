@@ -4,7 +4,7 @@ package server.gachapon;
  * @author Alan (SharpAceX) - gachapon source classes stub
  * @author Ronan - parsed MapleSEA loots
  * <p>
- * MapleSEA-like loots thanks to AyumiLove - src: https://ayumilovemaple.wordpress.com/maplestory-gachapon-guide/
+ * MapleSEA-like loots thanks to AyumiLove - src: <a href="https://ayumilovemaple.wordpress.com/maplestory-gachapon-guide/">...</a>
  */
 
 public class MushroomShrine extends GachaponItems {

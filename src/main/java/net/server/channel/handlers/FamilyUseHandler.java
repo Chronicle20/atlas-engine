@@ -44,7 +44,6 @@ public final class FamilyUseHandler extends AbstractMaplePacketHandler {
                      } else {
                         c.sendPacket(CWvsContext.sendFamilyMessage(75,
                               0)); // wrong message, but close enough. (client should check this first anyway)
-                        return;
                      }
                   } else {
                      if (!FieldLimit.CANNOTMIGRATE.check(targetMap.getFieldLimit()) && !FieldLimit.CANNOTVIPROCK.check(
@@ -62,7 +61,6 @@ public final class FamilyUseHandler extends AbstractMaplePacketHandler {
                         useEntitlement(entry, type);
                      } else {
                         c.sendPacket(CWvsContext.sendFamilyMessage(75, 0));
-                        return;
                      }
                   }
                }

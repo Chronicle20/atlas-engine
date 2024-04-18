@@ -68,7 +68,7 @@ public class MobStatusService extends BaseService {
         mobStatusSchedulers[getChannelSchedulerIndex(mapid)].interruptMobStatus(mse);
     }
 
-    private class MobStatusScheduler extends BaseScheduler {
+    private static class MobStatusScheduler extends BaseScheduler {
 
         private Map<MonsterStatusEffect, MobStatusOvertimeEntry> registeredMobStatusOvertime = new HashMap<>();
         private MonitoredReentrantLock overtimeStatusLock = MonitoredReentrantLockFactory.createLock(MonitoredLockType.CHANNEL_OVTSTATUS, true);
@@ -136,10 +136,10 @@ public class MobStatusService extends BaseService {
             overtimeStatusLock = overtimeStatusLock.dispose();
         }
 
-        private class MobStatusOvertimeEntry {
+        private static class MobStatusOvertimeEntry {
             private int procCount;
-            private int procLimit;
-            private Runnable r;
+            private final int procLimit;
+            private final Runnable r;
 
             protected MobStatusOvertimeEntry(int delay, Runnable run) {
                 procCount = 0;

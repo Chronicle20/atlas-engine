@@ -559,7 +559,6 @@ public final class PlayerInteractionHandler extends AbstractMaplePacketHandler {
                   MapleTrade.visitTrade(chr, chr.getTrade().getPartner().getChr());
                } else {
                   chr.sendPacket(CMiniRoomBaseDlg.getMiniRoomError(2));
-                  return;
                }
             } else {
                if (isTradeOpen(chr)) {

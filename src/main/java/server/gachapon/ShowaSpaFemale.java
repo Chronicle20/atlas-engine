@@ -4,7 +4,7 @@ package server.gachapon;
  * @author Alan (SharpAceX) - gachapon source classes stub
  * @author Ronan - parsed MapleSEA loots
  * <p>
- * MapleSEA-like loots src: http://maplesecrets.blogspot.com/2011/06/gachapon-showa-towns-sauna-female-spa.html
+ * MapleSEA-like loots src: <a href="http://maplesecrets.blogspot.com/2011/06/gachapon-showa-towns-sauna-female-spa.html">...</a>
  */
 
 public class ShowaSpaFemale extends GachaponItems {

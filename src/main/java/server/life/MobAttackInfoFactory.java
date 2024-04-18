@@ -50,7 +50,7 @@ public class MobAttackInfoFactory {
                 if (mobData != null) {
 //					MapleData infoData = mobData.getChildByPath("info");
                     String linkedmob = MapleDataTool.getString("link", mobData, "");
-                    if (!linkedmob.equals("")) {
+                    if (!linkedmob.isEmpty()) {
                         mobData = dataSource.getData(StringUtil.getLeftPaddedStr(linkedmob + ".img", '0', 11));
                     }
                     MapleData attackData = mobData.getChildByPath("attack" + (attack + 1) + "/info");

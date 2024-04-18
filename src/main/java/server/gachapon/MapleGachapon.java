@@ -115,21 +115,6 @@ public class MapleGachapon {
       }
    }
 
-   public class MapleGachaponItem {
-      private int id;
-      private int tier;
-
-      public MapleGachaponItem(int t, int i) {
-         id = i;
-         tier = t;
-      }
-
-      public int getTier() {
-         return tier;
-      }
-
-      public int getId() {
-         return id;
-      }
+   public record MapleGachaponItem(int id, int tier) {
    }
 }

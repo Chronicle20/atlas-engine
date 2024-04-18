@@ -31,7 +31,7 @@ public final class BBSOperationHandler extends AbstractMaplePacketHandler {
 
          con.close();
       } catch (SQLException se) {
-         se.printStackTrace();
+         log.error("Error retrieving list of BBS threads.", se);
       }
    }
 
@@ -69,7 +69,7 @@ public final class BBSOperationHandler extends AbstractMaplePacketHandler {
          con.close();
          displayThread(c, localthreadid);
       } catch (SQLException se) {
-         se.printStackTrace();
+         log.error("Error creating new BBS reply.", se);
       }
    }
 
@@ -95,7 +95,7 @@ public final class BBSOperationHandler extends AbstractMaplePacketHandler {
          con.close();
          displayThread(client, localthreadid);
       } catch (SQLException se) {
-         se.printStackTrace();
+         log.error("Error updating BBS thread.", se);
       }
    }
 
@@ -131,7 +131,7 @@ public final class BBSOperationHandler extends AbstractMaplePacketHandler {
          con.close();
          displayThread(client, nextId);
       } catch (SQLException se) {
-         se.printStackTrace();
+         log.error("Error creating new BBS thread.", se);
       }
    }
 
@@ -171,7 +171,7 @@ public final class BBSOperationHandler extends AbstractMaplePacketHandler {
          ps.close();
          con.close();
       } catch (SQLException se) {
-         se.printStackTrace();
+         log.error("Error deleting BBS thread.", se);
       }
    }
 
@@ -211,7 +211,7 @@ public final class BBSOperationHandler extends AbstractMaplePacketHandler {
          con.close();
          displayThread(client, threadid, false);
       } catch (SQLException se) {
-         se.printStackTrace();
+         log.error("Error deleting BBS reply.", se);
       }
    }
 
@@ -254,11 +254,8 @@ public final class BBSOperationHandler extends AbstractMaplePacketHandler {
          }
 
          con.close();
-      } catch (SQLException se) {
-         se.printStackTrace();
-      } catch (RuntimeException re) {//btw we get this everytime for some reason, but replies work!
-         re.printStackTrace();
-         log.error("The number of reply rows does not match the replycount in thread.");
+      } catch (SQLException | RuntimeException se) {
+         log.error("Error displaying thread.", se);
       }
    }
 

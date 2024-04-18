@@ -51,7 +51,7 @@ public class EventService extends BaseService {
         eventSchedulers[getChannelSchedulerIndex(mapid)].registerDelayedAction(runAction, delay);
     }
 
-    private class EventScheduler extends BaseScheduler {
+    private static class EventScheduler extends BaseScheduler {
 
         public EventScheduler() {
             super(MonitoredLockType.CHANNEL_EVENTS);

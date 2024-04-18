@@ -145,7 +145,7 @@ public abstract class AbstractMovementPacketHandler extends AbstractMaplePacketH
                break;
             }
             default:
-               log.debug("Unhandled Case:{}", command);
+               log.debug("parseMovement does not handle the command {}", command);
                throw new EmptyMovementException(p);
          }
       }
@@ -242,7 +242,7 @@ public abstract class AbstractMovementPacketHandler extends AbstractMaplePacketH
                break;
             }
             default:
-               log.debug("Unhandled Case:{}", command);
+               log.debug("updatePosition does not handle the command {}", command);
                throw new EmptyMovementException(p);
          }
 

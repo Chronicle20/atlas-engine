@@ -39,7 +39,7 @@ public class SessionInitialization {
     * or else the initialization will be left hanging in a bad state,
     * which means any subsequent initialization from the same remote host will fail.
     */
-   public InitializationResult initialize(String remoteHost) {
+   InitializationResult initialize(String remoteHost) {
       final Lock lock = getLock(remoteHost);
       try {
          int tries = 0;

@@ -9,10 +9,15 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import client.BuddyRequestInfo;
 import tools.DatabaseConnection;
 
 public class BuddyProvider {
+   private final static Logger log = LoggerFactory.getLogger(BuddyProvider.class);
+
    protected static BuddyList loadBuddyList(BuddyCharacterKey key) {
       Map<Integer, BuddyListEntry> buddies = new HashMap<>();
       Deque<BuddyRequestInfo> pendingRequests = new LinkedList<>();
@@ -54,7 +59,7 @@ public class BuddyProvider {
          ps.close();
          con.close();
       } catch (SQLException ex) {
-         ex.printStackTrace();
+         log.error("Error loading buddy list", ex);
       }
       return new BuddyList(capacity, buddies, pendingRequests);
    }

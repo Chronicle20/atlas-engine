@@ -140,7 +140,7 @@ public class MapleMapFactory {
         MapleData infoData = mapData.getChildByPath("info");
 
         String link = MapleDataTool.getString(infoData.getChildByPath("link"), "");
-        if (!link.equals("")) { //nexon made hundreds of dojo maps so to reduce the size they added links.
+        if (!link.isEmpty()) { //nexon made hundreds of dojo maps so to reduce the size they added links.
             mapName = getMapName(Integer.parseInt(link));
             mapData = mapSource.getData(mapName);
         }
@@ -153,10 +153,10 @@ public class MapleMapFactory {
         map.setEventInstance(event);
 
         String onFirstEnter = MapleDataTool.getString(infoData.getChildByPath("onFirstUserEnter"), String.valueOf(mapid));
-        map.setOnFirstUserEnter(onFirstEnter.equals("") ? String.valueOf(mapid) : onFirstEnter);
+        map.setOnFirstUserEnter(onFirstEnter.isEmpty() ? String.valueOf(mapid) : onFirstEnter);
 
         String onEnter = MapleDataTool.getString(infoData.getChildByPath("onUserEnter"), String.valueOf(mapid));
-        map.setOnUserEnter(onEnter.equals("") ? String.valueOf(mapid) : onEnter);
+        map.setOnUserEnter(onEnter.isEmpty() ? String.valueOf(mapid) : onEnter);
 
         map.setFieldLimit(MapleDataTool.getInt(infoData.getChildByPath("fieldLimit"), 0));
         map.setMobInterval((short) MapleDataTool.getInt(infoData.getChildByPath("createMobInterval"), 5000));

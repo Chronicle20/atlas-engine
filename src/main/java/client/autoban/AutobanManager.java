@@ -96,7 +96,7 @@ public class AutobanManager {
 
     /**
      * Timestamp checker
-     *
+     * <p>
      * <code>type</code>:<br>
      * 1: Pet Food<br>
      * 2: InventoryMerge<br>
@@ -109,7 +109,6 @@ public class AutobanManager {
      * 9: HealOverTimeMP<br>
      *
      * @param type type
-     * @return Timestamp checker
      */
     public void setTimestamp(int type, int time, int times) {
         if (this.timestamp[type] == time) {

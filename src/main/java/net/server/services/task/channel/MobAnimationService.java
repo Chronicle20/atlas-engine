@@ -60,7 +60,7 @@ public class MobAnimationService extends BaseService {
         return mobAnimationSchedulers[getChannelSchedulerIndex(mapid)].registerAnimationMode(mobHash, delay);
     }
 
-    private class MobAnimationScheduler extends BaseScheduler {
+    private static class MobAnimationScheduler extends BaseScheduler {
         Set<Integer> onAnimationMobs = new HashSet<>(1000);
         private MonitoredReentrantLock animationLock = MonitoredReentrantLockFactory.createLock(MonitoredLockType.CHANNEL_MOBANIMAT, true);
 

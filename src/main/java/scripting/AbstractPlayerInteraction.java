@@ -382,12 +382,7 @@ public class AbstractPlayerInteraction {
    }
 
    public boolean isQuestCompleted(int id) {
-      try {
-         return getQuestStat(id) == MapleQuestStatus.Status.COMPLETED;
-      } catch (NullPointerException e) {
-         e.printStackTrace();
-         return false;
-      }
+      return getQuestStat(id) == MapleQuestStatus.Status.COMPLETED;
    }
 
    public boolean isQuestActive(int id) {
@@ -395,12 +390,7 @@ public class AbstractPlayerInteraction {
    }
 
    public boolean isQuestStarted(int id) {
-      try {
-         return getQuestStat(id) == MapleQuestStatus.Status.STARTED;
-      } catch (NullPointerException e) {
-         e.printStackTrace();
-         return false;
-      }
+      return getQuestStat(id) == MapleQuestStatus.Status.STARTED;
    }
 
    public void setQuestProgress(int id, String progress) {
@@ -511,21 +501,11 @@ public class AbstractPlayerInteraction {
    }
 
    public boolean startQuest(int id, int npc) {
-      try {
-         return MapleQuest.getInstance(id).forceStart(getPlayer(), npc);
-      } catch (NullPointerException ex) {
-         ex.printStackTrace();
-         return false;
-      }
+      return MapleQuest.getInstance(id).forceStart(getPlayer(), npc);
    }
 
    public boolean completeQuest(int id, int npc) {
-      try {
-         return MapleQuest.getInstance(id).forceComplete(getPlayer(), npc);
-      } catch (NullPointerException ex) {
-         ex.printStackTrace();
-         return false;
-      }
+      return MapleQuest.getInstance(id).forceComplete(getPlayer(), npc);
    }
 
    public Item evolvePet(byte slot, int afterId) {

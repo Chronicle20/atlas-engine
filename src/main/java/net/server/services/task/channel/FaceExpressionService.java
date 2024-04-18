@@ -103,7 +103,7 @@ public class FaceExpressionService extends BaseService {
         }
     }
 
-    private class FaceExpressionScheduler extends BaseScheduler {
+    private static class FaceExpressionScheduler extends BaseScheduler {
 
         public FaceExpressionScheduler(final MonitoredReentrantLock channelFaceLock) {
             super(MonitoredLockType.CHANNEL_FACESCHDL, Collections.singletonList(channelFaceLock));

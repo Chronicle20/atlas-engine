@@ -5,10 +5,18 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import tools.DatabaseConnection;
 
 public class BanProcessor {
+   private final static Logger log = LoggerFactory.getLogger(BanProcessor.class);
+
    private static BanProcessor instance = null;
+
+   private BanProcessor() {
+   }
 
    public static synchronized BanProcessor getInstance() {
       if (instance == null) {
@@ -16,10 +24,6 @@ public class BanProcessor {
       }
 
       return instance;
-   }
-
-
-   private BanProcessor() {
    }
 
    public boolean ban(String id, String reason, boolean accountId) {
@@ -61,7 +65,7 @@ public class BanProcessor {
          con.close();
          return ret;
       } catch (SQLException ex) {
-         ex.printStackTrace();
+         log.error(ex.getMessage(), ex);
       } finally {
          try {
             if (ps != null && !ps.isClosed()) {
@@ -74,7 +78,7 @@ public class BanProcessor {
                con.close();
             }
          } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Error while closing connection", e);
          }
       }
       return false;

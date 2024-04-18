@@ -98,7 +98,7 @@ public class CLogin {
       p.writeLong(CCommon.getTime(-2));
       p.writeLong(CCommon.getTime(System.currentTimeMillis()));
       p.writeInt(0);
-      p.writeString("http://maplesolaxia.com");
+      p.writeString("https://maplestory.nexon.co.jp/");
       return p;
    }
 

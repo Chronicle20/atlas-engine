@@ -103,7 +103,6 @@ public final class CashOperationHandler extends AbstractMaplePacketHandler {
          FilePrinter.printError(FilePrinter.CASHITEM_BOUGHT,
                "Could not add " + qty + " slots to " + MapleCharacter.makeMapleReadable(c.getPlayer().getName()) + "'s account.");
       }
-      return;
    }
 
    private static void increaseTrunkCountByButton(MapleClient c, CashShop cs, int pointType) {
@@ -360,7 +359,6 @@ public final class CashOperationHandler extends AbstractMaplePacketHandler {
                int serialNumber = p.readInt();
                int newWorldSelection = p.readInt();
                buyTransferWorldItemPacket(c, cs, serialNumber, newWorldSelection);
-               return;
             }
          } finally {
             c.releaseClient();

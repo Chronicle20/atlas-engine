@@ -233,7 +233,7 @@ public class MapleLifeFactory {
          }
          return new MapleMonster(mid, stats);
       } catch (NullPointerException npe) {
-         log.error("MOB {} failed to load. Issue: {}", mid, npe.getMessage());
+         log.error("MOB {} failed to load. Could not retrieve monster. Issue: {}", mid, npe.getMessage());
          log.error("Exception: ", npe);
          return null;
       }
@@ -253,7 +253,7 @@ public class MapleLifeFactory {
             return stats.getLevel();
          }
       } catch (NullPointerException npe) {
-         log.error("MOB {} failed to load. Issue: {}", mid, npe.getMessage());
+         log.error("MOB {} failed to load. Could not retrieve monster level. Issue: {}", mid, npe.getMessage());
          log.error("Exception: ", npe);
       }
 

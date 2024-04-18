@@ -46,7 +46,7 @@ public class MapPlayersCommand extends Command {
                 String maxhp = Integer.toString(chr.getCurrentMaxHp());
                 String name = chr.getName() + ": " + hp + "/" + maxhp;
                 if (map == curMap) {
-                    names = names.equals("") ? name : (names + ", " + name);
+                    names = names.isEmpty() ? name : (names + ", " + name);
                 }
             }
         }

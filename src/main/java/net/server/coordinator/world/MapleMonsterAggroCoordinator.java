@@ -378,7 +378,7 @@ public class MapleMonsterAggroCoordinator {
         lock = lock.dispose();
     }
 
-    private class PlayerAggroEntry {
+    private static class PlayerAggroEntry {
         protected int cid;
         protected int averageDamage = 0;
         protected int currentDamageInstances = 0;

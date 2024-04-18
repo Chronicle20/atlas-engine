@@ -98,8 +98,8 @@ public class CMiniRoomBaseDlg {
       final OutPacket p = OutPacket.create(SendOpcode.PLAYER_INTERACTION);
       p.writeByte(PlayerInteractionHandler.Action.UPDATE_PLAYERSHOP.getCode());
       p.writeByte(position);
-      p.writeShort(item.getQuantity());
-      p.writeString(item.getBuyer());
+      p.writeShort(item.quantity());
+      p.writeString(item.buyer());
 
       return p;
    }
@@ -115,10 +115,10 @@ public class CMiniRoomBaseDlg {
          List<MaplePlayerShop.SoldItem> sold = shop.getSold();
          p.writeByte(sold.size());
          for (MaplePlayerShop.SoldItem s : sold) {
-            p.writeInt(s.getItemId());
-            p.writeShort(s.getQuantity());
-            p.writeInt(s.getMesos());
-            p.writeString(s.getBuyer());
+            p.writeInt(s.itemid());
+            p.writeShort(s.quantity());
+            p.writeInt(s.mesos());
+            p.writeString(s.buyer());
          }
       } else {
          p.writeByte(0);
@@ -547,10 +547,10 @@ public class CMiniRoomBaseDlg {
          List<MapleHiredMerchant.SoldItem> sold = hm.getSold();
          p.writeByte(sold.size());
          for (MapleHiredMerchant.SoldItem s : sold) {
-            p.writeInt(s.getItemId());
-            p.writeShort(s.getQuantity());
-            p.writeInt(s.getMesos());
-            p.writeString(s.getBuyer());
+            p.writeInt(s.itemid());
+            p.writeShort(s.quantity());
+            p.writeInt(s.mesos());
+            p.writeString(s.buyer());
          }
          p.writeInt(chr.getMerchantMeso());//:D?
       }

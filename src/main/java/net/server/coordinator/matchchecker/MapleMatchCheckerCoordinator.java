@@ -125,7 +125,8 @@ public class MapleMatchCheckerCoordinator {
     }
 
     private MapleMatchCheckingElement createMatchConfirmationInternal(MatchCheckerType matchType, int world, int leaderCid, AbstractMatchCheckerListener leaderListener, Set<Integer> players, String message) {
-        MapleMatchCheckingElement mmce = new MapleMatchCheckingElement(matchType, leaderCid, world, leaderListener, players, message);
+        MapleMatchCheckingElement mmce =
+              new MapleMatchCheckingElement(matchType, leaderCid, world, leaderListener, players, message);
 
         for (Integer cid : players) {
             matchEntries.put(cid, mmce);
@@ -295,7 +296,7 @@ public class MapleMatchCheckerCoordinator {
         }
     }
 
-    private class MapleMatchCheckingEntry {
+    private static class MapleMatchCheckingEntry {
         private boolean accepted;
         private int cid;
 
@@ -318,18 +319,18 @@ public class MapleMatchCheckerCoordinator {
         }
     }
 
-    private class MapleMatchCheckingElement {
-        private int leaderCid;
-        private int world;
+    private static class MapleMatchCheckingElement {
+        private final int leaderCid;
+        private final int world;
 
-        private MatchCheckerType matchType;
-        private AbstractMatchCheckerListener listener;
+        private final MatchCheckerType matchType;
+        private final AbstractMatchCheckerListener listener;
 
-        private Map<Integer, MapleMatchCheckingEntry> confirmingMembers = new HashMap<>();
+        private final Map<Integer, MapleMatchCheckingEntry> confirmingMembers = new HashMap<>();
         private int confirmCount;
         private boolean active = true;
 
-        private String message;
+        private final String message;
 
         private MapleMatchCheckingElement(MatchCheckerType matchType, int leaderCid, int world, AbstractMatchCheckerListener leaderListener, Set<Integer> matchPlayers, String message) {
             this.leaderCid = leaderCid;

@@ -4,6 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ban.BanProcessor;
 import client.MapleCharacter;
 import client.MapleClient;
@@ -15,6 +18,8 @@ import server.TimerManager;
 import tools.DatabaseConnection;
 
 public class BanCommand extends Command {
+   private final static Logger log = LoggerFactory.getLogger(BanCommand.class);
+
    {
       setDescription("");
    }
@@ -47,9 +52,8 @@ public class BanCommand extends Command {
 
             con.close();
          } catch (SQLException ex) {
-            ex.printStackTrace();
-            c.getPlayer().message("Error occured while banning IP address");
-            c.getPlayer().message(target.getName() + "'s IP was not banned: " + ip);
+            log.error("Error occured while banning IP address");
+            log.error("{}'s IP was not banned: {}", target.getName(), ip);
          }
          target.getClient().banMacs();
          reason = c.getPlayer().getName() + " banned " + readableTargetName + " for " + reason + " (IP: " + ip + ") " + "(MAC: "

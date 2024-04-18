@@ -606,33 +606,6 @@ public class MaplePlayerShop extends AbstractMapleMapObject {
       return MapleMapObjectType.SHOP;
    }
 
-   public class SoldItem {
-
-      int itemid, mesos;
-      short quantity;
-      String buyer;
-
-      public SoldItem(String buyer, int itemid, short quantity, int mesos) {
-         this.buyer = buyer;
-         this.itemid = itemid;
-         this.quantity = quantity;
-         this.mesos = mesos;
-      }
-
-      public String getBuyer() {
-         return buyer;
-      }
-
-      public int getItemId() {
-         return itemid;
-      }
-
-      public short getQuantity() {
-         return quantity;
-      }
-
-      public int getMesos() {
-         return mesos;
-      }
+   public record SoldItem(String buyer, int itemid, short quantity, int mesos) {
    }
 }

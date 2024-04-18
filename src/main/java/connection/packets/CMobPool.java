@@ -54,12 +54,12 @@ public class CMobPool {
       p.writeShort(0); //Origin FH //life.getStartFh()
       p.writeShort(life.getFh());
 
-      /**
-       * -4: Fake -3: Appear after linked mob is dead -2: Fade in 1: Smoke 3:
-       * King Slime spawn 4: Summoning rock thing, used for 3rd job? 6:
-       * Magical shit 7: Smoke shit 8: 'The Boss' 9/10: Grim phantom shit?
-       * 11/12: Nothing? 13: Frankenstein 14: Angry ^ 15: Orb animation thing,
-       * ?? 16: ?? 19: Mushroom castle boss thing
+      /*
+        -4: Fake -3: Appear after linked mob is dead -2: Fade in 1: Smoke 3:
+        King Slime spawn 4: Summoning rock thing, used for 3rd job? 6:
+        Magical shit 7: Smoke shit 8: 'The Boss' 9/10: Grim phantom shit?
+        11/12: Nothing? 13: Frankenstein 14: Angry ^ 15: Orb animation thing,
+        ?? 16: ?? 19: Mushroom castle boss thing
        */
 
       if (life.getParentMobOid() != 0) {

@@ -68,9 +68,9 @@ public class CSummonedPool {
       p.writeByte(direction);
       p.writeByte(allDamage.size());
       for (SummonDamageHandler.SummonAttackEntry attackEntry : allDamage) {
-         p.writeInt(attackEntry.getMonsterOid()); // oid
+         p.writeInt(attackEntry.monsterOid()); // oid
          p.writeByte(6); // who knows
-         p.writeInt(attackEntry.getDamage()); // damage
+         p.writeInt(attackEntry.damage()); // damage
       }
 
       return p;

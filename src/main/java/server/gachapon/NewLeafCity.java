@@ -4,7 +4,7 @@ package server.gachapon;
  * @author Alan (SharpAceX) - gachapon source classes stub & pirate equipment
  * @author Ronan - parsed MapleSEA loots, thanks Vcoc for noticing somewhat unbalanced loots in NLC
  * <p>
- * MapleSEA-like loots thanks to AyumiLove - src: https://ayumilovemaple.wordpress.com/maplestory-gachapon-guide/
+ * MapleSEA-like loots thanks to AyumiLove - src: <a href="https://ayumilovemaple.wordpress.com/maplestory-gachapon-guide/">...</a>
  */
 
 public class NewLeafCity extends GachaponItems {

@@ -397,10 +397,10 @@ public class MaplePartySearchCoordinator {
         }
     }
 
-    private class LeaderSearchMetadata {
-        private int minLevel;
-        private int maxLevel;
-        private List<MapleJob> searchedJobs;
+    private static class LeaderSearchMetadata {
+        private final int minLevel;
+        private final int maxLevel;
+        private final List<MapleJob> searchedJobs;
 
         private int reentryCount;
 

@@ -302,9 +302,7 @@ public class MapleFamily {
             }
             con.setAutoCommit(true);
             //reset repChanged after successful save
-            for (MapleFamilyEntry entry : members.values()) {
-                entry.savedSuccessfully();
-            }
+            members.values().forEach(MapleFamilyEntry::savedSuccessfully);
         } catch (SQLException e) {
             FilePrinter.printError(FilePrinter.FAMILY_ERROR, e, "Could not get connection to DB.");
             e.printStackTrace();

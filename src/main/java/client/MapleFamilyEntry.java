@@ -29,7 +29,9 @@ import tools.Pair;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -241,11 +243,7 @@ public class MapleFamilyEntry {
         }
         setTotalSeniors(getTotalSeniors() + seniorCount);
         this.generation += seniorCount;
-        for (MapleFamilyEntry junior : juniors) {
-            if (junior != null) {
-                junior.addSeniorCount(seniorCount, newFamily);
-            }
-        }
+        Arrays.stream(juniors).filter(Objects::nonNull).forEach(j -> j.addSeniorCount(seniorCount, newFamily));
     }
 
     private synchronized void addJuniorCount(int juniorCount) { // climbs tree and adds junior count

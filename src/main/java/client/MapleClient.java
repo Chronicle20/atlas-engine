@@ -494,8 +494,7 @@ public class MapleClient extends ChannelInboundHandlerAdapter {
             ps.setInt(1, accId);
             try (ResultSet rs = ps.executeQuery()) {
                if (rs.next()) {
-                  for (String mac : rs.getString("macs")
-                        .split(", ")) {
+                  for (String mac : rs.getString("macs").split(", ")) {
                      if (!mac.isEmpty()) {
                         macs.add(mac);
                      }
@@ -546,13 +545,7 @@ public class MapleClient extends ChannelInboundHandlerAdapter {
          }
          try (PreparedStatement ps = con.prepareStatement("INSERT INTO macbans (mac, aid) VALUES (?, ?)")) {
             for (String mac : macs) {
-               boolean matched = false;
-               for (String filter : filtered) {
-                  if (mac.matches(filter)) {
-                     matched = true;
-                     break;
-                  }
-               }
+               boolean matched = filtered.stream().anyMatch(mac::matches);
                if (!matched) {
                   ps.setString(1, mac);
                   ps.setString(2, String.valueOf(getAccID()));
@@ -975,8 +968,7 @@ public class MapleClient extends ChannelInboundHandlerAdapter {
                .getLeader()
                .getId() == idz && map != null) {
             MaplePartyCharacter lchr = null;
-            for (MaplePartyCharacter pchr : party.get()
-                  .getMembers()) {
+            for (MaplePartyCharacter pchr : party.get().getMembers()) {
                if (pchr != null && pchr.getId() != idz && (lchr == null || lchr.getLevel() <= pchr.getLevel())
                      && map.getCharacterById(pchr.getId())
                      .isPresent()) {
@@ -1317,18 +1309,14 @@ public class MapleClient extends ChannelInboundHandlerAdapter {
          return;
       }
 
-      for (World w : Server.getInstance()
-            .getWorlds()) {
+      for (World w : Server.getInstance().getWorlds()) {
          for (MapleCharacter chr : w.getPlayerStorage()
                .getAllCharacters()) {
             if (accid == chr.getAccountID()) {
-               FilePrinter.print(FilePrinter.EXPLOITS,
-                     "Player:  " + chr.getName() + " has been removed from " + GameConstants.WORLD_NAMES[w.getId()]
-                           + ". Possible Dupe attempt.");
-               chr.getClient()
-                     .forceDisconnect();
-               w.getPlayerStorage()
-                     .removePlayer(chr.getId());
+               log.error("Player: {} has been removed from {}. Possible Dupe attempt.", chr.getName(),
+                     GameConstants.WORLD_NAMES[w.getId()]);
+               chr.getClient().forceDisconnect();
+               w.getPlayerStorage().removePlayer(chr.getId());
             }
          }
       }

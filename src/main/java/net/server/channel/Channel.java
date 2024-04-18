@@ -64,6 +64,7 @@ public final class Channel {
    private final int channel;
    private final int port;
    private final String ip;
+   private boolean adultChannel = false;
    private PlayerStorage players = new PlayerStorage();
    private ChannelServer channelServer;
    private String serverMessage;
@@ -145,6 +146,10 @@ public final class Channel {
       } catch (Exception e) {
          e.printStackTrace();
       }
+   }
+
+   public boolean isAdultChannel() {
+      return adultChannel;
    }
 
    private static String[] getEvents() {

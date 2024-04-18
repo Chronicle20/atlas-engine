@@ -43,6 +43,7 @@ import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +59,7 @@ import client.inventory.manipulator.MapleCashidGenerator;
 import client.newyear.NewYearCardRecord;
 import client.processor.npc.FredrickProcessor;
 import config.YamlConfig;
+import connection.constants.WorldState;
 import constants.game.GameConstants;
 import constants.inventory.ItemConstants;
 import constants.net.OpcodeConstants;
@@ -109,9 +111,8 @@ public class Server {
    private static final Set<Integer> activeFly = new HashSet<>();
    private static final Map<Integer, Integer> couponRates = new HashMap<>(30);
    private static final List<Integer> activeCoupons = new LinkedList<>();
-   private static ChannelDependencies channelDependencies;
-
    public static long uptime = System.currentTimeMillis();
+   private static ChannelDependencies channelDependencies;
    private static Server instance = null;
    private final Properties subnetInfo = new Properties();
    private final Map<Integer, Set<Integer>> accountChars = new HashMap<>();
@@ -137,11 +138,10 @@ public class Server {
    private final MonitoredReadLock lgnRLock = MonitoredReadLockFactory.createLock(lgnLock);
    private final MonitoredWriteLock lgnWLock = MonitoredWriteLockFactory.createLock(lgnLock);
    private final AtomicLong currentTime = new AtomicLong(0);
-
+   private final List<Map<Integer, String>> channels = new LinkedList<>();
+   private final List<World> worlds = new ArrayList<>();
+   private final List<Pair<Integer, String>> worldRecommendedList = new LinkedList<>();
    private LoginServer loginServer;
-   private List<Map<Integer, String>> channels = new LinkedList<>();
-   private List<World> worlds = new ArrayList<>();
-   private List<Pair<Integer, String>> worldRecommendedList = new LinkedList<>();
    private long serverCurrentTime = 0;
 
    private boolean availableDeveloperRoom = false;
@@ -538,21 +538,15 @@ public class Server {
    }
 
    public Optional<Channel> getChannel(int world, int channel) {
-      return getWorld(world)
-            .flatMap(w -> w.getChannel(channel));
+      return getWorld(world).flatMap(w -> w.getChannel(channel));
    }
 
    public List<Channel> getChannelsFromWorld(int world) {
-      return getWorld(world)
-            .map(World::getChannels)
-            .orElse(Collections.emptyList());
+      return getWorld(world).map(World::getChannels).orElse(Collections.emptyList());
    }
 
    public List<Channel> getAllChannels() {
-      return getWorlds().stream()
-            .map(World::getChannels)
-            .flatMap(Collection::stream)
-            .collect(Collectors.toList());
+      return getWorlds().stream().map(World::getChannels).flatMap(Collection::stream).collect(Collectors.toList());
    }
 
    public Set<Integer> getOpenChannels(int world) {
@@ -661,7 +655,9 @@ public class Server {
          wldRLock.unlock();
       }
 
-      log.info("Starting world {}", i);
+      String name = GameConstants.WORLD_NAMES[i];
+
+      log.info("{} - {}: Starting world.", name, i);
 
       int exprate = YamlConfig.config.worlds.get(i).exp_rate;
       int mesorate = YamlConfig.config.worlds.get(i).meso_rate;
@@ -671,14 +667,12 @@ public class Server {
       int travelrate = YamlConfig.config.worlds.get(i).travel_rate;
       int fishingrate = YamlConfig.config.worlds.get(i).fishing_rate;
 
-      int flag = YamlConfig.config.worlds.get(i).flag;
+      WorldState flag = WorldState.fromState((byte) YamlConfig.config.worlds.get(i).flag).orElse(WorldState.NORMAL);
       String event_message = YamlConfig.config.worlds.get(i).event_message;
       String why_am_i_recommended = YamlConfig.config.worlds.get(i).why_am_i_recommended;
 
-      World world = new World(i,
-            flag,
-            event_message,
-            exprate, droprate, bossdroprate, mesorate, questrate, travelrate, fishingrate);
+      World world =
+            new World(i, name, flag, event_message, exprate, droprate, bossdroprate, mesorate, questrate, travelrate, fishingrate);
       boolean canDeploy = world.getId() == worlds.size();
 
       worldRecommendedList.add(new Pair<>(i, why_am_i_recommended));
@@ -692,7 +686,7 @@ public class Server {
          channelInfo.put(channelid, channel.getIP());
       }
 
-      wldWLock.lock();    // thanks Ashen for noticing a deadlock issue when trying to deploy a channel
+      wldWLock.lock();
       try {
          if (canDeploy) {
             channels.add(i, channelInfo);
@@ -703,11 +697,10 @@ public class Server {
 
       if (canDeploy) {
          world.setServerMessage(YamlConfig.config.worlds.get(i).server_message);
-
-         log.info("Finished loading world {}", i);
+         log.info("{} - {}: Finished loading world.", name, i);
          return i;
       } else {
-         log.error("Could not load world {}...", i);
+         log.error("{} - {}: Could not load world...", name, i);
          world.shutdown();
          return -2;
       }
@@ -818,12 +811,8 @@ public class Server {
    }
 
    public void commitActiveCoupons() {
-      getWorlds().stream()
-            .map(World::getPlayerStorage)
-            .map(PlayerStorage::getAllCharacters)
-            .flatMap(Collection::stream)
-            .filter(MapleCharacter::isLoggedin)
-            .forEach(MapleCharacter::updateCouponRates);
+      getWorlds().stream().map(World::getPlayerStorage).map(PlayerStorage::getAllCharacters).flatMap(Collection::stream)
+            .filter(MapleCharacter::isLoggedin).forEach(MapleCharacter::updateCouponRates);
    }
 
    public void toggleCoupon(Integer couponId) {
@@ -1065,10 +1054,7 @@ public class Server {
 
       try {
          int worldCount = Math.min(GameConstants.WORLD_NAMES.length, YamlConfig.config.server.WORLDS);
-
-         for (int i = 0; i < worldCount; i++) {
-            initWorld();
-         }
+         IntStream.range(0, worldCount).forEachOrdered(_ -> initWorld());
          initWorldPlayerRanking();
 
          MaplePlayerNPCFactory.loadFactoryMetadata();
@@ -1163,9 +1149,7 @@ public class Server {
       synchronized (alliances) {
          MapleAlliance alliance = alliances.get(id);
          if (alliance != null) {
-            alliance.getGuilds().stream()
-                  .map(guilds::get)
-                  .forEach(g -> g.setAllianceId(0));
+            alliance.getGuilds().stream().map(guilds::get).forEach(g -> g.setAllianceId(0));
             alliances.remove(id);
          }
       }
@@ -1174,10 +1158,7 @@ public class Server {
    public void allianceMessage(int id, Packet packet, int exception, int guildex) {
       MapleAlliance alliance = alliances.get(id);
       if (alliance != null) {
-         alliance.getGuilds().stream()
-               .filter(guildId -> guildId != guildex)
-               .map(guilds::get)
-               .filter(Objects::nonNull)
+         alliance.getGuilds().stream().filter(guildId -> guildId != guildex).map(guilds::get).filter(Objects::nonNull)
                .forEach(g -> g.broadcast(packet, exception));
       }
    }
@@ -1235,9 +1216,7 @@ public class Server {
 
    public Optional<MapleGuild> getGuildByName(String name) {
       synchronized (guilds) {
-         return guilds.values().stream()
-               .filter(g -> g.getName().equalsIgnoreCase(name))
-               .findFirst();
+         return guilds.values().stream().filter(g -> g.getName().equalsIgnoreCase(name)).findFirst();
       }
    }
 
@@ -1402,11 +1381,8 @@ public class Server {
    }
 
    public boolean isGmOnline(int world) {
-      return getChannelsFromWorld(world).stream()
-            .map(Channel::getPlayerStorage)
-            .map(PlayerStorage::getAllCharacters)
-            .flatMap(Collection::stream)
-            .anyMatch(MapleCharacter::isGM);
+      return getChannelsFromWorld(world).stream().map(Channel::getPlayerStorage).map(PlayerStorage::getAllCharacters)
+            .flatMap(Collection::stream).anyMatch(MapleCharacter::isGM);
    }
 
    public void changeFly(Integer accountid, boolean canFly) {
@@ -1452,11 +1428,8 @@ public class Server {
    public short getAccountWorldCharacterCount(Integer accountId, Integer worldId) {
       lgnRLock.lock();
       try {
-         return (short) accountChars.get(accountId).stream()
-               .map(this::getCharacterWorld)
-               .flatMap(Optional::stream)
-               .filter(id -> id.equals(worldId))
-               .count();
+         return (short) accountChars.get(accountId).stream().map(this::getCharacterWorld).flatMap(Optional::stream)
+               .filter(id -> id.equals(worldId)).count();
       } finally {
          lgnRLock.unlock();
       }
@@ -1535,8 +1508,7 @@ public class Server {
                                            Integer toWorld) { // used before setting the new worldid on the character object
       lgnWLock.lock();
       try {
-         getCharacterWorld(chr.getId())
-               .flatMap(this::getWorld)
+         getCharacterWorld(chr.getId()).flatMap(this::getWorld)
                .ifPresent(w -> w.unregisterAccountCharacterView(chr.getAccountID(), chr.getId()));
 
          worldChars.put(chr.getId(), toWorld);
@@ -1619,22 +1591,14 @@ public class Server {
 
          lgnRLock.lock();
          try {
-            accWorlds = getAccountCharacterEntries(accId).stream()
-                  .map(this::getCharacterWorld)
-                  .flatMap(Optional::stream)
+            accWorlds = getAccountCharacterEntries(accId).stream().map(this::getCharacterWorld).flatMap(Optional::stream)
                   .collect(Collectors.toSet());
          } finally {
             lgnRLock.unlock();
          }
 
-         int gmLevel = accWorlds.stream()
-               .map(this::getWorld)
-               .flatMap(Optional::stream)
-               .map(World::getAllCharactersView)
-               .flatMap(Collection::stream)
-               .mapToInt(MapleCharacter::gmLevel)
-               .max()
-               .orElse(0);
+         int gmLevel = accWorlds.stream().map(this::getWorld).flatMap(Optional::stream).map(World::getAllCharactersView)
+               .flatMap(Collection::stream).mapToInt(MapleCharacter::gmLevel).max().orElse(0);
 
          c.setGMLevel(gmLevel);
          return;
@@ -1687,9 +1651,7 @@ public class Server {
       Set<Integer> accWorlds;
       lgnWLock.lock();
       try {
-         accWorlds = accountChars.get(accountId).stream()
-               .map(this::getCharacterWorld)
-               .flatMap(Optional::stream)
+         accWorlds = accountChars.get(accountId).stream().map(this::getCharacterWorld).flatMap(Optional::stream)
                .collect(Collectors.toSet());
       } finally {
          lgnWLock.unlock();
@@ -1786,10 +1748,7 @@ public class Server {
       try {
          long timeNow = System.currentTimeMillis();
 
-         toDisconnect = inLoginState.entrySet().stream()
-               .filter(e -> timeNow > e.getValue())
-               .map(Entry::getKey)
-               .toList();
+         toDisconnect = inLoginState.entrySet().stream().filter(e -> timeNow > e.getValue()).map(Entry::getKey).toList();
          toDisconnect.forEach(inLoginState::remove);
       } finally {
          srvLock.unlock();

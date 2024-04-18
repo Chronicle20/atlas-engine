@@ -263,7 +263,7 @@ public class MapleClient extends ChannelInboundHandlerAdapter {
          } catch (NullPointerException e) {
             e.printStackTrace();
          }
-      }, SECONDS.toMillis(15));
+      }, SECONDS.toMillis(60));
    }
 
    public void disconnectSession() {

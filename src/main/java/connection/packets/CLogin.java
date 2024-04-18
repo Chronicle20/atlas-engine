@@ -9,10 +9,10 @@ import config.YamlConfig;
 import connection.constants.CharacterNameResponseCode;
 import connection.constants.LoginStatusCode;
 import connection.constants.SendOpcode;
+import connection.models.WorldInformation;
 import net.packet.OutPacket;
 import net.packet.Packet;
 import net.server.Server;
-import net.server.channel.Channel;
 import tools.Pair;
 import tools.Randomizer;
 
@@ -60,10 +60,8 @@ public class CLogin {
     * @return the successful authentication packet
     */
    public static Packet getAuthSuccess(MapleClient c) {
-      Server.getInstance()
-            .loadAccountCharacters(c);    // locks the login session until data is recovered from the cache or the DB.
-      Server.getInstance()
-            .loadAccountStorages(c);
+      Server.getInstance().loadAccountCharacters(c);    // locks the login session until data is recovered from the cache or the DB.
+      Server.getInstance().loadAccountStorages(c);
 
       final OutPacket p = OutPacket.create(SendOpcode.LOGIN_STATUS);
       p.writeByte(LoginStatusCode.OK.getCode());
@@ -71,8 +69,7 @@ public class CLogin {
       p.writeInt(c.getAccID());
       p.writeByte(c.getGender());
 
-      boolean canFly = Server.getInstance()
-            .canFly(c.getAccID());
+      boolean canFly = Server.getInstance().canFly(c.getAccID());
       p.writeBool((YamlConfig.config.server.USE_ENFORCE_ADMIN_ACCOUNT || canFly)
             && c.getGMLevel() > 1);    // thanks Steve(kaito1410) for pointing the GM account boolean here
       p.writeByte(((YamlConfig.config.server.USE_ENFORCE_ADMIN_ACCOUNT || canFly) && c.getGMLevel() > 1) ? 0x80 :
@@ -186,42 +183,24 @@ public class CLogin {
    }
 
    /**
-    * Gets a packet detailing a server and its channels.
+    * Gets a packet detailing a world and its channels.
     *
-    * @param serverId
-    * @param serverName  The name of the server.
-    * @param flag
-    * @param eventmsg
-    * @param channelLoad Load of the channel - 1200 seems to be max.
-    * @return The server info packet.
+    * @param worldInformation Information which describes the world to the user on world selection.
+    * @return The composed packet.
     */
-   public static Packet getServerList(int serverId, String serverName, int flag, String eventmsg, List<Channel> channelLoad) {
-      final OutPacket p = OutPacket.create(SendOpcode.SERVERLIST);
-      p.writeByte(serverId);
-      p.writeString(serverName);
-      p.writeByte(flag);
-      p.writeString(eventmsg);
-      p.writeShort(100); // rate modifier, don't ask O.O!
-      p.writeShort(100); // rate modifier, don't ask O.O!
-      p.writeByte(channelLoad.size());
-      for (Channel ch : channelLoad) {
-         p.writeString(serverName + "-" + ch.getId());
-         p.writeInt(ch.getChannelCapacity());
-         p.writeByte(1);// nWorldID
-         p.writeByte(ch.getId() - 1);// nChannelID
-         p.writeBool(false);// bAdultChannel
-      }
-      p.writeShort(0);
+   public static Packet getWorldInformation(WorldInformation worldInformation) {
+      final OutPacket p = OutPacket.create(SendOpcode.WORLD_INFORMATION);
+      worldInformation.encode(p);
       return p;
    }
 
    /**
-    * Gets a packet saying that the server list is over.
+    * Gets a packet saying that the world list is over.
     *
-    * @return The end of server list packet.
+    * @return The composed packet.
     */
-   public static Packet getEndOfServerList() {
-      final OutPacket p = OutPacket.create(SendOpcode.SERVERLIST);
+   public static Packet getEndOfWorldInformation() {
+      final OutPacket p = OutPacket.create(SendOpcode.WORLD_INFORMATION);
       p.writeByte(0xFF);
       return p;
    }

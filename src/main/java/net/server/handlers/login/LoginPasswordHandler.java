@@ -17,8 +17,8 @@ import org.mindrot.jbcrypt.BCrypt;
 import client.MapleClient;
 import config.YamlConfig;
 import connection.constants.LoginStatusCode;
+import connection.models.WorldInformation;
 import connection.packets.CLogin;
-import constants.game.GameConstants;
 import net.MaplePacketHandler;
 import net.packet.InPacket;
 import net.server.Server;
@@ -40,11 +40,11 @@ public final class LoginPasswordHandler implements MaplePacketHandler {
 
       List<World> worlds = Server.getInstance().getWorlds();
       c.requestedServerlist(worlds.size());
-      for (World world : worlds) {
-         c.sendPacket(CLogin.getServerList(world.getId(), GameConstants.WORLD_NAMES[world.getId()], world.getFlag(),
-               world.getEventMessage(), world.getChannels()));
-      }
-      c.sendPacket(CLogin.getEndOfServerList());
+      worlds.stream()
+            .map(WorldInformation::fromWorld)
+            .map(CLogin::getWorldInformation)
+            .forEach(c::sendPacket);
+      c.sendPacket(CLogin.getEndOfWorldInformation());
    }
 
    private static void disposeSql(Connection con, PreparedStatement ps) {

@@ -35,6 +35,7 @@ import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleFamily;
 import config.YamlConfig;
+import connection.constants.WorldState;
 import connection.packets.CField;
 import connection.packets.CUIMessenger;
 import connection.packets.CUserRemote;
@@ -96,7 +97,16 @@ public class World {
          new MonitoredReentrantReadWriteLock(MonitoredLockType.WORLD_CHANNELS, true);
    private final MonitoredReentrantReadWriteLock suggestLock =
          new MonitoredReentrantReadWriteLock(MonitoredLockType.WORLD_SUGGEST, true);
-   private int id, flag, exprate, droprate, bossdroprate, mesorate, questrate, travelrate, fishingrate;
+   private final int id;
+   private final String name;
+   private WorldState flag;
+   private int exprate;
+   private int droprate;
+   private int bossdroprate;
+   private int mesorate;
+   private int questrate;
+   private int travelrate;
+   private int fishingrate;
    private String eventmsg;
    private List<Channel> channels = new ArrayList<>();
    private Map<Integer, Byte> pnpcStep = new HashMap<>();
@@ -166,9 +176,11 @@ public class World {
    private ScheduledFuture<?> partySearchSchedule;
    private ScheduledFuture<?> timeoutSchedule;
 
-   public World(int world, int flag, String eventmsg, int exprate, int droprate, int bossdroprate, int mesorate, int questrate,
+   public World(int worldId, String name, WorldState flag, String eventmsg, int exprate, int droprate, int bossdroprate, int mesorate,
+                int questrate,
                 int travelrate, int fishingrate) {
-      this.id = world;
+      this.id = worldId;
+      this.name = name;
       this.flag = flag;
       this.eventmsg = eventmsg;
       this.exprate = exprate;
@@ -405,11 +417,11 @@ public class World {
       return true;
    }
 
-   public int getFlag() {
+   public WorldState getFlag() {
       return flag;
    }
 
-   public void setFlag(byte b) {
+   public void setFlag(WorldState b) {
       this.flag = b;
    }
 
@@ -669,6 +681,10 @@ public class World {
 
    public int getId() {
       return id;
+   }
+
+   public String getName() {
+      return name;
    }
 
    public void addFamily(int id, MapleFamily f) {
@@ -2014,6 +2030,6 @@ public class World {
       players = null;
 
       clearWorldData();
-      log.info("Finished shutting down world {}", id);
+      log.info("{} - {}: Finished shutting down world.", name, id);
    }
 }

@@ -4,7 +4,7 @@ public enum SendOpcode {
 
    LOGIN_STATUS(0x00), // CLogin::OnCheckPasswordResult
    GUEST_ID_LOGIN(0x01), // CLogin::OnGuestIDLoginResult
-   SERVERLIST(0x02), // CLogin::OnWorldInformation
+   WORLD_INFORMATION(0x02), // CLogin::OnWorldInformation
    CHARLIST(0x03), // CLogin::OnSelectWorldResult
    SERVER_IP(0x04), // CLogin::OnSelectCharacterResult
    CHAR_NAME_RESPONSE(0x05), // CLogin::OnCheckDuplicatedIDResult

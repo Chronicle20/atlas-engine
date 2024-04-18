@@ -9,6 +9,7 @@ import config.YamlConfig;
 import connection.constants.CharacterNameResponseCode;
 import connection.constants.LoginStatusCode;
 import connection.constants.SendOpcode;
+import connection.constants.ViewAllCharacterMode;
 import connection.models.WorldInformation;
 import connection.models.WorldRecommendation;
 import net.packet.OutPacket;
@@ -138,7 +139,7 @@ public class CLogin {
 
    public static Packet showAllCharacter(int chars, int unk) {
       final OutPacket p = OutPacket.create(SendOpcode.VIEW_ALL_CHAR);
-      p.writeByte(chars > 0 ? 1 : 5); // 2: already connected to server, 3 : unk error (view-all-characters), 5 : cannot find any
+      p.writeByte(chars > 0 ? ViewAllCharacterMode.CHARACTER_COUNT.getMode() : ViewAllCharacterMode.SEARCH_FAILED.getMode());
       p.writeInt(chars);
       p.writeInt(unk);
       return p;
@@ -146,13 +147,12 @@ public class CLogin {
 
    public static Packet showAllCharacterInfo(int worldid, List<MapleCharacter> chars, boolean usePic) {
       final OutPacket p = OutPacket.create(SendOpcode.VIEW_ALL_CHAR);
-      p.writeByte(0);
+      p.writeByte(ViewAllCharacterMode.NORMAL.getMode());
       p.writeByte(worldid);
       p.writeByte(chars.size());
       for (MapleCharacter chr : chars) {
          addCharEntry(p, chr, true);
       }
-      p.writeByte(usePic ? 1 : 2);
       return p;
    }
 

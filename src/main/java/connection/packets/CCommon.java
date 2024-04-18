@@ -1,13 +1,13 @@
 package connection.packets;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 
+import character.BodyPart;
 import client.GuidedBullet;
 import client.MapleCharacter;
 import client.MapleClient;
@@ -20,8 +20,6 @@ import client.TemporaryStatType;
 import client.TemporaryStatValue;
 import client.inventory.Equip;
 import client.inventory.Item;
-import client.inventory.MapleInventory;
-import client.inventory.MapleInventoryType;
 import client.inventory.MaplePet;
 import client.newyear.NewYearCardRecord;
 import constants.game.ExpTable;
@@ -32,6 +30,7 @@ import net.packet.OutPacket;
 import server.ItemInformationProvider;
 import server.maps.MapleMiniGame;
 import server.maps.MaplePlayerShop;
+import tools.ItemUtils;
 import tools.Pair;
 import tools.StringUtil;
 
@@ -237,36 +236,23 @@ public class CCommon {
    }
 
    private static void addCharEquips(OutPacket p, MapleCharacter chr) {
-      MapleInventory equip = chr.getInventory(MapleInventoryType.EQUIPPED);
-      Collection<Item> ii = ItemInformationProvider.getInstance().canWearEquipment(chr, equip.list());
-      Map<Short, Integer> myEquip = new LinkedHashMap<>();
-      Map<Short, Integer> maskedEquip = new LinkedHashMap<>();
-      for (Item item : ii) {
-         short pos = (byte) (item.getPosition() * -1);
-         if (pos < 100 && myEquip.get(pos) == null) {
-            myEquip.put(pos, item.getItemId());
-         } else if (pos > 100 && pos != 111) { // don't ask. o.o
-            pos -= 100;
-            if (myEquip.get(pos) != null) {
-               maskedEquip.put(pos, myEquip.get(pos));
-            }
-            myEquip.put(pos, item.getItemId());
-         } else if (myEquip.get(pos) != null) {
-            maskedEquip.put(pos, item.getItemId());
-         }
-      }
-      for (Map.Entry<Short, Integer> entry : myEquip.entrySet()) {
-         p.writeByte(entry.getKey());
-         p.writeInt(entry.getValue());
-      }
+      Map<BodyPart, Integer> charEquips = new HashMap<>();
+      Map<BodyPart, Integer> charMaskedEquips = new HashMap<>();
+      List<Integer> cWeapon = new ArrayList<>();
+      ItemUtils.fillEquipsMaps(chr, charEquips, charMaskedEquips, cWeapon);
+      Integer cWeaponID = cWeapon.isEmpty() ? null : cWeapon.getFirst();
+      charEquips.forEach((BodyPart, itemID) -> {
+         p.writeByte(BodyPart.getVal());
+         p.writeInt(itemID);
+      });
       p.writeByte(0xFF);
-      for (Map.Entry<Short, Integer> entry : maskedEquip.entrySet()) {
-         p.writeByte(entry.getKey());
-         p.writeInt(entry.getValue());
-      }
+      charMaskedEquips.forEach((BodyPart, itemID) -> {
+         p.writeByte(BodyPart.getVal());
+         p.writeInt(itemID);
+      });
       p.writeByte(0xFF);
-      Item cWeapon = equip.getItem((short) -111);
-      p.writeInt(cWeapon != null ? cWeapon.getItemId() : 0);
+      p.writeInt(cWeaponID != null ? cWeaponID : 0);
+
       for (int i = 0; i < 3; i++) {
          p.writeInt(chr.getPet(i).map(Item::getItemId).orElse(0));
       }

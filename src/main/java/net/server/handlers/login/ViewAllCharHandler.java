@@ -15,7 +15,8 @@ public final class ViewAllCharHandler extends AbstractMaplePacketHandler {
    @Override
    public void handlePacket(InPacket p, MapleClient c) {
       try {
-         if (!c.canRequestCharlist()) {   // client breaks if the charlist request pops too soon
+         // client breaks if the charlist request pops too soon
+         if (!c.canRequestCharlist()) {
             c.sendPacket(CLogin.showAllCharacter(0, 0));
             return;
          }

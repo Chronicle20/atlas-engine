@@ -3,7 +3,7 @@ package connection.packets;
 import java.util.List;
 
 import client.MapleCharacter;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import net.packet.OutPacket;
 import net.packet.Packet;
 

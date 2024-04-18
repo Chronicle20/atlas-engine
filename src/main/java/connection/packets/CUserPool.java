@@ -11,7 +11,7 @@ import client.MapleMount;
 import client.TemporaryStatType;
 import client.inventory.MapleInventoryType;
 import client.newyear.NewYearCardRecord;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import constants.inventory.ItemConstants;
 import net.packet.OutPacket;
 import net.packet.Packet;

@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import client.inventory.Item;
 import client.inventory.MapleInventoryType;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import net.packet.OutPacket;
 import net.packet.Packet;
 

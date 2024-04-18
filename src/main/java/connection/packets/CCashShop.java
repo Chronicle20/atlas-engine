@@ -6,7 +6,7 @@ import client.MapleCharacter;
 import client.MapleClient;
 import client.inventory.Item;
 import connection.constants.CashShopOperationClientMode;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import constants.game.GameConstants;
 import net.packet.OutPacket;
 import net.packet.Packet;

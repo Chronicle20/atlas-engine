@@ -7,8 +7,9 @@ import client.MapleCharacter;
 import client.MapleClient;
 import config.YamlConfig;
 import connection.constants.CharacterNameResponseCode;
+import connection.constants.DeleteCharacterCode;
 import connection.constants.LoginStatusCode;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import connection.constants.ViewAllCharacterMode;
 import connection.models.WorldInformation;
 import connection.models.WorldRecommendation;
@@ -279,27 +280,10 @@ public class CLogin {
       return p;
    }
 
-   /**
-    * State :
-    * 0x00 = success
-    * 0x06 = Trouble logging into the game?
-    * 0x09 = Unknown error
-    * 0x0A = Could not be processed due to too many connection requests to the server.
-    * 0x12 = invalid bday
-    * 0x14 = incorrect pic
-    * 0x16 = Cannot delete a guild master.
-    * 0x18 = Cannot delete a character with a pending wedding.
-    * 0x1A = Cannot delete a character with a pending world transfer.
-    * 0x1D = Cannot delete a character that has a family.
-    *
-    * @param cid
-    * @param state
-    * @return
-    */
-   public static Packet deleteCharResponse(int cid, int state) {
+   public static Packet deleteCharResponse(int cid, DeleteCharacterCode code) {
       final OutPacket p = OutPacket.create(SendOpcode.DELETE_CHAR_RESPONSE);
       p.writeInt(cid);
-      p.writeByte(state);
+      p.writeByte(code.getCode());
       return p;
    }
 

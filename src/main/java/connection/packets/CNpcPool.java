@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import net.packet.OutPacket;
 import net.packet.Packet;
 import server.life.MapleNPC;

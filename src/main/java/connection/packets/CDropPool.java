@@ -3,7 +3,7 @@ package connection.packets;
 import java.awt.*;
 
 import client.MapleCharacter;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import net.packet.OutPacket;
 import net.packet.Packet;
 import server.maps.MapleMapItem;

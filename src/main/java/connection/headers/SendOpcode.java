@@ -1,4 +1,4 @@
-package connection.constants;
+package connection.headers;
 
 public enum SendOpcode {
 

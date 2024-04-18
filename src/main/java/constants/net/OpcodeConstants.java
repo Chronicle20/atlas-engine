@@ -19,8 +19,8 @@
 */
 package constants.net;
 
-import connection.constants.RecvOpcode;
-import connection.constants.SendOpcode;
+import connection.headers.RecvOpcode;
+import connection.headers.SendOpcode;
 
 import java.util.Arrays;
 import java.util.HashMap;

@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import client.MapleCharacter;
 import client.inventory.Item;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import connection.packets.CCommon;
 import net.packet.OutPacket;
 import net.packet.Packet;

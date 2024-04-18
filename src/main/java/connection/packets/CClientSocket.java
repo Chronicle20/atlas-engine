@@ -2,7 +2,7 @@ package connection.packets;
 
 import java.net.InetAddress;
 
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import net.encryption.InitializationVector;
 import net.packet.ByteBufOutPacket;
 import net.packet.OutPacket;

@@ -2,7 +2,7 @@ package net.packet.logging;
 
 import java.util.Set;
 
-import connection.constants.RecvOpcode;
+import connection.headers.RecvOpcode;
 import io.netty.buffer.Unpooled;
 
 public class LoggingUtil {

@@ -35,7 +35,7 @@ import client.newyear.NewYearCardRecord;
 import connection.constants.BuddylistErrorMode;
 import connection.constants.BuddylistMode;
 import connection.constants.PartyOperationMode;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import connection.constants.ShowStatusInfoMessageType;
 import constants.game.GameConstants;
 import constants.inventory.ItemConstants;

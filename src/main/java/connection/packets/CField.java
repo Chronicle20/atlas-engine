@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import client.MapleCharacter;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import net.packet.OutPacket;
 import net.packet.Packet;
 import server.MTSItemInfo;

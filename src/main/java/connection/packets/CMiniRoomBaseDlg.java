@@ -5,7 +5,7 @@ import java.util.List;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.inventory.Item;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import net.packet.OutPacket;
 import net.packet.Packet;
 import net.server.channel.handlers.PlayerInteractionHandler;

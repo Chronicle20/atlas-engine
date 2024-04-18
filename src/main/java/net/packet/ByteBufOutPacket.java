@@ -3,7 +3,7 @@ package net.packet;
 import java.awt.*;
 import java.io.UnsupportedEncodingException;
 
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;

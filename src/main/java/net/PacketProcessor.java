@@ -8,7 +8,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import connection.constants.RecvOpcode;
+import connection.headers.RecvOpcode;
 import net.netty.LoginServer;
 import net.server.channel.handlers.*;
 import net.server.handlers.KeepAliveHandler;

@@ -8,6 +8,7 @@ import client.MapleClient;
 import client.creator.novice.BeginnerCreator;
 import client.creator.novice.LegendCreator;
 import client.creator.novice.NoblesseCreator;
+import connection.constants.DeleteCharacterCode;
 import connection.packets.CLogin;
 import constants.character.creation.TemplateFactory;
 import net.AbstractMaplePacketHandler;
@@ -91,12 +92,12 @@ public final class CreateCharHandler extends AbstractMaplePacketHandler {
       } else if (job == 2) { // Aran
          status = LegendCreator.createCharacter(c, name, face, hair, 0, top, bottom, shoes, weapon, c.getGender());
       } else {
-         c.sendPacket(CLogin.deleteCharResponse(0, 9));
+         c.sendPacket(CLogin.deleteCharResponse(0, DeleteCharacterCode.UNKNOWN_ERROR));
          return;
       }
 
       if (status == -2) {
-         c.sendPacket(CLogin.deleteCharResponse(0, 9));
+         c.sendPacket(CLogin.deleteCharResponse(0, DeleteCharacterCode.UNKNOWN_ERROR));
       }
    }
 

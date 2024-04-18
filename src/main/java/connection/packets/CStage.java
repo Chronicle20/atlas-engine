@@ -19,7 +19,7 @@ import client.inventory.Item;
 import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
 import client.newyear.NewYearCardRecord;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import constants.game.GameConstants;
 import net.packet.OutPacket;
 import net.packet.Packet;

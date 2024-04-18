@@ -1,7 +1,7 @@
 package net.server.channel.handlers;
 
 import client.MapleClient;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import net.AbstractMaplePacketHandler;
 import net.packet.InPacket;
 import net.packet.OutPacket;

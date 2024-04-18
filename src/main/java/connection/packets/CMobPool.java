@@ -6,7 +6,7 @@ import java.util.Map;
 import client.Skill;
 import client.status.MonsterStatus;
 import client.status.MonsterStatusEffect;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import net.packet.OutPacket;
 import net.packet.Packet;
 import server.life.MapleMonster;

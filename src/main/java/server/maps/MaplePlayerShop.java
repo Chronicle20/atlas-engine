@@ -37,7 +37,7 @@ import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
 import client.inventory.manipulator.MapleInventoryManipulator;
 import client.inventory.manipulator.MapleKarmaManipulator;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import connection.packets.CMiniRoomBaseDlg;
 import connection.packets.CUser;
 import connection.packets.CWvsContext;

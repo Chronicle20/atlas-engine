@@ -5,7 +5,7 @@ import java.awt.*;
 import client.MapleCharacter;
 import client.inventory.Equip;
 import client.inventory.MaplePet;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import connection.constants.ShowItemGainInChatCode;
 import net.packet.InPacket;
 import net.packet.OutPacket;

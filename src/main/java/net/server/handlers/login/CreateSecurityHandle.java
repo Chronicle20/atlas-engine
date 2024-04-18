@@ -3,6 +3,7 @@ package net.server.handlers.login;
 import java.util.Random;
 
 import client.MapleClient;
+import connection.headers.SendOpcode;
 import net.AbstractMaplePacketHandler;
 import net.packet.InPacket;
 import net.packet.OutPacket;
@@ -21,7 +22,7 @@ public class CreateSecurityHandle extends AbstractMaplePacketHandler {
 
    private Packet writePacket() {
       String[] LoginScreen = {"MapLogin", "MapLogin1"};
-      final OutPacket op = OutPacket.create(connection.constants.SendOpcode.LOGIN_AUTH);
+      final OutPacket op = OutPacket.create(SendOpcode.LOGIN_AUTH);
       int index = new Random().nextInt(2);
       op.writeString(LoginScreen[index]);
       return op;

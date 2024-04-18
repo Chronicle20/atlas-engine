@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import client.MapleCharacter;
 import client.MapleClient;
-import connection.constants.RecvOpcode;
+import connection.headers.RecvOpcode;
 import net.jcip.annotations.NotThreadSafe;
 import tools.HexTool;
 

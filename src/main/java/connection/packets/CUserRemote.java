@@ -11,7 +11,7 @@ import client.MapleDisease;
 import client.MapleMount;
 import client.TemporaryStatType;
 import client.TemporaryStatValue;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import constants.skills.Buccaneer;
 import constants.skills.Corsair;
 import constants.skills.ThunderBreaker;

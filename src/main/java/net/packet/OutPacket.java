@@ -2,7 +2,7 @@ package net.packet;
 
 import java.awt.*;
 
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 
 public interface OutPacket extends Packet {
    static OutPacket create(SendOpcode opcode) {

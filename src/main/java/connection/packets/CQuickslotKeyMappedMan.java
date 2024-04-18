@@ -1,7 +1,7 @@
 package connection.packets;
 
 import client.keybind.MapleQuickslotBinding;
-import connection.constants.SendOpcode;
+import connection.headers.SendOpcode;
 import net.packet.OutPacket;
 import net.packet.Packet;
 

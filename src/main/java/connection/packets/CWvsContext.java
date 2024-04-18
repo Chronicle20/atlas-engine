@@ -136,6 +136,14 @@ public class CWvsContext {
       return p;
    }
 
+   public static Packet updateDama(int characterId, int dama) {
+      final OutPacket p = OutPacket.create(SendOpcode.MINIGAME_PACHINKO_UPDATE_DAMA);
+      p.writeInt(characterId);
+      p.writeInt(dama);
+      p.writeInt(0);
+      return p;
+   }
+
    public static Packet petStatUpdate(MapleCharacter chr) {
       // this actually does nothing... packet structure and stats needs to be uncovered
 
@@ -352,7 +360,19 @@ public class CWvsContext {
          p.writeByte(ShowStatusInfoMessageType.ON_INCREASE_MONEY.getMessageType());
       }
       p.writeInt(gain);
-      p.writeShort(0);
+      return p;
+   }
+
+   public static Packet getShowDamaGain(int gain, boolean inChat) {
+      final OutPacket p = OutPacket.create(SendOpcode.SHOW_STATUS_INFO);
+      if (!inChat) {
+         //TODO does this actually work?
+         p.writeByte(ShowStatusInfoMessageType.ON_DROP_PICK_UP.getMessageType());
+         p.writeShort(1); //v83
+      } else {
+         p.writeByte(ShowStatusInfoMessageType.ON_INCREASE_DAMA.getMessageType());
+      }
+      p.writeInt(gain);
       return p;
    }
 

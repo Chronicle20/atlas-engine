@@ -256,4 +256,12 @@ public final class ItemConstants {
     public static boolean isChair(int itemId) {
         return itemId / 10000 == 301;
     }
+
+    public static boolean isMesoSack(int itemId) {
+        return itemId / 1000 == 5200;
+    }
+
+    public static boolean isPachinkoBox(int itemId) {
+        return itemId / 1000 == 5201;
+    }
 }

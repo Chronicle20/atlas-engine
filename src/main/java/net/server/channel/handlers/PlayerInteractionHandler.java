@@ -595,7 +595,8 @@ public final class PlayerInteractionHandler extends AbstractMaplePacketHandler {
                   merchant.visitShop(chr);
                }
             }
-         } else if (mode == Action.CHAT.getCode()) { // chat lol
+         } else if (mode == Action.CHAT.getCode()) {
+            int updateTime = p.readInt();
             String message = p.readString();
             chat(chr, message);
          } else if (mode == Action.EXIT.getCode()) {

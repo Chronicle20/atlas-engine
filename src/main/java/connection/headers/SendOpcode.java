@@ -88,6 +88,7 @@ public enum SendOpcode {
    SET_POTION_DISCOUNT_RATE(0x48), // CWvsContext::OnSetPotionDiscountRate
 
    BRIDLE_MOB_CATCH_FAIL(0x49), // CWvsContext::OnBridleMobCatchFail
+   MINIGAME_PACHINKO_UPDATE_DAMA(0x4B), // sub_B06318
    IMITATED_NPC_RESULT(0xFFFF), // CWvsContext::OnImitatedNPCResult
    IMITATED_NPC_DATA(0x55), // CNpcPool::OnNpcImitateData
    LIMITED_NPC_DISABLE_INFO(0x56), // CNpcPool::OnUpdateLimitedDisableInfo

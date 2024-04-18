@@ -142,6 +142,7 @@ CREATE TABLE IF NOT EXISTS `characters` (
   `maxhp` int(11) NOT NULL DEFAULT '50',
   `maxmp` int(11) NOT NULL DEFAULT '5',
   `meso` int(11) NOT NULL DEFAULT '0',
+  `dama` int(11) NOT NULL DEFAULT '0',
   `hpMpUsed` int(11) unsigned NOT NULL DEFAULT '0',
   `job` int(11) NOT NULL DEFAULT '0',
   `skincolor` int(11) NOT NULL DEFAULT '0',

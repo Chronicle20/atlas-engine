@@ -163,6 +163,12 @@ public final class UseCashItemHandler extends AbstractMaplePacketHandler {
       c.sendPacket(CWvsContext.enableActions());
    }
 
+   private static void handlePachinkoBox(MapleClient c, short position, int itemId) {
+      c.getPlayer().gainDama(ItemInformationProvider.getInstance().getPachinko(itemId), true, false, true);
+      remove(c, position, itemId);
+      c.sendPacket(CWvsContext.enableActions());
+   }
+
    private static void handlePetRename(MapleClient c, short position, int itemId, String newName) {
       c.getPlayer().getPet(0).ifPresent(p -> handlePetRename(c, p, position, itemId, newName));
       c.sendPacket(CWvsContext.enableActions());
@@ -532,7 +538,11 @@ public final class UseCashItemHandler extends AbstractMaplePacketHandler {
          String newName = p.readString();
          handlePetRename(c, position, itemId, newName);
       } else if (itemType == 520) {
-         handleMesoSack(c, position, itemId);
+         if (ItemConstants.isMesoSack(itemId)) {
+            handleMesoSack(c, position, itemId);
+         } else if (ItemConstants.isPachinkoBox(itemId)) {
+            handlePachinkoBox(c, position, itemId);
+         }
       } else if (itemType == 523) {
          int searchItemId = p.readInt();
          handleOwlOfMinerva(c, position, itemId, searchItemId);

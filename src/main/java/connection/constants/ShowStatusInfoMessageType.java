@@ -15,7 +15,8 @@ public enum ShowStatusInfoMessageType {
     ON_QUEST_RECORD_EX(11),
     ON_ITEM_PROTECTION_EXPIRE(12),
     ON_ITEM_EXPIRE_REPLACE(13),
-    ON_SKILL_EXPIRE(14);
+    ON_SKILL_EXPIRE(14),
+    ON_INCREASE_DAMA(15);
 
     final byte messageType;
 

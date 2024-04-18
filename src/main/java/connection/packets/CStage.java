@@ -169,7 +169,7 @@ public class CStage {
       p.writeInt(chr.getMeso());
 
       p.writeInt(chr.getId());
-      p.writeInt(0); // tama?
+      p.writeInt(chr.getDama());
       p.writeInt(0);
 
       addInventoryInfo(p, chr);

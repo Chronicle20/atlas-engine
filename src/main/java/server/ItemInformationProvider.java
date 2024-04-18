@@ -85,6 +85,7 @@ public class ItemInformationProvider {
    protected Map<Integer, Boolean> dropRestrictionCache = new HashMap<>();
    protected Map<Integer, Boolean> pickupRestrictionCache = new HashMap<>();
    protected Map<Integer, Integer> getMesoCache = new HashMap<>();
+   protected Map<Integer, Integer> getPachinkoCache = new HashMap<>();
    protected Map<Integer, Integer> monsterBookID = new HashMap<>();
    protected Map<Integer, Boolean> untradeableCache = new HashMap<>();
    protected Map<Integer, Boolean> onEquipUntradeableCache = new HashMap<>();
@@ -525,6 +526,24 @@ public class ItemInformationProvider {
       }
       pEntry = MapleDataTool.getInt(pData);
       getMesoCache.put(itemId, pEntry);
+      return pEntry;
+   }
+
+   public int getPachinko(int itemId) {
+      if (getPachinkoCache.containsKey(itemId)) {
+         return getPachinkoCache.get(itemId);
+      }
+      Optional<MapleData> item = getItemData(itemId);
+      if (item.isEmpty()) {
+         return -1;
+      }
+      int pEntry;
+      MapleData pData = item.get().getChildByPath("info/dama");
+      if (pData == null) {
+         return -1;
+      }
+      pEntry = MapleDataTool.getInt(pData);
+      getPachinkoCache.put(itemId, pEntry);
       return pEntry;
    }
 

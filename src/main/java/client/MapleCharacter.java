@@ -221,6 +221,7 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
    private final AtomicInteger exp = new AtomicInteger();
    private final AtomicInteger gachaexp = new AtomicInteger();
    private final AtomicInteger meso = new AtomicInteger();
+   private final AtomicInteger dama = new AtomicInteger();
    private final AtomicInteger chair = new AtomicInteger(-1);
    private final MaplePet[] pets = new MaplePet[3];
    private final Set<NewYearCardRecord> newyears = new LinkedHashSet<>();
@@ -1130,6 +1131,7 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
          ret.remainingAp = rs.getInt("ap");
          ret.loadCharSkillPoints(rs.getString("sp").split(","));
          ret.meso.set(rs.getInt("meso"));
+         ret.dama.set(rs.getInt("dama"));
          ret.merchantmeso = rs.getInt("MerchantMesos");
          ret.setGMLevel(rs.getInt("gm"));
          ret.skinColor = MapleSkinColor.getById(rs.getInt("skincolor")).orElseThrow();
@@ -4216,6 +4218,31 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
       }
    }
 
+   public void gainDama(int gain, boolean show, boolean enableActions, boolean inChat) {
+      long nextDama;
+      petLock.lock();
+      try {
+         nextDama = (long) dama.get() + gain;  // thanks Thora for pointing integer overflow here
+         if (nextDama > Integer.MAX_VALUE) {
+            gain -= (nextDama - Integer.MAX_VALUE);
+         } else if (nextDama < 0) {
+            gain = -dama.get();
+         }
+         nextDama = dama.addAndGet(gain);
+      } finally {
+         petLock.unlock();
+      }
+
+      if (gain != 0) {
+         client.sendPacket(CWvsContext.updateDama(getId(), (int) nextDama));
+         if (show) {
+            client.sendPacket(CWvsContext.getShowDamaGain(gain, inChat));
+         }
+      } else {
+         client.sendPacket(CWvsContext.enableActions());
+      }
+   }
+
    public void genericGuildMessage(int code) {
       this.client.sendPacket(CWvsContext.genericGuildMessage((byte) code));
    }
@@ -5938,6 +5965,10 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
 
    public int getMeso() {
       return meso.get();
+   }
+
+   public int getDama() {
+      return dama.get();
    }
 
    public int getMerchantMeso() {
@@ -8557,7 +8588,14 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
          con.setAutoCommit(false);
          PreparedStatement ps;
          ps = con.prepareStatement(
-               "UPDATE characters SET level = ?, fame = ?, str = ?, dex = ?, luk = ?, `int` = ?, exp = ?, gachaexp = ?, hp = ?, mp = ?, maxhp = ?, maxmp = ?, sp = ?, ap = ?, gm = ?, skincolor = ?, gender = ?, job = ?, hair = ?, face = ?, map = ?, meso = ?, hpMpUsed = ?, spawnpoint = ?, party = ?, buddyCapacity = ?, messengerid = ?, messengerposition = ?, mountlevel = ?, mountexp = ?, mounttiredness= ?, equipslots = ?, useslots = ?, setupslots = ?, etcslots = ?,  monsterbookcover = ?, vanquisherStage = ?, dojoPoints = ?, lastDojoStage = ?, finishedDojoTutorial = ?, vanquisherKills = ?, matchcardwins = ?, matchcardlosses = ?, matchcardties = ?, omokwins = ?, omoklosses = ?, omokties = ?, dataString = ?, fquest = ?, jailexpire = ?, partnerId = ?, marriageItemId = ?, lastExpGainTime = ?, ariantPoints = ?, partySearch = ? WHERE id = ?",
+               "UPDATE characters SET level = ?, fame = ?, str = ?, dex = ?, luk = ?, `int` = ?, exp = ?, gachaexp = ?, hp = ?, "
+                     + "mp = ?, maxhp = ?, maxmp = ?, sp = ?, ap = ?, gm = ?, skincolor = ?, gender = ?, job = ?, hair = ?, face = ?, "
+               + "map = ?, meso = ?, hpMpUsed = ?, spawnpoint = ?, party = ?, buddyCapacity = ?, messengerid = ?, "
+                     + "messengerposition = ?, mountlevel = ?, mountexp = ?, mounttiredness= ?, equipslots = ?, useslots = ?, "
+               + "setupslots = ?, etcslots = ?,  monsterbookcover = ?, vanquisherStage = ?, dojoPoints = ?, lastDojoStage = ?, "
+               + "finishedDojoTutorial = ?, vanquisherKills = ?, matchcardwins = ?, matchcardlosses = ?, matchcardties = ?, "
+               + "omokwins = ?, omoklosses = ?, omokties = ?, dataString = ?, fquest = ?, jailexpire = ?, partnerId = ?, "
+                     + "marriageItemId = ?, lastExpGainTime = ?, ariantPoints = ?, partySearch = ?, dama = ? WHERE id = ?",
                Statement.RETURN_GENERATED_KEYS);
          ps.setInt(1, level);    // thanks CanIGetaPR for noticing an unnecessary "level" limitation when persisting DB data
          ps.setInt(2, fame);
@@ -8671,7 +8709,8 @@ public class MapleCharacter extends AbstractMapleCharacterObject {
          ps.setTimestamp(53, new Timestamp(lastExpGainTime));
          ps.setInt(54, ariantPoints);
          ps.setBoolean(55, canRecvPartySearchInvite);
-         ps.setInt(56, id);
+         ps.setInt(56, dama.get());
+         ps.setInt(57, id);
 
          int updateRows = ps.executeUpdate();
          ps.close();

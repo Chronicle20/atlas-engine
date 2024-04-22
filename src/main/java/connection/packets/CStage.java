@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import buddy.BuddyProcessor;
 import client.MapleCharacter;
@@ -21,6 +22,8 @@ import client.inventory.MapleInventoryType;
 import client.newyear.NewYearCardRecord;
 import connection.headers.SendOpcode;
 import constants.game.GameConstants;
+import gift.LogoutGift;
+import gift.LogoutGiftProcessor;
 import net.packet.OutPacket;
 import net.packet.Packet;
 import net.server.PlayerCoolDownValueHolder;
@@ -50,7 +53,7 @@ public class CStage {
          p.writeInt(Randomizer.nextInt());
       }
       addCharacterInfo(p, chr);
-      setLogutGiftConfig(chr, p);
+      setLogoutGiftConfig(chr, p);
       p.writeLong(CCommon.getTime(System.currentTimeMillis()));
       return p;
    }
@@ -358,10 +361,19 @@ public class CStage {
       }
    }
 
-   private static void setLogutGiftConfig(MapleCharacter chr, OutPacket p) {
-      p.writeInt(0);// bPredictQuit
-      for (int i = 0; i < 3; i++) {
-         p.writeInt(0);//
+   private static void setLogoutGiftConfig(MapleCharacter chr, OutPacket p) {
+      List<LogoutGift> choices = LogoutGiftProcessor.getInstance()
+            .getGiftChoices(chr.getWorld(), chr.getId()).stream()
+            .filter(i -> i.serialNumber() != 0)
+            .toList();
+      p.writeInt(choices.size());
+      if (choices.isEmpty()) {
+         IntStream.range(0, 3).forEach(_ -> p.writeInt(0));
+      } else {
+         choices.stream()
+               .limit(3)
+               .map(LogoutGift::serialNumber)
+               .forEach(p::writeInt);
       }
    }
 

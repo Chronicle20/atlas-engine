@@ -11,9 +11,11 @@ import server.maps.MaplePortal;
 public final class ChangeMapSpecialHandler extends AbstractMaplePacketHandler {
    @Override
    public void handlePacket(InPacket p, MapleClient c) {
-      p.readByte();
+      byte type = p.readByte();
       String startwp = p.readString();
-      p.readShort();
+      short xRange = p.readShort();
+      short yRange = p.readShort();
+
       MaplePortal portal = c.getPlayer().getMap().getPortal(startwp);
       if (portal == null || c.getPlayer().portalDelay() > currentServerTime() || c.getPlayer().getBlockedPortals()
             .contains(portal.getScriptName())) {

@@ -263,7 +263,7 @@ public class MapleClient extends ChannelInboundHandlerAdapter {
          } catch (NullPointerException e) {
             e.printStackTrace();
          }
-      }, SECONDS.toMillis(60));
+      }, SECONDS.toMillis(15));
    }
 
    public void disconnectSession() {
@@ -1225,8 +1225,7 @@ public class MapleClient extends ChannelInboundHandlerAdapter {
    }
 
    public void pongReceived() {
-      lastPong = Server.getInstance()
-            .getCurrentTime();
+      lastPong = System.currentTimeMillis();
    }
 
    public Hwid getHwid() {

@@ -276,6 +276,7 @@ public final class PacketProcessor {
          registerHandler(RecvOpcode.OPEN_ITEMUI, new RaiseUIStateHandler());
          registerHandler(RecvOpcode.USE_ITEMUI, new RaiseIncExpHandler());
          registerHandler(RecvOpcode.CHANGE_QUICKSLOT, new QuickslotKeyMappedModifiedHandler());
+         registerHandler(RecvOpcode.ON_LOGOUT_GIFT, new LogoutGiftHandler());
       }
    }
 }

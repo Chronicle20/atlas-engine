@@ -2403,4 +2403,8 @@ public class CWvsContext {
    public static Packet enableActions() {
       return updatePlayerStats(Collections.emptyList(), true, null);
    }
+
+   public static Packet confirmLogoutGift() {
+      return OutPacket.create(SendOpcode.CONFIRM_LOGOUT_GIFT);
+   }
 }

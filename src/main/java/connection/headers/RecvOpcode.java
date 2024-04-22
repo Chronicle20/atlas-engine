@@ -787,7 +787,9 @@ public enum RecvOpcode {
 
    // 0x10F sub_575186
    // CUIItemUpgrade::Update
-   USE_HAMMER(0x114);
+   USE_HAMMER(0x114),
+
+   ON_LOGOUT_GIFT(0x116);
 
    // 0x116 CUILogoutGift::OnButtonClicked
 

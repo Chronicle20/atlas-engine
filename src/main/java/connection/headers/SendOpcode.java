@@ -385,6 +385,7 @@ public enum SendOpcode {
    SEND_TV(0x17A), // CMapleTVMan::OnSetMessage
    REMOVE_TV(0x17B), // CMapleTVMan::OnClearMessage
    ENABLE_TV(0x17C), // CMapleTVMan::OnSendMessageResult
+   CONFIRM_LOGOUT_GIFT(0x186),
    MTS_OPERATION2(0xFFFF), // CField::OnCharacterSale TODO
    MTS_OPERATION(0xFFFF), // CField::OnCharacterSale TODO
    MAPLELIFE_RESULT(0xFFFF), // TODO
